@@ -42,10 +42,11 @@ Each module lives in `modules/` and includes:
 - Functional code
 - Module-specific README
 - `agent_notes.md` for LLMs and human handoffs
+- `AGENTS.md` to guide programming agents
 
 Support folders:
 - `db/` — schema, queries, migration helpers
-- `scripts/` — adhoc tools like `sync_once.py`
+- `scripts/` — utility scripts (each in its own folder)
 - `ui/` — gradio, HTML templates, web components
 - `tests/` — basic test scaffolds
 - `docs/` — architecture, ambiguity log, developer guide
@@ -61,7 +62,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env  # then edit your HackerOne creds + local LLM endpoint
-python scripts/sync_once.py  # Dry run sync
+python scripts/sync_once  # Dry run sync
 ```
 
 ---
