@@ -1,4 +1,5 @@
 # 🏗️ Architecture
+<!-- TODO: remove emoji from header -->
 
 ![System Diagram](./ARCHITECTURE.png)
 
