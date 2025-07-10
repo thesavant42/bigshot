@@ -1,5 +1,4 @@
-# 🧭 System Overview
-<!-- TODO: remove emoji from header -->
+# System Overview
 
 **BigShot** is a LAN-only HackerOne analytics dashboard designed to help bug bounty hunters:
 
