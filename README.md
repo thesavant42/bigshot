@@ -14,7 +14,7 @@ BigShot collects, filters, and visualizes HackerOne data to help you:
 - Promote interesting bounty programs to your own **favorites list**
 - Summarize bounty reports using a **local LLM** over MCP (no cloud required)
 - Track your **ranking vs. peers** via the “Leeterboard”
-- Maintain a **denylist** of low-payout or disinteresting programs
+- Maintain a **denylist** of excluded or out-of-scope targets
 - Use date filters (7d/30d/90d) and severity filters to focus your research
 
 All data is stored locally in **PostgreSQL**. No public dashboard, no telemetry, no nonsense.
