@@ -15,7 +15,7 @@ from pathlib import Path
 import sys
 
 # Add the modules directory to the path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'modules'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'modules'))
 
 from utils.path_normalization import normalize_config_path, validate_path_format
 
@@ -32,7 +32,8 @@ def demonstrate_path_handling():
     
     # Step 1: Load configuration
     print("1. Loading configuration...")
-    config = load_config('config/default_config.json')
+    config_path = os.path.join(os.path.dirname(__file__), '..', 'config', 'default_config.json')
+    config = load_config(config_path)
     
     print("   Raw config paths (from JSON):")
     for key, path in config['paths'].items():
