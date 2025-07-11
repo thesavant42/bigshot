@@ -134,7 +134,7 @@ Controls for HackerOne data synchronization:
 
 ⚠️ **Important**: When configuring Windows file paths in JSON configuration files, you **must** use double-escaped backslashes.
 
-### ❌ INCORRECT - Single Backslashes (Will Cause Errors)
+### INCORRECT - Single Backslashes (Will Cause Errors)
 ```json
 {
   "operations": {
@@ -143,7 +143,7 @@ Controls for HackerOne data synchronization:
 }
 ```
 
-### ✅ CORRECT - Double-Escaped Backslashes
+### CORRECT - Double-Escaped Backslashes
 ```json
 {
   "operations": {

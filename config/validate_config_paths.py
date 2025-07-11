@@ -32,10 +32,10 @@ def validate_config_file(config_path: str) -> bool:
         with open(config_path, 'r') as f:
             config = json.load(f)
     except (json.JSONDecodeError, FileNotFoundError) as e:
-        print(f"❌ Error reading {config_path}: {e}")
+        print(f"ERROR: Error reading {config_path}: {e}")
         return False
     
-    print(f"🔍 Validating paths in {config_path}")
+    print(f"Validating paths in {config_path}")
     
     all_valid = True
     
@@ -60,9 +60,9 @@ def validate_config_file(config_path: str) -> bool:
                 
                 try:
                     validate_path_for_json(obj)
-                    print(f"  ✅ {path_prefix}: {obj}")
+                    print(f"  VALID: {path_prefix}: {obj}")
                 except PathValidationError as e:
-                    print(f"  ❌ {path_prefix}: {obj}")
+                    print(f"  INVALID: {path_prefix}: {obj}")
                     print(f"     Error: {e}")
                     
                     suggestions = suggest_corrections(obj)
@@ -84,7 +84,7 @@ def main():
         # Validate specific file
         config_file = sys.argv[1]
         if not os.path.exists(config_file):
-            print(f"❌ Configuration file not found: {config_file}")
+            print(f"ERROR: Configuration file not found: {config_file}")
             sys.exit(1)
         
         is_valid = validate_config_file(config_file)
@@ -96,10 +96,10 @@ def main():
         json_files = list(config_dir.glob("*.json"))
         
         if not json_files:
-            print("📁 No JSON configuration files found in config directory")
+            print("INFO: No JSON configuration files found in config directory")
             return
         
-        print("🔍 Validating all JSON configuration files...")
+        print("Validating all JSON configuration files...")
         print()
         
         all_files_valid = True
@@ -110,9 +110,9 @@ def main():
             print()
         
         if all_files_valid:
-            print("✅ All configuration files have valid Windows paths!")
+            print("SUCCESS: All configuration files have valid Windows paths!")
         else:
-            print("❌ Some configuration files have invalid Windows paths.")
+            print("ERROR: Some configuration files have invalid Windows paths.")
             print("   Please fix the paths and run validation again.")
             sys.exit(1)
 
