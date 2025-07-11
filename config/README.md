@@ -9,11 +9,79 @@ This directory contains configuration files and utilities for the BigShot applic
 - **`default_config.json`**: Base configuration with default values
 - **`local_overrides.json`**: Environment-specific overrides (copy and customize for your setup)
 
-### Common Configuration Options
+### Configuration Concepts and Examples
 
-BigShot supports the following configuration categories:
+BigShot is designed for security researchers who need local-first bounty research capabilities. Here are realistic configuration scenarios:
+
+#### Scenario 1: Alice's Home Lab Setup
+Alice runs BigShot on her home lab with a dedicated PostgreSQL instance and LMStudio for local LLM inference:
+
+```json
+{
+  "database": {
+    "host": "192.168.1.100",
+    "port": 5432,
+    "database": "bigshot_alice",
+    "username": "alice_researcher",
+    "password": "SecurePass123!"
+  },
+  "api": {
+    "hackerone_username": "alice_h1",
+    "hackerone_token": "your_actual_h1_token_here",
+    "rate_limit_delay": 1.5
+  },
+  "llm": {
+    "endpoint": "http://192.168.1.98:1234/v1/",
+    "api_key": "fake_api_LMStudio",
+    "model": "qwen2.5-coder"
+  },
+  "operations": {
+    "folder_path": "C:\\\\Users\\\\Alice\\\\Documents\\\\BigShot\\\\Research",
+    "temp_folder": "C:\\\\Temp\\\\BigShot",
+    "export_folder": "C:\\\\Users\\\\Alice\\\\Documents\\\\BigShot\\\\Exports"
+  }
+}
+```
+
+#### Scenario 2: Bob's Cloud-Free Corporate Setup
+Bob works at a security firm and needs complete air-gapped operation with local PostgreSQL and strict data isolation:
+
+```json
+{
+  "database": {
+    "host": "localhost",
+    "port": 5432,
+    "database": "bigshot_corp",
+    "username": "bounty_analyst",
+    "password": "Corp2024SecureDB!"
+  },
+  "api": {
+    "hackerone_username": "bob_corp_h1",
+    "hackerone_token": "corporate_h1_token",
+    "rate_limit_delay": 2.0
+  },
+  "llm": {
+    "endpoint": "http://127.0.0.1:8080/v1/",
+    "api_key": "local_inference_key",
+    "model": "qwen2.5-coder"
+  },
+  "sync": {
+    "batch_size": 50,
+    "max_retries": 5,
+    "backoff_factor": 3.0
+  },
+  "operations": {
+    "folder_path": "C:\\\\SecureData\\\\BountyResearch\\\\Analysis",
+    "temp_folder": "C:\\\\SecureData\\\\Temp",
+    "export_folder": "C:\\\\SecureData\\\\BountyResearch\\\\Reports"
+  }
+}
+```
+
+### Common Configuration Categories
 
 #### Database Settings
+PostgreSQL connection for local data storage:
 ```json
 {
   "database": {
@@ -26,7 +94,8 @@ BigShot supports the following configuration categories:
 }
 ```
 
-#### API Configuration
+#### HackerOne API Configuration
+Credentials for fetching bounty data:
 ```json
 {
   "api": {
@@ -37,7 +106,8 @@ BigShot supports the following configuration categories:
 }
 ```
 
-#### LLM/MCP Settings
+#### Local LLM/MCP Settings
+LMStudio or similar local inference endpoints:
 ```json
 {
   "llm": {
@@ -48,7 +118,8 @@ BigShot supports the following configuration categories:
 }
 ```
 
-#### Sync Configuration
+#### Sync Engine Configuration
+Controls for HackerOne data synchronization:
 ```json
 {
   "sync": {
@@ -104,6 +175,29 @@ For cross-platform compatibility, you can also use forward slashes:
   }
 }
 ```
+
+## MVP Readiness Assessment
+
+Based on the current repository state, here's what's blocking a minimal viable product:
+
+### Immediate Blockers
+1. **Dependencies**: `requirements.txt` and `pyproject.toml` are stubs - need actual Python dependencies
+2. **Database Schema**: No database initialization scripts found in `db/` directory
+3. **MCP Endpoint Configuration**: Documentation mentions Docker but implementation unclear
+4. **Sync Engine**: Core sync functionality exists but integration unclear
+
+### Configuration Prerequisites for MVP
+To achieve MVP status, users need:
+1. PostgreSQL instance (local or network)
+2. HackerOne API credentials (username + token)
+3. Local LLM endpoint (LMStudio recommended)
+4. Proper Windows path escaping for file operations
+
+### Current MVP Status
+- Modules exist with documentation
+- Configuration framework established
+- Path validation system implemented
+- Need: dependency management, database schema, integration testing
 
 ## Path Validation
 

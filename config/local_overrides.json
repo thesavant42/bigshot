@@ -1,14 +1,17 @@
 {
-  "operations": {
-    "folder_path": "C:\\\\Users\\\\YourName\\\\Documents\\\\BigShot",
-    "temp_folder": "C:\\\\Temp\\\\BigShot",
-    "export_folder": "C:\\\\Users\\\\YourName\\\\Documents\\\\BigShot\\\\Exports"
-  },
   "database": {
     "password": "your_actual_password_here"
   },
   "api": {
-    "hackerone_username": "your_username",
-    "hackerone_token": "your_api_token"
+    "hackerone_username": "alice_h1",
+    "hackerone_token": "your_actual_h1_token_here"
+  },
+  "llm": {
+    "endpoint": "http://192.168.1.98:1234/v1/"
+  },
+  "operations": {
+    "folder_path": "C:\\\\Users\\\\Alice\\\\Documents\\\\BigShot\\\\Research",
+    "temp_folder": "C:\\\\Temp\\\\BigShot",
+    "export_folder": "C:\\\\Users\\\\Alice\\\\Documents\\\\BigShot\\\\Exports"
   }
 }
