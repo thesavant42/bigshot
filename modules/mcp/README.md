@@ -1,5 +1,93 @@
 # HackerOne GraphQL MCP Server
+Derailed slightly, since the mcp server in the dockerhub version doesn't work as is outside of docker
+```
+Usage: apollo-mcp-server.exe [OPTIONS] [APOLLO_REGISTRY_URL]
 
+Arguments:
+  [APOLLO_REGISTRY_URL]  [env: APOLLO_REGISTRY_URL=]
+
+Options:
+  -d, --directory <DIRECTORY>
+
+   The working directory to use
+  -s, --schema <SCHEMA>
+
+   The path to the GraphQL API schema file
+  -c, --custom-scalars-config <CUSTOM_SCALARS_CONFIG>
+The path to the GraphQL custom_scalars_config file
+  -e, --endpoint <ENDPOINT>
+
+   The GraphQL endpoint the server will invoke [default: http://127.0.0.1:4000]
+
+--header <HEADERS> Headers to send to the endpoint
+
+--sse-address <SSE_ADDRESS>
+
+   The IP address to bind the SSE server to
+
+--sse-port <SSE_PORT>
+
+   Start the server using the SSE transport on the given port
+  -i, --introspection
+
+   Expose the schema to the MCP client through `introspect` and `execute` tools
+  -u, --uplink
+
+   Enable use of uplink to get the schema and persisted queries (requires APOLLO_KEY and APOLLO_GRAPH_REF)
+  -x, --explorer
+
+   Expose a tool to open queries in Apollo Explorer (requires APOLLO_GRAPH_REF)
+  -o, --operations [<OPERATIONS>...]
+
+   Operation files to expose as MCP tools
+
+--manifest <MANIFEST>
+
+   The path to the persisted query manifest containing operations
+  -m, --allow-mutations <ALLOW_MUTATIONS>
+
+   [default: none] [possible values: none, explicit, all]
+
+--disable-type-description
+
+   Disable operation root field types in tool description
+
+--disable-schema-description
+
+   Disable schema type definitions referenced by all fields returned by the operation in the tool description
+  -l, --log <LOG_LEVEL>
+
+   The log level for the MCP Server [default: INFO]
+
+--http-address <HTTP_ADDRESS>
+   The IP address to bind the Streamable HTTP server to
+
+--http-port <HTTP_PORT>
+
+   Start the server using the Streamable HTTP transport on the given port
+
+--collection <COLLECTION>
+
+   collection id to expose as MCP tools (requires APOLLO_KEY)
+
+--apollo-uplink-endpoints <APOLLO_UPLINK_ENDPOINTS>
+
+   The endpoints (comma separated) polled to fetch the latest supergraph schema [env: APOLLO_UPLINK_ENDPOINTS=]
+
+--apollo-key <APOLLO_KEY>
+
+   Your Apollo key [env: APOLLO_KEY=]
+
+--apollo-graph-ref <APOLLO_GRAPH_REF>
+
+   Your Apollo graph reference [env: APOLLO_GRAPH_REF=]
+  -h, --help
+
+   Print help (see more with '--help')
+(base) PS C:\Users\jbras\.lmstudio\bin> cd ..
+(base) PS C:\Users\jbras\.lmstudio> .\bin\apollo-mcp-server.exe
+
+```
 A Docker image that provides access to HackerOne's GraphQL API through the Model Context Protocol (MCP).
 
 **Supported MCP transport types**: Currently only stdio transport is supported. Please file an issue if you require [other transports](https://modelcontextprotocol.io/docs/concepts/transports#built-in-transport-types).
