@@ -1,0 +1,32 @@
+name: Lint Configuration Files
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  lint-windows-paths:
+    runs-on: ubuntu-latest
+    name: Check Windows Path Escaping
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+        
+    - name: Check for Windows path escaping errors
+      run: python3 scripts/check_backslashes.py
+      
+    - name: Report results
+      if: failure()
+      run: |
+        echo "❌ Windows path escaping errors found!"
+        echo "Please fix the single backslashes in configuration files."
+        echo "Replace single backslashes (\) with double backslashes (\\) in file paths."
+        echo "Example: \"C:\Users\Name\" should be \"C:\\Users\\Name\""
