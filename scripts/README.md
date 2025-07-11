@@ -4,6 +4,35 @@ This directory is intended for **standalone utility scripts** that assist with d
 
 ---
 
+## Current Scripts
+
+### `check_backslashes.py`
+**Windows Path Escaping Linter**
+
+A linter that scans configuration files for Windows path escaping issues. It helps identify:
+- Single backslashes in JSON strings that should be double-escaped
+- Over-escaped paths (quadruple backslashes) that would break at runtime
+- Provides guidance on proper path handling between JSON config and runtime usage
+
+**Usage:**
+```bash
+python scripts/check_backslashes.py
+```
+
+**Key Features:**
+- Scans `.json` and `.cfg` files recursively in the `config/` directory
+- Detects both under-escaped and over-escaped Windows paths
+- Provides clear guidance on fixing path escaping issues
+- Integrates with the path normalization utility in `modules/utils/path_normalization.py`
+
+### `sync_once/`
+Synchronization utility for one-time data operations.
+
+### `populate_mock_data/`
+Database seeding and mock data population utilities.
+
+---
+
 ## What types of files belong in `scripts/`?
 
 **Files that SHOULD go in here:**
@@ -15,6 +44,7 @@ This directory is intended for **standalone utility scripts** that assist with d
 - **Diagnostics or health-check scripts**
 - **Manual job runners** (e.g., scripts that trigger a background job outside of the main app)
 - **Local environment setup scripts** (installing dependencies, setting up configs, etc., if not already handled by a dedicated tool like Make or npm)
+- **Linters and code quality tools** (like the path escaping linter)
 
 **Files that should NOT go in here:**
 - **Core application code** (models, controllers, business logic, etc.)

@@ -1,1 +1,10 @@
-# Empty file placeholder
+{
+  "paths": {
+    "data_directory": "C:\\Users\\LocalUser\\LocalData",
+    "log_directory": "C:\\Users\\LocalUser\\LocalLogs"
+  },
+  "database": {
+    "connection_string": "postgresql://localuser:localpass@localhost/bigshot_dev"
+  },
+  "debug": true
+}

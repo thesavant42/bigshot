@@ -1,1 +1,17 @@
-# Empty file placeholder
+{
+  "app_name": "BigShot",
+  "version": "1.0.0",
+  "paths": {
+    "data_directory": "C:\\Users\\BigShot\\Data",
+    "log_directory": "C:\\Users\\BigShot\\Logs",
+    "backup_directory": "D:\\Backups\\BigShot",
+    "temp_directory": "C:\\Temp\\BigShot"
+  },
+  "database": {
+    "connection_string": "postgresql://user:pass@localhost/bigshot"
+  },
+  "api": {
+    "hackerone_base_url": "https://api.hackerone.com",
+    "rate_limit": 100
+  }
+}
