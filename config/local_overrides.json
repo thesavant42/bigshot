@@ -1,1 +1,17 @@
-# Empty file placeholder
+{
+  "database": {
+    "password": "your_actual_password_here"
+  },
+  "api": {
+    "hackerone_username": "alice_h1",
+    "hackerone_token": "your_actual_h1_token_here"
+  },
+  "llm": {
+    "endpoint": "http://192.168.1.98:1234/v1/"
+  },
+  "operations": {
+    "folder_path": "C:\\\\Users\\\\Alice\\\\Documents\\\\BigShot\\\\Research",
+    "temp_folder": "C:\\\\Temp\\\\BigShot",
+    "export_folder": "C:\\\\Users\\\\Alice\\\\Documents\\\\BigShot\\\\Exports"
+  }
+}

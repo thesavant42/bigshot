@@ -1,1 +1,29 @@
-# Empty file placeholder
+{
+  "database": {
+    "host": "localhost",
+    "port": 5432,
+    "database": "bigshot",
+    "username": "bigshot_user",
+    "password": ""
+  },
+  "api": {
+    "hackerone_username": "",
+    "hackerone_token": "",
+    "rate_limit_delay": 1.0
+  },
+  "llm": {
+    "endpoint": "http://localhost:1234/v1/",
+    "api_key": "fake_api_LMStudio",
+    "model": "qwen2.5-coder"
+  },
+  "sync": {
+    "batch_size": 100,
+    "max_retries": 3,
+    "backoff_factor": 2.0
+  },
+  "operations": {
+    "folder_path": "C:\\\\Users\\\\YourName\\\\Documents\\\\BigShot",
+    "temp_folder": "C:\\\\Temp\\\\BigShot",
+    "export_folder": "C:\\\\Users\\\\YourName\\\\Documents\\\\BigShot\\\\Exports"
+  }
+}
