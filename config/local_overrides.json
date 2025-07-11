@@ -1,1 +1,14 @@
-# Empty file placeholder
+{
+  "operations": {
+    "folder_path": "C:\\\\Users\\\\YourName\\\\Documents\\\\BigShot",
+    "temp_folder": "C:\\\\Temp\\\\BigShot",
+    "export_folder": "C:\\\\Users\\\\YourName\\\\Documents\\\\BigShot\\\\Exports"
+  },
+  "database": {
+    "password": "your_actual_password_here"
+  },
+  "api": {
+    "hackerone_username": "your_username",
+    "hackerone_token": "your_api_token"
+  }
+}
