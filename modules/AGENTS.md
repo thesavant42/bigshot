@@ -9,6 +9,7 @@ Subfolders:
 - `report_parser/` - parse HackerOne report data
 - `summarizer/` - send reports to local LLM
 - `sync_engine/` - fetch data from HackerOne
+- `mcp/` - HackerOne GraphQL MCP server
 - `utils/` - shared helper utilities
 
 Add new modules as peer directories and document them similarly.
