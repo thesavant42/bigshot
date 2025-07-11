@@ -80,13 +80,13 @@ Enable bug bounty hunters and security researchers to efficiently analyze, track
 
 ## 10. Open Questions & Ownership
 
-| Open Question                                            | Owner/Assignee      |
+| Open Question                                            | Answer, Owner/Assignee      |
 |----------------------------------------------------------|---------------------|
-| How should MCP endpoint networking be configured for LLM? | [To be assigned]    |
-| What is the final scope for multi-user authentication?    | [To be assigned]    |
-| Which UI framework will be the default (Gradio/React)?   | [To be assigned]    |
+| How should MCP endpoint networking be configured for LLM? | unclear, please elaborate, assigned to thesavant42    |
+| What is the final scope for multi-user authentication?    | Not for MVP, will use OAUTH2, assigned to thesavant42    |
+| Which UI framework will be the default (Gradio/React)?   | Gradio for mvp, react for v2, assigned to thesavant42    |
 | How will scope tagging and alternate UIs be prioritized?  | [To be assigned]    |
-| What are the privacy guarantees for peer ranking data?    | [To be assigned]    |
+| What are the privacy guarantees for peer ranking data?    | Bound by all of the same rules and NDAs as are required to participate in Hackerone's program. assigned to thesavant42    |
 
 ## 11. Next Steps
 
