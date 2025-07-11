@@ -53,7 +53,7 @@ Support folders:
 
 ---
 
-## ⚙️ Quickstart
+## Quickstart
 
 ```bash
 git clone https://github.com/thesavant42/bigshot.git
@@ -62,12 +62,17 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env  # then edit your HackerOne creds + local LLM endpoint
-python scripts/sync_once  # Dry run sync
+python scripts/sync_once  # Dry run sync <-- does nothing, the python is commented stubs FIX ME!
 ```
 
 ---
 
 ##  MCP + Local Model
+Open Question: The MCP_Endpoint is confusing in this case. The qwen2.5-code model is being run from lmstudio, but 
+1. mcp_endpoint  is not the same as the llm's api, the documentation says docker but that's not been codified afaik
+  - is a docker image
+-- hoe should I configure networking for the container?
+2. LLM_ENDPOINT should definitely be http://192.168.1.98:1234/v1/
 
 Summarization and analysis are delegated to a local LLM (e.g. Qwen2.5 via LMStudio).
 
@@ -81,7 +86,7 @@ FAKE_API_KEY=fake_api_LMStudio
 
 ##  License
 
-MIT or Apache 2.0 — to be decided. No warranty, no cloud.
+MIT No warranty, some rights reserved.
 
 ---
 
