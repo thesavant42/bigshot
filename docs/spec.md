@@ -162,35 +162,35 @@ The backend will use SQLAlchemy as the ORM for database operations, providing an
 
 #### 2.3.3. Background Task Processing
 
-The application will use Celery with Redis as the message broker for handling background tasks such as domain enumeration. This allows the UI to remain responsive while long-running enumeration tasks execute in the background.
+For the initial prototype, the application will use native Python threads or simple asyncio for handling background tasks such as domain enumeration. This allows the UI to remain responsive while long-running enumeration tasks execute in the background. The option to migrate to Celery with Redis may be considered for future versions if more sophisticated job management is needed.
 
-**Enumeration Tasks**: Background tasks that query external APIs and process results.
+**Enumeration Tasks**: Background tasks that query external APIs and process results using asyncio or threading.
 
-**Data Processing Tasks**: Tasks that normalize and deduplicate enumeration results.
+**Data Processing Tasks**: Tasks that normalize and deduplicate enumeration results using simple async processing.
 
-**Notification Tasks**: Tasks that update the frontend about job completion status.
+**Notification Tasks**: Tasks that update the frontend about job completion status through basic polling or WebSocket connections.
 
 ### 2.4. LLM Integration Architecture
 
 #### 2.4.1. Model Context Protocol (MCP) Integration
 
-The application will implement MCP to allow the LLM to access the database and make API calls. This integration will be handled through a dedicated MCP server that runs alongside the main Flask application.
+The application will implement basic MCP integration to allow the LLM to access the database and make simple API calls. For the first prototype, this integration will focus on essential chat and database query functionality, with more sophisticated context handling and tool calling deferred to future versions.
 
-**Database Access**: The MCP server will provide tools for the LLM to query the domains database, allowing it to answer questions about discovered subdomains and their properties.
+**Database Access**: The MCP server will provide basic tools for the LLM to query the domains database, allowing it to answer simple questions about discovered subdomains and their properties.
 
-**API Access**: The MCP server will expose tools for making external API calls, enabling the LLM to fetch additional information about domains when requested.
+**Basic API Access**: The MCP server will expose simple tools for making basic external API calls, enabling the LLM to fetch limited additional information about domains when requested.
 
-**Wikipedia Integration**: A specific tool will be provided for fetching Wikipedia summaries of target organizations or domains.
+**Wikipedia Integration**: A basic tool will be provided for fetching Wikipedia summaries of target organizations or domains.
 
 #### 2.4.2. OpenAI-Compatible API Integration
 
-The backend will include a client for communicating with OpenAI-compatible APIs. This client will handle authentication, request formatting, and response processing.
+The backend will include a basic client for communicating with OpenAI-compatible APIs. This client will handle simple authentication, request formatting, and response processing for basic chat functionality.
 
 **Chat Completion Endpoint**: Handles standard chat interactions with the LLM.
 
-**Function Calling**: Supports function calling for MCP tool invocation.
+**Basic Function Calling**: Supports simple function calling for basic MCP tool invocation.
 
-**Streaming Responses**: Provides real-time response streaming for better user experience.
+**Simple Response Handling**: Provides basic response processing for user interaction.
 
 ### 2.5. External API Integration
 
@@ -227,19 +227,19 @@ async def query_shodan(domain: str, api_key: str) -> List[str]:
     # Implementation details...
 ```
 
-### 2.6. Security Considerations
+### 2.6. Security Considerations for Single-User LAN Prototype
 
-#### 2.6.1. API Key Management
+#### 2.6.1. Simplified API Key Management
 
-All external API keys will be stored securely using environment variables or a dedicated configuration file that is not committed to version control. The application will provide a settings interface for users to configure their API keys.
+For the single-user LAN prototype, API keys will be stored using environment variables for simplicity. Advanced key management, encryption at rest, and key rotation will be deferred to future versions. The application will provide a basic settings interface for users to configure their API keys.
 
-#### 2.6.2. Input Validation
+#### 2.6.2. Basic Input Validation
 
-All user inputs will be validated and sanitized to prevent injection attacks. Domain names will be validated using regular expressions and DNS resolution checks.
+Basic input validation will be implemented for domain names and user inputs. Advanced security measures such as comprehensive injection attack prevention and complex validation rules will be deferred to future versions.
 
-#### 2.6.3. Rate Limiting
+#### 2.6.3. Deferred Advanced Security Features
 
-The application will implement rate limiting for external API calls to prevent abuse and comply with service provider policies.
+Advanced authentication, comprehensive rate limiting, and sophisticated key management will be deferred for the single-user LAN prototype. Environment variables will be used for secrets management, with more robust security measures implemented in future versions based on deployment requirements.
 
 ### 2.7. Performance Considerations
 
@@ -249,7 +249,7 @@ Database queries will be optimized using appropriate indexes, and the applicatio
 
 #### 2.7.2. Caching
 
-The application will implement caching for frequently accessed data, including enumeration results and LLM responses. Redis will be used as the caching layer.
+The application will implement basic caching for frequently accessed data. Advanced caching strategies using Redis or other dedicated caching layers will be deferred to future versions when performance requirements justify the additional complexity.
 
 #### 2.7.3. Asynchronous Processing
 
@@ -259,225 +259,94 @@ All external API calls will be handled asynchronously to prevent blocking the ma
 
 ## 3. UI/UX Specifications and Design Guidelines
 
-### 3.1. Design Philosophy and FANG-Style Principles
+### 3.1. Design Philosophy and v0 Scope
 
-The user interface design for this bug bounty reconnaissance application will follow the design principles commonly found in FANG (Facebook, Amazon, Netflix, Google) company products. These principles emphasize clean, modern aesthetics with a focus on functionality, accessibility, and user experience. The design will prioritize information density while maintaining visual clarity, ensuring that security researchers can efficiently process large amounts of data without cognitive overload.
+For the initial prototype (v0), the user interface design will focus on essential functionality rather than advanced polish. The design will prioritize getting core features working effectively, with advanced features such as FANG-style polish, accessibility enhancements, and sophisticated interactions deferred to future versions.
 
-The core design philosophy centers around three fundamental principles: **Clarity**, **Efficiency**, and **Elegance**. Clarity ensures that all interface elements serve a clear purpose and are immediately understandable to users. Efficiency focuses on minimizing the number of actions required to complete common tasks, particularly in the context of domain enumeration and analysis. Elegance refers to the visual refinement and attention to detail that creates a professional, trustworthy appearance suitable for security research work.
+The v0 scope will include only the essential spreadsheet/tree UI for domain display and basic chat functionality. Advanced features like virtual scrolling, complex animations, and extensive customization will be deferred to focus on core reconnaissance capabilities.
 
-The color palette will draw inspiration from modern security tools and professional development environments, utilizing a dark theme as the primary interface with light theme options available. The dark theme reduces eye strain during extended research sessions and provides better contrast for highlighting important information such as newly discovered subdomains or security-relevant findings.
+**Turn-key UI Framework Recommendation**: It is recommended to investigate turn-key UI frameworks such as PocketSaaS or similar solutions that can provide rapid development of essential interface components while maintaining professional appearance and basic functionality.
 
-### 3.2. Layout Architecture and Viewport Management
+### 3.2. Essential Layout Architecture
 
-#### 3.2.1. Split Viewport Design
+#### 3.2.1. Basic Split Viewport Design
 
-The application's main interface will feature a sophisticated split viewport design that allows users to simultaneously interact with the LLM chat interface and perform reconnaissance tasks. This dual-pane approach maximizes screen real estate utilization while maintaining context between AI assistance and active research work.
+The application's main interface will feature a simple split viewport design that allows users to interact with the LLM chat interface and perform reconnaissance tasks. This basic dual-pane approach will provide the core functionality needed for v0.
 
-The primary viewport will be divided into two main sections with a resizable splitter between them. The left panel will house the LLM chat interface, occupying approximately 30-40% of the screen width by default. The right panel will contain the main reconnaissance dashboard, taking up the remaining 60-70% of the screen width. Users will be able to adjust this ratio by dragging the splitter, with the application remembering their preferred layout configuration.
+The primary viewport will be divided into two main sections with a basic resizable splitter between them. The left panel will house the basic chat interface, and the right panel will contain the main reconnaissance dashboard with essential spreadsheet/tree functionality.
 
-A collapsible sidebar will be positioned on the far left of the interface, containing navigation elements, quick actions, and system status indicators. This sidebar can be minimized to a narrow icon bar to maximize space for the main content areas when needed. The top of the interface will feature a clean header bar containing the application logo, global search functionality, user settings access, and system status indicators.
+#### 3.2.2. Deferred Advanced Features
 
-#### 3.2.2. Responsive Design Considerations
+Advanced responsive design considerations, sophisticated layout management, and complex viewport controls will be deferred to future versions. The v0 implementation will focus on desktop functionality with basic responsive behavior.
 
-While the application is primarily designed for desktop use in a LAN environment, the interface will incorporate responsive design principles to ensure usability across different screen sizes and resolutions. On smaller screens or when the application window is resized, the split viewport will automatically adjust to a stacked layout, with the chat interface moving to a modal or drawer-style overlay that can be toggled on demand.
+### 3.3. Basic Chat Interface Design
 
-The reconnaissance dashboard will maintain its functionality across different screen sizes through adaptive column management, where less critical columns can be hidden or moved to expandable detail views on smaller displays. Touch-friendly interaction patterns will be incorporated to support hybrid devices and touch-enabled monitors.
+#### 3.3.1. Essential Chat Functionality
 
-### 3.3. LLM Chat Interface Design
+The LLM chat interface will feature a basic conversation layout with simple message display. Messages will be displayed in chronological format with basic visual distinction between user messages and AI responses. Advanced features like rich text rendering, syntax highlighting, and complex animations will be deferred to future versions.
 
-#### 3.3.1. Conversation Layout and Message Rendering
+The chat input area will feature a simple text input field with basic multi-line support. Advanced features like auto-completion, quick action buttons, and sophisticated message history will be deferred.
 
-The LLM chat interface will feature a modern conversation layout similar to those found in professional AI tools like ChatGPT or Claude. Messages will be displayed in a clean, chronological format with clear visual distinction between user messages and AI responses. User messages will appear in a subtle background color aligned to the right side of the chat panel, while AI responses will use a different background color and align to the left.
+#### 3.3.2. Basic Integration
 
-Each message will include a timestamp, and AI responses will feature a typing indicator animation during generation to provide feedback about processing status. The interface will support rich text rendering for AI responses, including markdown formatting, code syntax highlighting, and inline links. When the AI references specific domains or subdomains from the database, these will be rendered as interactive elements that can highlight corresponding entries in the main dashboard.
+Basic integration with the main dashboard will allow simple text-based references to domains in chat messages. Advanced features like drag-and-drop, automatic highlighting, and complex context management will be deferred to future versions.
 
-The chat input area will feature a sophisticated text input field with support for multi-line messages, auto-completion for common queries, and quick action buttons for frequently used commands. A message history feature will allow users to navigate through previous conversations and re-submit modified versions of earlier queries.
+### 3.4. Essential Reconnaissance Dashboard Design
 
-#### 3.3.2. Context Awareness and Integration
+#### 3.4.1. Basic Spreadsheet/Tree Interface
 
-The chat interface will display contextual information about the current reconnaissance session, including the number of domains being analyzed, active enumeration jobs, and recent discoveries. This context panel will be collapsible and positioned above the message history, providing the AI with relevant information about the current research state.
+The main reconnaissance dashboard will implement a basic spreadsheet-style interface with essential tree structure for displaying domain relationships. The interface will feature basic collapsible rows for navigating subdomain hierarchies.
 
-Integration with the main dashboard will be seamless, with the ability to reference specific domains or subdomains in chat messages and have them automatically highlighted in the reconnaissance interface. Users will be able to drag and drop domains from the main dashboard into the chat interface to quickly ask questions about specific targets.
+The primary table will include essential columns for domain name, source of discovery, and basic status indicators. Advanced features like customizable columns, complex filtering, and sophisticated sorting will be deferred.
 
-### 3.4. Reconnaissance Dashboard Design
+#### 3.4.2. Essential Hierarchical Domain Display
 
-#### 3.4.1. Spreadsheet-Style Interface
+The hierarchical domain display will provide basic tree structure functionality with simple visual indentation and basic expand/collapse controls. Advanced features like smooth animations, complex visual indicators, and sophisticated styling will be deferred.
 
-The main reconnaissance dashboard will implement a sophisticated spreadsheet-style interface that combines the familiarity of tools like Google Sheets with specialized functionality for security research. The interface will feature a hierarchical tree structure for displaying domain relationships, with collapsible rows that allow users to navigate complex subdomain hierarchies efficiently.
+#### 3.4.3. Deferred Advanced Features
 
-The primary table will include columns for domain name, source of discovery, discovery date, status indicators, tags, and user comments. Additional columns can be shown or hidden based on user preferences, including technical details like IP addresses, SSL certificate information, and HTTP response codes when available. The table will support both single and multi-row selection, enabling batch operations on multiple domains simultaneously.
+Advanced interactive features, bulk operations, inline editing, context menus, and sophisticated visual feedback will be deferred to future versions. The v0 implementation will focus on basic functionality.
 
-Column headers will be interactive, providing sorting functionality and filter options. The sorting will be intelligent, understanding domain hierarchy and maintaining parent-child relationships even when sorted by other criteria. Filter options will include text-based filtering, tag-based filtering, and advanced filters based on discovery source, date ranges, and status indicators.
+### 3.5. Deferred Advanced UI Features
 
-#### 3.4.2. Hierarchical Domain Display
+Advanced navigation structures, sophisticated search capabilities, complex data visualization, comprehensive filtering systems, and extensive customization options will be deferred to future versions. The v0 implementation will focus on basic functionality to support core reconnaissance workflows.
 
-The hierarchical domain display represents one of the most critical aspects of the user interface, as it directly addresses the user's requirement for organizing subdomains in a tree-like structure. Each domain level will be visually indented and connected with subtle lines to show the relationship hierarchy. Chevron icons will indicate expandable/collapsible sections, with smooth animations for expand and collapse operations.
+### 3.6. Basic Visual Design
 
-The hierarchy will be constructed by parsing the subdomain structure, with the root domain at the top level and each subdomain level creating a new tier in the tree. For example, `stage.www.example.com` would appear under `www.example.com`, which would appear under `example.com`. The interface will handle complex subdomain structures gracefully, including cases where intermediate levels might not be explicitly discovered.
+#### 3.6.1. Simple Typography and Basic Styling
 
-Visual indicators will distinguish between different types of entries: confirmed active domains, discovered but unverified subdomains, and domains with specific security relevance. Color coding and iconography will provide quick visual cues about the status and importance of each entry.
+The v0 implementation will use simple, readable fonts and basic styling to ensure functionality without complex visual design. Advanced typography systems, comprehensive color palettes, and sophisticated visual hierarchies will be deferred.
 
-#### 3.4.3. Interactive Features and Bulk Operations
+#### 3.6.2. Basic Visual Elements
 
-The reconnaissance dashboard will support a comprehensive set of interactive features designed to streamline the security research workflow. Right-click context menus will provide quick access to common operations such as adding tags, copying domain names, initiating new enumeration jobs, and opening domains in external tools.
+Simple visual indicators and basic styling will be used for essential functionality. Advanced iconography, complex animations, and sophisticated visual feedback will be deferred to future versions.
 
-Bulk operations will be supported through checkbox selection, allowing users to perform actions on multiple domains simultaneously. These operations will include bulk tagging, bulk export, batch verification, and bulk deletion. A floating action toolbar will appear when multiple items are selected, providing easy access to bulk operation options.
+### 3.7. Deferred Advanced Features
 
-Inline editing will be supported for user-modifiable fields such as tags and comments. Double-clicking on these fields will enable edit mode with auto-save functionality. The interface will provide visual feedback for all user actions, including subtle animations for row updates and clear indicators for background processing status.
-
-### 3.5. Navigation and Information Architecture
-
-#### 3.5.1. Primary Navigation Structure
-
-The application's navigation structure will be designed to support the workflow of security researchers, with primary navigation elements organized around core functional areas. The main navigation will include sections for Dashboard (the primary reconnaissance interface), Jobs (background enumeration task management), Settings (configuration and API key management), and Help (documentation and tutorials).
-
-Secondary navigation will be contextual, appearing within each main section to provide access to related functionality. For example, within the Dashboard section, secondary navigation might include options for different view modes (tree view, flat list, timeline view), export options, and filter presets.
-
-The navigation will maintain state across user sessions, remembering the user's preferred view modes, filter settings, and panel configurations. Breadcrumb navigation will be provided for complex workflows, particularly when drilling down into specific domain details or job configurations.
-
-#### 3.5.2. Search and Discovery Features
-
-A global search functionality will be prominently featured in the application header, providing users with the ability to quickly locate specific domains, search through comments and tags, and find historical enumeration results. The search will support advanced query syntax, including boolean operators, field-specific searches, and regular expression patterns.
-
-Auto-complete functionality will suggest domains as users type, drawing from the current dataset and providing quick access to frequently accessed targets. The search results will be presented in a dropdown interface with categorized results (domains, comments, tags, jobs) and the ability to jump directly to relevant sections of the interface.
-
-### 3.6. Visual Design System
-
-#### 3.6.1. Typography and Readability
-
-The typography system will prioritize readability and information density, utilizing a carefully selected font stack that performs well at various sizes and weights. The primary typeface will be a modern sans-serif font such as Inter or System UI, chosen for its excellent readability in data-dense interfaces and professional appearance.
-
-Font sizes will follow a modular scale, with clear hierarchy established through size, weight, and color variations. Code and domain names will be displayed in a monospace font to ensure proper alignment and easy scanning. The typography system will support multiple languages and character sets to accommodate international domain names and research targets.
-
-Line height and spacing will be optimized for scanning large amounts of tabular data while maintaining comfortable reading for longer text content in the chat interface and documentation areas. The typography will be fully responsive, adjusting appropriately for different screen sizes and user accessibility preferences.
-
-#### 3.6.2. Color Palette and Visual Hierarchy
-
-The color palette will be built around a sophisticated dark theme with carefully chosen accent colors that provide clear visual hierarchy and status indication. The primary background will use a deep gray or blue-gray tone that reduces eye strain while providing sufficient contrast for text and interface elements.
-
-Accent colors will be used strategically to indicate different types of information: green for confirmed active domains, yellow for pending verification, red for potential security concerns, and blue for user-added tags and comments. These colors will be chosen to be accessible to users with color vision deficiencies and will include alternative visual indicators such as icons or patterns.
-
-The color system will support both dark and light themes, with the ability to switch between them based on user preference or system settings. The light theme will maintain the same visual hierarchy and information density while providing a brighter interface for users who prefer traditional light backgrounds.
-
-#### 3.6.3. Iconography and Visual Elements
-
-A comprehensive icon system will be developed to support the various functions and status indicators throughout the application. Icons will follow a consistent design language with appropriate sizing and visual weight to maintain clarity at different scales. The icon set will include representations for different domain types, enumeration sources, status indicators, and common actions.
-
-Visual elements such as loading indicators, progress bars, and status badges will be designed to provide clear feedback about system state and operation progress. Subtle animations and transitions will enhance the user experience without being distracting or performance-intensive.
-
-### 3.7. Accessibility and Usability Considerations
-
-#### 3.7.1. Accessibility Standards Compliance
-
-The application will be designed to meet WCAG 2.1 AA accessibility standards, ensuring that it can be used effectively by researchers with various abilities and assistive technologies. This includes proper semantic HTML structure, comprehensive keyboard navigation support, appropriate color contrast ratios, and screen reader compatibility.
-
-All interactive elements will be keyboard accessible, with clear focus indicators and logical tab order. The hierarchical domain display will be navigable using keyboard shortcuts, allowing users to expand and collapse sections without requiring mouse interaction. Alternative text will be provided for all visual elements, and important information will not be conveyed through color alone.
-
-#### 3.7.2. Performance and Responsiveness
-
-The interface will be optimized for performance, particularly when handling large datasets of enumerated domains. Virtual scrolling will be implemented for the main data table to ensure smooth performance with thousands of entries. Lazy loading will be used for non-critical interface elements, and the application will provide clear feedback about loading states and background operations.
-
-Response times for user interactions will be minimized through efficient state management and optimized rendering. The interface will remain responsive during background enumeration operations, with clear progress indicators and the ability to continue working with existing data while new results are being processed.
-
-### 3.8. Mobile and Cross-Platform Considerations
-
-While the application is primarily designed for desktop use, consideration will be given to mobile and tablet interfaces for scenarios where researchers need to access information while away from their primary workstation. The mobile interface will focus on read-only access to enumeration results and basic chat functionality with the LLM.
-
-The responsive design will adapt the complex desktop interface to simpler, touch-friendly layouts on mobile devices. The hierarchical domain display will be optimized for touch interaction, with larger touch targets and gesture-based navigation. Critical functionality will remain accessible across all device types, ensuring that the application can serve as a useful reference tool regardless of the access method.
-
-Cross-platform compatibility will be ensured through the use of web standards and progressive web app technologies, allowing the application to function consistently across different operating systems and browsers. The application will be designed to work offline for basic functionality, with synchronization occurring when network connectivity is restored.
+Advanced accessibility features, performance optimizations like virtual scrolling, mobile and cross-platform considerations, and sophisticated usability enhancements will be deferred to focus on core desktop functionality for the v0 prototype.
 
 
 ## 4. API Specifications and Integration Requirements
 
-### 4.1. RESTful API Design Principles
+### 4.1. MVP API Strategy
 
-The backend API for the bug bounty reconnaissance application will follow RESTful design principles, providing a clean and intuitive interface for the React frontend to interact with the underlying data and services. The API will be designed with consistency, predictability, and extensibility in mind, ensuring that it can evolve to support additional features while maintaining backward compatibility with existing clients.
+For the initial MVP, the API from the existing retrorecon project (https://github.com/thesavant42/retrorecon) will be reused to accelerate development and leverage proven functionality. This approach will allow rapid deployment of core features while collecting user feedback for future API enhancements.
 
-The API will utilize standard HTTP methods (GET, POST, PUT, DELETE) with appropriate status codes and response formats. All endpoints will return JSON-formatted responses with consistent error handling and validation messages. The API will support both synchronous operations for immediate data retrieval and asynchronous operations for long-running tasks such as domain enumeration jobs.
+A more robust and comprehensive API solution will be implemented in future versions after collecting user feedback and understanding real-world usage patterns. The retrorecon API provides sufficient functionality for the core reconnaissance workflows needed in the prototype.
 
-Authentication and authorization will be handled through API keys or JWT tokens, depending on the deployment scenario. Since the application is designed for single-user, LAN-hosted environments, the authentication mechanism will be simplified while still providing basic security measures to prevent unauthorized access.
+### 4.2. Retrorecon API Integration
 
-### 4.2. Core Domain Management API
+The existing retrorecon API will be utilized for core domain management functionality, providing proven endpoints for domain enumeration, data retrieval, and basic operations. This approach enables rapid development while leveraging battle-tested functionality.
 
-#### 4.2.1. Domain Enumeration Endpoints
+Key retrorecon API endpoints that will be reused include:
+- Domain enumeration endpoints
+- Data retrieval and filtering
+- Basic CRUD operations for domains
+- Job management for enumeration tasks
 
-The domain enumeration functionality represents the core of the application's API surface. These endpoints will handle the initiation, monitoring, and retrieval of subdomain discovery operations across multiple external services.
+### 4.3. Basic LLM Integration API
 
-**POST /api/v1/domains/enumerate**
-
-This endpoint initiates a new domain enumeration job for one or more target domains. The request body will accept a JSON payload containing the target domains, selected enumeration sources, and optional configuration parameters.
-
-```json
-{
-  "domains": ["example.com", "target.org"],
-  "sources": ["crt.sh", "virustotal", "shodan"],
-  "options": {
-    "include_wildcards": true,
-    "max_depth": 3,
-    "timeout": 300
-  }
-}
-```
-
-The response will include a job identifier that can be used to monitor the enumeration progress and retrieve results when complete. The endpoint will validate domain names, check API key availability for selected sources, and return appropriate error messages for invalid configurations.
-
-**GET /api/v1/domains/enumerate/{job_id}**
-
-This endpoint provides status information and results for a specific enumeration job. The response will include the current job status, progress percentage, discovered domains, and any error messages encountered during processing.
-
-```json
-{
-  "job_id": "enum_12345",
-  "status": "running",
-  "progress": 65,
-  "total_sources": 3,
-  "completed_sources": 2,
-  "discovered_domains": 127,
-  "errors": [],
-  "estimated_completion": "2024-01-15T14:30:00Z"
-}
-```
-
-**GET /api/v1/domains**
-
-This endpoint retrieves the complete list of discovered domains with support for filtering, sorting, and pagination. Query parameters will allow clients to filter by root domain, discovery source, date ranges, and tags.
-
-```json
-{
-  "domains": [
-    {
-      "id": 1,
-      "root_domain": "example.com",
-      "subdomain": "www.example.com",
-      "source": "crt.sh",
-      "tags": ["production", "verified"],
-      "discovered_at": "2024-01-15T12:00:00Z",
-      "status": "active"
-    }
-  ],
-  "pagination": {
-    "page": 1,
-    "per_page": 50,
-    "total": 1247,
-    "pages": 25
-  }
-}
-```
-
-#### 4.2.2. Domain Management Operations
-
-**PUT /api/v1/domains/{domain_id}**
-
-This endpoint allows updating domain metadata such as tags, comments, and status flags. The request body will contain the fields to be updated, with the API performing validation and returning the updated domain record.
-
-**DELETE /api/v1/domains/{domain_id}**
-
-This endpoint removes a domain from the database. Soft deletion will be implemented to maintain audit trails, with the option for hard deletion through administrative interfaces.
-
-**POST /api/v1/domains/bulk**
-
-This endpoint supports bulk operations on multiple domains, including bulk tagging, bulk deletion, and bulk status updates. The request body will specify the operation type and target domain identifiers.
+Simple endpoints will be added to support basic LLM chat functionality and database queries. Advanced API features will be deferred to future versions after collecting user feedback.
 
 ### 4.3. LLM Integration API
 
@@ -517,418 +386,32 @@ The response will include the AI's message, any function calls made to access da
 }
 ```
 
-**GET /api/v1/chat/conversations/{session_id}**
+### 4.4. Deferred Advanced API Features
 
-This endpoint retrieves the conversation history for a specific session, allowing the frontend to restore chat context when the application is reloaded or when switching between different research sessions.
-
-#### 4.3.2. MCP Integration Endpoints
-
-**GET /api/v1/mcp/tools**
-
-This endpoint returns the list of available MCP tools that the LLM can use to interact with the database and external services. The response will include tool descriptions, parameter schemas, and usage examples.
-
-**POST /api/v1/mcp/execute**
-
-This endpoint executes MCP tool calls on behalf of the LLM, providing a secure interface for AI-initiated database queries and API calls. The request will include the tool name and parameters, with appropriate validation and access control.
-
-### 4.4. External Service Integration API
-
-#### 4.4.1. Certificate Transparency Integration
-
-The crt.sh integration will be implemented through a dedicated service layer that handles rate limiting, response parsing, and error handling. The API will provide both direct query capabilities and batch processing for multiple domains.
-
-**GET /api/v1/external/crt/{domain}**
-
-This endpoint queries crt.sh for subdomains of the specified domain and returns normalized results. The response will include discovered subdomains, certificate details, and discovery timestamps.
-
-```json
-{
-  "domain": "example.com",
-  "subdomains": [
-    {
-      "name": "www.example.com",
-      "certificate_id": "12345",
-      "issuer": "Let's Encrypt",
-      "not_before": "2024-01-01T00:00:00Z",
-      "not_after": "2024-04-01T00:00:00Z"
-    }
-  ],
-  "query_time": "2024-01-15T14:00:00Z",
-  "total_found": 23
-}
-```
-
-#### 4.4.2. VirusTotal Integration
-
-The VirusTotal API integration will require API key management and careful rate limiting to comply with their usage policies. The integration will focus on subdomain discovery through their domain report endpoints.
-
-**GET /api/v1/external/virustotal/{domain}**
-
-This endpoint queries VirusTotal for subdomains and related information about the specified domain. The API will handle authentication, rate limiting, and response normalization.
-
-```json
-{
-  "domain": "example.com",
-  "subdomains": [
-    {
-      "name": "mail.example.com",
-      "detection_ratio": "0/89",
-      "last_analysis_date": "2024-01-10T10:00:00Z"
-    }
-  ],
-  "reputation": {
-    "harmless": 85,
-    "malicious": 0,
-    "suspicious": 2,
-    "undetected": 2
-  }
-}
-```
-
-#### 4.4.3. Shodan Integration
-
-The Shodan API integration will provide subdomain discovery through their search capabilities, with proper handling of search credits and result pagination.
-
-**GET /api/v1/external/shodan/{domain}**
-
-This endpoint searches Shodan for hosts related to the specified domain and extracts subdomain information from the results.
-
-```json
-{
-  "domain": "example.com",
-  "hosts": [
-    {
-      "ip": "192.168.1.1",
-      "hostnames": ["api.example.com"],
-      "ports": [80, 443],
-      "last_update": "2024-01-12T08:00:00Z"
-    }
-  ],
-  "total_results": 15,
-  "credits_used": 1
-}
-```
-
-### 4.5. Job Management and Background Processing API
-
-#### 4.5.1. Job Lifecycle Management
-
-The application will implement a comprehensive job management system to handle long-running enumeration tasks and provide real-time status updates to the frontend.
-
-**GET /api/v1/jobs**
-
-This endpoint returns a list of all enumeration jobs with their current status, progress information, and basic metadata. The response will support filtering by status, date ranges, and target domains.
-
-```json
-{
-  "jobs": [
-    {
-      "id": "enum_12345",
-      "type": "domain_enumeration",
-      "status": "completed",
-      "target_domains": ["example.com"],
-      "sources": ["crt.sh", "virustotal"],
-      "created_at": "2024-01-15T12:00:00Z",
-      "completed_at": "2024-01-15T12:05:00Z",
-      "results_count": 47
-    }
-  ]
-}
-```
-
-**POST /api/v1/jobs/{job_id}/cancel**
-
-This endpoint cancels a running enumeration job, stopping any in-progress API calls and cleaning up associated resources.
-
-**GET /api/v1/jobs/{job_id}/logs**
-
-This endpoint provides detailed logging information for a specific job, including API call details, error messages, and processing statistics.
-
-#### 4.5.2. Real-time Updates and WebSocket Integration
-
-To provide real-time updates about job progress and new domain discoveries, the API will include WebSocket endpoints that allow the frontend to receive live updates without polling.
-
-**WebSocket /api/v1/ws/jobs/{job_id}**
-
-This WebSocket endpoint provides real-time updates about job progress, including status changes, new domain discoveries, and error notifications.
-
-```json
-{
-  "type": "progress_update",
-  "job_id": "enum_12345",
-  "progress": 75,
-  "message": "Processing VirusTotal results...",
-  "new_domains": 3
-}
-```
-
-### 4.6. Configuration and Settings API
-
-#### 4.6.1. API Key Management
-
-The application will provide secure storage and management of API keys for external services, with encryption at rest and secure transmission.
-
-**GET /api/v1/settings/api-keys**
-
-This endpoint returns the list of configured API keys with masked values for security. Only the service name and configuration status will be visible.
-
-```json
-{
-  "api_keys": [
-    {
-      "service": "virustotal",
-      "configured": true,
-      "last_used": "2024-01-15T10:00:00Z",
-      "rate_limit_remaining": 450
-    },
-    {
-      "service": "shodan",
-      "configured": false,
-      "last_used": null,
-      "rate_limit_remaining": null
-    }
-  ]
-}
-```
-
-**PUT /api/v1/settings/api-keys/{service}**
-
-This endpoint updates the API key for a specific service, with validation to ensure the key is valid and functional.
-
-#### 4.6.2. Application Configuration
-
-**GET /api/v1/settings/config**
-
-This endpoint returns the current application configuration, including enumeration preferences, UI settings, and system parameters.
-
-**PUT /api/v1/settings/config**
-
-This endpoint updates application configuration settings, with validation and immediate application of changes where appropriate.
-
-### 4.7. Data Export and Import API
-
-#### 4.7.1. Export Functionality
-
-The API will provide comprehensive export capabilities to support integration with other security tools and backup requirements.
-
-**GET /api/v1/export/domains**
-
-This endpoint exports domain data in various formats (JSON, CSV, XML) with support for filtering and custom field selection.
-
-**GET /api/v1/export/jobs/{job_id}**
-
-This endpoint exports the complete results of a specific enumeration job, including all discovered domains, metadata, and processing logs.
-
-#### 4.7.2. Import Functionality
-
-**POST /api/v1/import/domains**
-
-This endpoint imports domain data from external sources or backup files, with validation and duplicate detection.
-
-### 4.8. Error Handling and Validation
-
-#### 4.8.1. Standardized Error Responses
-
-All API endpoints will return standardized error responses with consistent formatting and appropriate HTTP status codes.
-
-```json
-{
-  "error": {
-    "code": "INVALID_DOMAIN",
-    "message": "The provided domain name is not valid",
-    "details": {
-      "field": "domain",
-      "value": "invalid..domain",
-      "reason": "Multiple consecutive dots are not allowed"
-    },
-    "timestamp": "2024-01-15T14:00:00Z"
-  }
-}
-```
-
-#### 4.8.2. Input Validation
-
-Comprehensive input validation will be implemented for all endpoints, including domain name validation, API key format checking, and parameter range validation. The validation will provide clear error messages to help users correct their requests.
-
-### 4.9. Rate Limiting and Throttling
-
-#### 4.9.1. External API Rate Limiting
-
-The backend will implement intelligent rate limiting for external API calls to prevent exceeding service provider limits and to optimize resource usage.
-
-**GET /api/v1/rate-limits**
-
-This endpoint provides information about current rate limit status for all external services.
-
-```json
-{
-  "rate_limits": [
-    {
-      "service": "virustotal",
-      "requests_remaining": 450,
-      "reset_time": "2024-01-15T15:00:00Z",
-      "daily_limit": 500
-    }
-  ]
-}
-```
-
-#### 4.9.2. Internal API Throttling
-
-The API will implement throttling mechanisms to prevent abuse and ensure fair resource allocation, particularly important for computationally expensive operations like large-scale domain enumeration.
-
-### 4.10. Security and Authentication
-
-#### 4.10.1. API Security Measures
-
-The API will implement multiple layers of security including input sanitization, SQL injection prevention, and secure handling of sensitive data such as API keys.
-
-**POST /api/v1/auth/login**
-
-This endpoint handles user authentication and returns JWT tokens for subsequent API calls.
-
-**POST /api/v1/auth/refresh**
-
-This endpoint refreshes expired JWT tokens to maintain session continuity.
-
-#### 4.10.2. CORS Configuration
-
-The API will be configured to support Cross-Origin Resource Sharing (CORS) for the React frontend while maintaining security through appropriate origin restrictions in production environments.
-
-### 4.11. Monitoring and Logging
-
-#### 4.11.1. API Metrics and Monitoring
-
-The API will include comprehensive logging and metrics collection to support monitoring, debugging, and performance optimization.
-
-**GET /api/v1/metrics**
-
-This endpoint provides system metrics including API response times, error rates, and resource utilization statistics.
-
-#### 4.11.2. Audit Logging
-
-All API operations will be logged with appropriate detail levels to support security auditing and troubleshooting. Sensitive information such as API keys will be excluded from logs or properly masked.
-
-The comprehensive API specification outlined above provides a robust foundation for the bug bounty reconnaissance application, ensuring that all functional requirements are met while maintaining security, performance, and extensibility. The API design follows industry best practices and provides clear interfaces for all major application features, from domain enumeration to LLM integration and external service management.
+Advanced API features such as comprehensive external service integrations, sophisticated job management, real-time WebSocket updates, complex configuration management, extensive export/import capabilities, advanced error handling, rate limiting, and comprehensive monitoring will be deferred to future versions. The MVP will focus on basic functionality using the proven retrorecon API foundation.
 
 
 ## 5. Implementation Roadmap and Development Phases
 
-### 5.1. Development Methodology and Project Structure
+### 5.1. Simplified Development Approach
 
-The implementation of this bug bounty reconnaissance application will follow an agile development methodology with clearly defined phases that prioritize core functionality while allowing for iterative improvements and feature additions. The development approach will emphasize rapid prototyping and user feedback integration to ensure that the final product meets the specific needs of security researchers.
+The implementation will follow a streamlined approach focused on delivering core functionality quickly. The development will prioritize getting essential features working over comprehensive feature sets, with advanced capabilities deferred to future iterations based on user feedback.
 
-The project will be structured as a monorepo containing both the React frontend and Flask backend components, along with shared configuration files, documentation, and deployment scripts. This approach facilitates coordinated development and ensures consistency across the entire application stack. The repository structure will include separate directories for frontend components, backend services, database migrations, external service integrations, and comprehensive testing suites.
+### 5.2. Phase 1: Foundation Using Retrorecon API
 
-Version control will be managed through Git with a branching strategy that supports parallel development of different features while maintaining a stable main branch. Feature branches will be used for individual components and integrations, with pull requests requiring code review and automated testing before merging. This approach ensures code quality and facilitates knowledge sharing among team members.
+The first phase will focus on integrating the existing retrorecon API and database schema, providing a proven foundation for domain enumeration functionality. This approach accelerates development while ensuring reliable core functionality.
 
-### 5.2. Phase 1: Foundation and Core Infrastructure
+### 5.3. Phase 2: Basic UI Implementation
 
-#### 5.2.1. Database Setup and Schema Implementation
+The second phase will implement the essential spreadsheet/tree interface for domain display and basic chat functionality. Advanced UI features will be deferred to focus on core usability.
 
-The first phase of development will focus on establishing the foundational infrastructure, beginning with the database layer. The initial implementation will use SQLite for rapid development and testing, with the database schema based on the retrorecon structure but enhanced to support the additional features required by this application.
+### 5.4. Phase 3: Simple LLM Integration
 
-The database setup will include the creation of all necessary tables, indexes, and constraints as defined in the schema analysis section. Migration scripts will be developed to facilitate the eventual transition from SQLite to PostgreSQL, ensuring that data can be seamlessly transferred when the application is ready for production deployment. The migration system will be designed to handle schema evolution as new features are added during development.
+The third phase will implement basic LLM integration for chat and simple database queries, with advanced MCP features deferred to future versions.
 
-Data access layers will be implemented using SQLAlchemy ORM, providing an abstraction that supports both SQLite and PostgreSQL without requiring significant code changes. The ORM models will include appropriate relationships, validation rules, and helper methods to support the application's business logic. Database connection pooling and transaction management will be configured to ensure optimal performance and data consistency.
+### 5.5. Phase 4: Integration and Testing
 
-#### 5.2.2. Backend API Framework
-
-The Flask backend will be implemented using the application factory pattern with blueprints for different functional areas. The initial API implementation will focus on the core domain management endpoints, providing basic CRUD operations for domains, jobs, and configuration settings. The API will be designed with extensibility in mind, allowing for easy addition of new endpoints as features are developed.
-
-Authentication and authorization mechanisms will be implemented early in the development process, even though the application is designed for single-user environments. This approach ensures that security considerations are built into the foundation rather than added as an afterthought. JWT-based authentication will be used with configurable token expiration and refresh mechanisms.
-
-Error handling and logging systems will be established to provide comprehensive debugging and monitoring capabilities. The logging system will be configured to capture appropriate detail levels for different environments (development, testing, production) while ensuring that sensitive information is properly protected. Structured logging will be used to facilitate automated log analysis and monitoring.
-
-#### 5.2.3. Frontend Application Structure
-
-The React frontend will be initialized using Create React App with TypeScript configuration for enhanced development experience and code quality. The initial application structure will include the basic layout components, routing configuration, and state management setup using React Context API and useReducer hooks.
-
-The component hierarchy will be established with clear separation of concerns between presentation components, container components, and service layers. A comprehensive design system will be implemented early in the development process, including typography, color schemes, spacing systems, and reusable UI components. This design system will ensure consistency across the application and facilitate rapid development of new features.
-
-Development tooling will be configured including ESLint for code quality, Prettier for code formatting, and Jest for testing. The build system will be optimized for both development and production environments, with appropriate bundling, minification, and asset optimization strategies.
-
-### 5.3. Phase 2: Core Domain Enumeration Features
-
-#### 5.3.1. External API Integration Development
-
-The second phase will focus on implementing the core domain enumeration functionality through integration with external services. Each external API integration will be developed as a separate module with consistent interfaces and error handling patterns.
-
-The crt.sh integration will be implemented first due to its simplicity and lack of authentication requirements. This integration will serve as a template for the more complex integrations that follow. The implementation will include rate limiting, response parsing, error handling, and result normalization to ensure consistent data format across all sources.
-
-VirusTotal and Shodan integrations will follow, with careful attention to API key management, rate limiting compliance, and quota monitoring. These integrations will include comprehensive error handling for various failure scenarios including network timeouts, API quota exhaustion, and invalid responses. The integration modules will be designed to be easily testable with mock responses for development and testing environments.
-
-#### 5.3.2. Background Job Processing System
-
-A robust background job processing system will be implemented using Celery with Redis as the message broker. This system will handle the asynchronous execution of domain enumeration tasks while providing real-time status updates to the frontend application.
-
-The job system will include comprehensive monitoring and logging capabilities, allowing users to track the progress of enumeration tasks and diagnose any issues that arise. Job queues will be configured to handle different types of tasks with appropriate priority levels and resource allocation. The system will include automatic retry mechanisms for transient failures and dead letter queues for tasks that cannot be completed.
-
-WebSocket integration will be implemented to provide real-time updates to the frontend about job progress and completion. This integration will ensure that users receive immediate feedback about enumeration results without requiring manual page refreshes or polling mechanisms.
-
-#### 5.3.3. Data Normalization and Deduplication
-
-A sophisticated data processing pipeline will be developed to normalize and deduplicate enumeration results from multiple sources. This pipeline will handle the various response formats from different APIs and convert them into a consistent internal representation suitable for storage and display.
-
-The deduplication logic will be intelligent, recognizing equivalent domains that may be represented differently by various sources. The system will maintain provenance information, tracking which sources discovered each domain and when the discovery occurred. This information will be valuable for understanding the reliability and coverage of different enumeration sources.
-
-### 5.4. Phase 3: User Interface Development
-
-#### 5.4.1. Spreadsheet-Style Interface Implementation
-
-The third phase will focus on developing the sophisticated user interface components, beginning with the spreadsheet-style domain display. This component will implement the hierarchical tree structure with collapsible rows, supporting the complex domain relationships described in the user requirements.
-
-The tree component will be optimized for performance with large datasets, implementing virtual scrolling and lazy loading to ensure smooth operation with thousands of domains. The component will support keyboard navigation, accessibility features, and responsive design principles to ensure usability across different devices and user preferences.
-
-Interactive features such as inline editing, bulk operations, and context menus will be implemented with careful attention to user experience and performance. The component will include comprehensive state management to handle complex operations like multi-level sorting, filtering, and selection across the hierarchical structure.
-
-#### 5.4.2. Advanced Filtering and Search Capabilities
-
-Sophisticated filtering and search capabilities will be implemented to help users navigate large datasets efficiently. The search functionality will support multiple search modes including simple text matching, regular expressions, and structured queries with field-specific filters.
-
-The filtering system will provide both quick filters for common operations and advanced filter builders for complex queries. Filter presets will be supported, allowing users to save and reuse common filter configurations. The system will maintain filter state across user sessions and provide clear visual indicators of active filters.
-
-Search and filter operations will be optimized for performance, with appropriate indexing and caching strategies to ensure responsive operation even with large datasets. The implementation will include debounced search input to prevent excessive API calls and provide smooth user experience.
-
-#### 5.4.3. Data Visualization and Export Features
-
-Data visualization components will be developed to provide insights into enumeration results and discovery patterns. These visualizations will include timeline views showing discovery patterns over time, source comparison charts showing the effectiveness of different enumeration methods, and domain relationship graphs for complex subdomain hierarchies.
-
-Export functionality will be implemented to support integration with other security tools and reporting requirements. Multiple export formats will be supported including CSV, JSON, XML, and specialized formats for popular security tools. The export system will support both full dataset exports and filtered subsets based on current search and filter criteria.
-
-### 5.5. Phase 4: LLM Integration and MCP Implementation
-
-#### 5.5.1. OpenAI-Compatible API Client Development
-
-The fourth phase will focus on implementing the LLM integration features, beginning with the development of a robust OpenAI-compatible API client. This client will handle authentication, request formatting, response processing, and error handling for communication with various LLM providers.
-
-The client will support both streaming and non-streaming response modes, with appropriate handling for function calling and tool use scenarios. Rate limiting and quota management will be implemented to prevent excessive API usage and associated costs. The client will be designed to work with multiple LLM providers while maintaining a consistent interface for the rest of the application.
-
-Conversation management will be implemented with support for context preservation, conversation history, and session management. The system will include mechanisms for managing conversation length and token usage to optimize performance and cost efficiency.
-
-#### 5.5.2. Model Context Protocol (MCP) Server Implementation
-
-A comprehensive MCP server will be developed to provide the LLM with access to the application's database and external services. This server will implement the MCP specification with tools for querying domain data, initiating enumeration jobs, and accessing external information sources.
-
-The MCP server will include security measures to ensure that LLM access to sensitive data and operations is properly controlled. Tool implementations will include comprehensive validation and error handling to prevent unintended operations or data corruption. The server will maintain audit logs of all LLM-initiated operations for security and debugging purposes.
-
-Integration with the main Flask application will be seamless, with shared database connections and configuration management. The MCP server will be designed to scale independently if needed, supporting high-volume LLM interactions without impacting the main application performance.
-
-#### 5.5.3. Chat Interface Development
-
-The chat interface will be implemented as a sophisticated React component with support for rich text rendering, conversation history, and real-time message streaming. The interface will include features such as message editing, conversation branching, and context management to provide a professional AI interaction experience.
-
-Integration with the domain management interface will be seamless, allowing users to reference specific domains in chat messages and receive contextual responses based on current enumeration data. The chat interface will support drag-and-drop operations for adding domains to conversations and will provide visual indicators when the LLM is accessing database information.
-
-### 5.6. Phase 5: Advanced Features and Optimization
-
-#### 5.6.1. Performance Optimization and Caching
-
-The fifth phase will focus on performance optimization and advanced features. Comprehensive caching strategies will be implemented at multiple levels including database query caching, API response caching, and frontend component caching. The caching system will be intelligent, invalidating cached data when underlying information changes while maximizing cache hit rates for frequently accessed data.
-
-Database query optimization will be performed with analysis of common query patterns and implementation of appropriate indexes and query restructuring. The application will be profiled under realistic load conditions to identify and address performance bottlenecks.
-
-Frontend performance optimization will include code splitting, lazy loading, and bundle optimization to ensure fast initial load times and smooth operation. The application will be tested across different devices and network conditions to ensure consistent performance.
+The final phase will focus on integration testing, basic performance optimization, and preparation for user feedback collection to guide future development priorities.
 
 #### 5.6.2. Advanced Analytics and Reporting
 
@@ -970,7 +453,7 @@ Installation and configuration scripts will be developed to simplify the deploym
 
 The development environment for this bug bounty reconnaissance application requires careful consideration of dependencies, external service integrations, and development workflow optimization. The local setup will be designed to minimize friction for developers while maintaining consistency with production environments.
 
-The development stack will require Node.js for the React frontend development, Python for the Flask backend, and Redis for background job processing. Docker Compose will be used to orchestrate these services in development, ensuring that all developers work with identical service configurations and versions. The Docker setup will include hot reloading for both frontend and backend components to support rapid development iteration.
+The development stack will require Node.js for the React frontend development and Python for the Flask backend. Docker Compose will be used to orchestrate these services in development, ensuring that all developers work with identical service configurations and versions. The Docker setup will include hot reloading for both frontend and backend components to support rapid development iteration.
 
 Database setup in development will use SQLite for simplicity and speed, with the option to use PostgreSQL in Docker containers when testing migration scenarios or PostgreSQL-specific features. The development database will be seeded with sample data to support testing and development of UI components without requiring actual enumeration operations.
 
@@ -1026,7 +509,7 @@ Resource planning will consider the expected workload characteristics including 
 
 Database scalability will be addressed through appropriate indexing strategies, query optimization, and data archival procedures. The application will include mechanisms for managing large datasets efficiently, including pagination, filtering, and data compression where appropriate. Database maintenance procedures will be designed to scale with data volume while minimizing impact on application availability.
 
-Background job processing scalability will be achieved through appropriate queue management and worker process configuration. The Celery-based job system will be configured to handle varying workloads efficiently while preventing resource exhaustion. Job prioritization and resource allocation will be implemented to ensure that critical operations receive appropriate attention.
+Background job processing scalability will be achieved through appropriate thread management and asyncio configuration. The native Python threading/asyncio-based job system will be configured to handle varying workloads efficiently while preventing resource exhaustion. Job prioritization and resource allocation will be implemented to ensure that critical operations receive appropriate attention.
 
 ### 6.7. Backup and Disaster Recovery
 
