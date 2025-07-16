@@ -1,5 +1,144 @@
 # General Specification for a Bug Bounty Reconnaissance Application
 
+## Table of Contents
+
+1. **Database Schema Analysis and Compatibility**
+    - 1.1 Retrorecon Database Schema Overview
+    - 1.2 Analysis of the `domains` Table
+    - 1.3 Compatibility with User Requirements
+        - 1.3.1 Spreadsheet-like Interface and Collapsible Rows
+        - 1.3.2 SQLite to PostgreSQL Transition
+        - 1.3.3 API Compatibility
+    - 1.4 Recommendations for Subdomain Enumeration Services
+
+2. **System Architecture and Technical Specifications**
+    - 2.1 High-Level Architecture Overview
+    - 2.2 Frontend Architecture
+        - 2.2.1 React Application Structure
+        - 2.2.2 State Management
+        - 2.2.3 Styling and UI Framework
+    - 2.3 Backend Architecture
+        - 2.3.1 Flask Application Structure
+        - 2.3.2 Database Integration
+        - 2.3.3 Background Task Processing
+    - 2.4 LLM Integration Architecture
+        - 2.4.1 Model Context Protocol (MCP) Integration
+        - 2.4.2 OpenAI-Compatible API Integration
+    - 2.5 External API Integration
+        - 2.5.1 Certificate Transparency (crt.sh)
+        - 2.5.2 VirusTotal API
+        - 2.5.3 Shodan API
+    - 2.6 Security Considerations
+        - 2.6.1 API Key Management
+        - 2.6.2 Input Validation
+        - 2.6.3 Rate Limiting
+    - 2.7 Performance Considerations
+        - 2.7.1 Database Optimization
+        - 2.7.2 Caching
+        - 2.7.3 Asynchronous Processing
+
+3. **UI/UX Specifications and Design Guidelines**
+    - 3.1 Design Philosophy and FANG-Style Principles
+    - 3.2 Layout Architecture and Viewport Management
+        - 3.2.1 Split Viewport Design
+        - 3.2.2 Responsive Design Considerations
+    - 3.3 LLM Chat Interface Design
+        - 3.3.1 Conversation Layout and Message Rendering
+        - 3.3.2 Context Awareness and Integration
+    - 3.4 Reconnaissance Dashboard Design
+        - 3.4.1 Spreadsheet-Style Interface
+        - 3.4.2 Hierarchical Domain Display
+        - 3.4.3 Interactive Features and Bulk Operations
+    - 3.5 Navigation and Information Architecture
+        - 3.5.1 Primary Navigation Structure
+        - 3.5.2 Search and Discovery Features
+    - 3.6 Visual Design System
+        - 3.6.1 Typography and Readability
+        - 3.6.2 Color Palette and Visual Hierarchy
+        - 3.6.3 Iconography and Visual Elements
+    - 3.7 Accessibility and Usability Considerations
+        - 3.7.1 Accessibility Standards Compliance
+        - 3.7.2 Performance and Responsiveness
+    - 3.8 Mobile and Cross-Platform Considerations
+
+4. **API Specifications and Integration Requirements**
+    - 4.1 RESTful API Design Principles
+    - 4.2 Core Domain Management API
+        - 4.2.1 Domain Enumeration Endpoints
+        - 4.2.2 Domain Management Operations
+    - 4.3 LLM Integration API
+        - 4.3.1 Chat Interface Endpoints
+        - 4.3.2 MCP Integration Endpoints
+    - 4.4 External Service Integration API
+        - 4.4.1 Certificate Transparency Integration
+        - 4.4.2 VirusTotal Integration
+        - 4.4.3 Shodan Integration
+    - 4.5 Job Management and Background Processing API
+        - 4.5.1 Job Lifecycle Management
+        - 4.5.2 Real-time Updates and WebSocket Integration
+    - 4.6 Configuration and Settings API
+        - 4.6.1 API Key Management
+        - 4.6.2 Application Configuration
+    - 4.7 Data Export and Import API
+        - 4.7.1 Export Functionality
+        - 4.7.2 Import Functionality
+    - 4.8 Error Handling and Validation
+        - 4.8.1 Standardized Error Responses
+        - 4.8.2 Input Validation
+    - 4.9 Rate Limiting and Throttling
+        - 4.9.1 External API Rate Limiting
+        - 4.9.2 Internal API Throttling
+    - 4.10 Security and Authentication
+        - 4.10.1 API Security Measures
+        - 4.10.2 CORS Configuration
+    - 4.11 Monitoring and Logging
+        - 4.11.1 API Metrics and Monitoring
+        - 4.11.2 Audit Logging
+
+5. **Implementation Roadmap and Development Phases**
+    - 5.1 Development Methodology and Project Structure
+    - 5.2 Phase 1: Foundation and Core Infrastructure
+        - 5.2.1 Database Setup and Schema Implementation
+        - 5.2.2 Backend API Framework
+        - 5.2.3 Frontend Application Structure
+    - 5.3 Phase 2: Core Domain Enumeration Features
+        - 5.3.1 External API Integration Development
+        - 5.3.2 Background Job Processing System
+        - 5.3.3 Data Normalization and Deduplication
+    - 5.4 Phase 3: User Interface Development
+        - 5.4.1 Spreadsheet-Style Interface Implementation
+        - 5.4.2 Advanced Filtering and Search Capabilities
+        - 5.4.3 Data Visualization and Export Features
+    - 5.5 Phase 4: LLM Integration and MCP Implementation
+        - 5.5.1 OpenAI-Compatible API Client Development
+        - 5.5.2 Model Context Protocol (MCP) Server Implementation
+        - 5.5.3 Chat Interface Development
+    - 5.6 Phase 5: Advanced Features and Optimization
+        - 5.6.1 Performance Optimization and Caching
+        - 5.6.2 Advanced Analytics and Reporting
+        - 5.6.3 Integration and Extensibility Features
+    - 5.7 Phase 6: Testing, Documentation, and Deployment
+        - 5.7.1 Comprehensive Testing Strategy
+        - 5.7.2 Documentation and User Guides
+        - 5.7.3 Deployment and Distribution
+
+6. **Deployment Considerations and Infrastructure Requirements**
+    - 6.1 Local Development Environment Setup
+    - 6.2 LAN Deployment Architecture
+    - 6.3 Database Migration Strategy
+    - 6.4 Security Hardening and Access Control
+    - 6.5 Monitoring and Maintenance Procedures
+    - 6.6 Scalability and Resource Planning
+    - 6.7 Backup and Disaster Recovery
+
+7. **Conclusion and Future Enhancements**
+    - 7.1 Summary of Specification Achievements
+    - 7.2 Key Innovation Areas
+    - 7.3 Potential Future Enhancements
+    - 7.4 Impact on Security Research Workflows
+    - 7.5 Technical Excellence and Best Practices
+    - 7.6 Final Recommendations
+
 ## 1. Database Schema Analysis and Compatibility
 
 ### 1.1. Retrorecon Database Schema Overview
