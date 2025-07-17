@@ -1,18 +1,19 @@
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
+import type { FunctionCall, MCPToolParameters, ContextData, StreamingChatChunk } from '../types';
 
 export interface ChatMessage {
   id?: number;
   role: 'user' | 'assistant' | 'system';
   content: string;
-  function_calls?: any[];
+  function_calls?: FunctionCall[];
   created_at?: string;
 }
 
 export interface ChatResponse {
   content: string;
   role: string;
-  function_calls?: any[];
+  function_calls?: FunctionCall[];
   usage?: {
     prompt_tokens: number;
     completion_tokens: number;
@@ -42,7 +43,7 @@ export interface MCPTool {
   function: {
     name: string;
     description: string;
-    parameters: any;
+    parameters: MCPToolParameters;
   };
 }
 
@@ -126,12 +127,7 @@ class ChatService {
     return response.data.data;
   }
 
-  async getContext(): Promise<{
-    recent_domains: any[];
-    active_jobs: any[];
-    recent_urls: any[];
-    timestamp: string;
-  }> {
+  async getContext(): Promise<ContextData> {
     const token = localStorage.getItem('token');
     const response = await axios.get(`${this.baseURL}/chat/context`, {
       headers: {
@@ -179,7 +175,7 @@ class ChatService {
     return response.data.data.tools;
   }
 
-  async executeMCPTool(toolName: string, args: any): Promise<any> {
+  async executeMCPTool(toolName: string, args: Record<string, unknown>): Promise<unknown> {
     const token = localStorage.getItem('token');
     const response = await axios.post(
       `${this.baseURL}/mcp/execute`,
@@ -203,9 +199,9 @@ class ChatService {
     message: string,
     conversationHistory: ChatMessage[] = [],
     context: ChatContext = {},
-    onChunk: (chunk: any) => void,
+    onChunk: (chunk: StreamingChatChunk) => void,
     onComplete: () => void,
-    onError: (error: any) => void
+    onError: (error: Error) => void
   ): Promise<void> {
     const token = localStorage.getItem('token');
     
