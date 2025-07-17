@@ -74,8 +74,10 @@ class TestJobProcessing:
         """Test enumeration service with Celery"""
         service = EnumerationService()
 
-        with patch("app.tasks.domain_enumeration.enumerate_domains_task") as mock_task:
+        with patch("app.tasks.domain_enumeration.enumerate_domains_task") as mock_task, \
+             patch("app.tasks.notifications.send_job_notification_task") as mock_notification:
             mock_task.delay.return_value = MagicMock(id="test-task-id")
+            mock_notification.delay.return_value = MagicMock(id="notification-task-id")
 
             job = service.start_enumeration(
                 domains=["example.com"], sources=["crt.sh"], options={}
@@ -89,6 +91,9 @@ class TestJobProcessing:
             mock_task.delay.assert_called_once_with(
                 job.id, ["example.com"], ["crt.sh"], {}
             )
+            
+            # Check notification was called
+            mock_notification.delay.assert_called_once_with(job.id, "started")
 
     def test_enumeration_service_invalid_source(self, client):
         """Test enumeration service with invalid source"""
@@ -103,8 +108,11 @@ class TestJobProcessing:
         """Test job cancellation with Celery task revocation"""
         service = EnumerationService()
 
-        with patch("app.tasks.domain_enumeration.enumerate_domains_task") as mock_task:
+        with patch("app.tasks.domain_enumeration.enumerate_domains_task") as mock_task, \
+             patch("app.tasks.notifications.send_job_notification_task") as mock_notification, \
+             patch("celery_app.celery_app.control.revoke") as mock_revoke:
             mock_task.delay.return_value = MagicMock(id="test-task-id")
+            mock_notification.delay.return_value = MagicMock(id="notification-task-id")
 
             # Start job
             job = service.start_enumeration(
@@ -112,18 +120,17 @@ class TestJobProcessing:
             )
 
             # Cancel job
-            with patch("celery_app.celery_app.control.revoke") as mock_revoke:
-                success = service.cancel_enumeration(job.id)
+            success = service.cancel_enumeration(job.id)
 
-                assert success is True
+            assert success is True
 
-                # Refresh job from database
-                db.session.refresh(job)
-                assert job.status == "cancelled"
-                assert job.error_message == "Job cancelled by user"
+            # Refresh job from database
+            db.session.refresh(job)
+            assert job.status == "cancelled"
+            assert job.error_message == "Job cancelled by user"
 
-                # Check task was revoked
-                mock_revoke.assert_called_once_with("test-task-id", terminate=True)
+            # Check task was revoked
+            mock_revoke.assert_called_once_with("test-task-id", terminate=True)
 
     def test_job_status_with_celery_task_info(self, client):
         """Test job status including Celery task information"""

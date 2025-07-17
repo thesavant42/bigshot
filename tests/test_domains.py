@@ -4,6 +4,7 @@ Tests for domain endpoints
 
 import pytest
 import json
+from unittest.mock import patch, MagicMock
 from app import db
 from app.models.models import Domain
 
@@ -178,12 +179,17 @@ class TestDomains:
             "options": {},
         }
 
-        response = client.post(
-            "/api/v1/domains/enumerate", json=enumeration_data, headers=auth_headers
-        )
+        with patch("app.tasks.domain_enumeration.enumerate_domains_task") as mock_task, \
+             patch("app.tasks.notifications.send_job_notification_task") as mock_notification:
+            mock_task.delay.return_value = MagicMock(id="test-task-id")
+            mock_notification.delay.return_value = MagicMock(id="notification-task-id")
 
-        assert response.status_code == 202
-        data = response.get_json()
-        assert data["success"] is True
-        assert data["data"]["type"] == "domain_enumeration"
-        assert data["data"]["status"] == "pending"
+            response = client.post(
+                "/api/v1/domains/enumerate", json=enumeration_data, headers=auth_headers
+            )
+
+            assert response.status_code == 202
+            data = response.get_json()
+            assert data["success"] is True
+            assert data["data"]["type"] == "domain_enumeration"
+            assert data["data"]["status"] == "pending"
