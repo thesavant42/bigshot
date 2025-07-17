@@ -24,6 +24,16 @@ def create_app(config_class=Config):
     jwt.init_app(app)
     cors.init_app(app)
     
+    # Initialize Celery
+    from celery_app import create_celery_app
+    celery = create_celery_app(app)
+    app.celery = celery
+    
+    # Initialize WebSocket service
+    from app.services.websocket import websocket_service
+    websocket_service.init_app(app)
+    app.socketio = websocket_service.socketio
+    
     # Register blueprints
     from app.api.domains import domains_bp
     from app.api.jobs import jobs_bp
