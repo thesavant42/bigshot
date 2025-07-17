@@ -68,7 +68,7 @@ def get_domains():
 def get_domain(domain_id):
     """Get a specific domain"""
     try:
-        domain = Domain.query.get(domain_id)
+        domain = db.session.get(Domain, domain_id)
         if not domain:
             return error_response("Domain not found", 404)
         return success_response(domain.to_dict())
@@ -121,7 +121,7 @@ def create_domain():
 def update_domain(domain_id):
     """Update a domain"""
     try:
-        domain = Domain.query.get(domain_id)
+        domain = db.session.get(Domain, domain_id)
         if not domain:
             return error_response("Domain not found", 404)
 
@@ -146,7 +146,7 @@ def update_domain(domain_id):
 def delete_domain(domain_id):
     """Delete a domain"""
     try:
-        domain = Domain.query.get(domain_id)
+        domain = db.session.get(Domain, domain_id)
         if not domain:
             return error_response("Domain not found", 404)
 

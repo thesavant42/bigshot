@@ -23,7 +23,7 @@ def normalize_domains_task(self, job_id=None):
     try:
         # Get or create job record
         if job_id:
-            job = Job.query.get(job_id)
+            job = db.session.get(Job, job_id)
             if not job:
                 job = Job(type="data_normalization", status="running", progress=0)
                 db.session.add(job)
@@ -117,7 +117,7 @@ def normalize_domains_task(self, job_id=None):
     except Exception as e:
         # Update job with error
         if job_id:
-            job = Job.query.get(job_id)
+            job = db.session.get(Job, job_id)
             if job:
                 job.status = "failed"
                 job.error_message = str(e)
@@ -137,7 +137,7 @@ def deduplicate_domains_task(self, job_id=None):
     try:
         # Get or create job record
         if job_id:
-            job = Job.query.get(job_id)
+            job = db.session.get(Job, job_id)
             if not job:
                 job = Job(type="data_deduplication", status="running", progress=0)
                 db.session.add(job)
@@ -236,7 +236,7 @@ def deduplicate_domains_task(self, job_id=None):
     except Exception as e:
         # Update job with error
         if job_id:
-            job = Job.query.get(job_id)
+            job = db.session.get(Job, job_id)
             if job:
                 job.status = "failed"
                 job.error_message = str(e)
@@ -259,7 +259,7 @@ def cleanup_old_domains_task(self, days_old=30, job_id=None):
 
         # Get or create job record
         if job_id:
-            job = Job.query.get(job_id)
+            job = db.session.get(Job, job_id)
             if not job:
                 job = Job(type="data_cleanup", status="running", progress=0)
                 db.session.add(job)
@@ -332,7 +332,7 @@ def cleanup_old_domains_task(self, days_old=30, job_id=None):
     except Exception as e:
         # Update job with error
         if job_id:
-            job = Job.query.get(job_id)
+            job = db.session.get(Job, job_id)
             if job:
                 job.status = "failed"
                 job.error_message = str(e)

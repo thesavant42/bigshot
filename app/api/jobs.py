@@ -62,7 +62,7 @@ def get_jobs():
 def get_job(job_id):
     """Get a specific job"""
     try:
-        job = Job.query.get(job_id)
+        job = db.session.get(Job, job_id)
         if not job:
             return error_response("Job not found", 404)
         return success_response(job.to_dict())
@@ -75,7 +75,7 @@ def get_job(job_id):
 def cancel_job(job_id):
     """Cancel a running job"""
     try:
-        job = Job.query.get(job_id)
+        job = db.session.get(Job, job_id)
         if not job:
             return error_response("Job not found", 404)
 
@@ -102,7 +102,9 @@ def cancel_job(job_id):
 def get_job_logs(job_id):
     """Get logs for a specific job"""
     try:
-        job = Job.query.get_or_404(job_id)
+        job = db.session.get(Job, job_id)
+        if not job:
+            return error_response("Job not found", 404)
 
         job_manager = JobManager()
         logs = job_manager.get_job_logs(job_id)
@@ -118,7 +120,9 @@ def get_job_logs(job_id):
 def get_job_status(job_id):
     """Get detailed status for a specific job"""
     try:
-        job = Job.query.get_or_404(job_id)
+        job = db.session.get(Job, job_id)
+        if not job:
+            return error_response("Job not found", 404)
 
         job_manager = JobManager()
         detailed_status = job_manager.get_job_status(job_id)
@@ -136,7 +140,9 @@ def get_job_status(job_id):
 def get_job_results(job_id):
     """Get results for a completed job"""
     try:
-        job = Job.query.get_or_404(job_id)
+        job = db.session.get(Job, job_id)
+        if not job:
+            return error_response("Job not found", 404)
 
         if job.status != "completed":
             return error_response("Job is not completed", 400)
@@ -210,7 +216,9 @@ def start_data_cleanup():
 def get_job_task_status(job_id):
     """Get Celery task status for a job"""
     try:
-        job = Job.query.get_or_404(job_id)
+        job = db.session.get(Job, job_id)
+        if not job:
+            return error_response("Job not found", 404)
 
         task_status = None
         if job.result:

@@ -3,7 +3,7 @@ Utility functions for API responses
 """
 
 from flask import jsonify
-from datetime import datetime
+from datetime import datetime, UTC
 
 
 def success_response(data, status_code=200):
@@ -11,7 +11,7 @@ def success_response(data, status_code=200):
     response = {
         "success": True,
         "data": data,
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
     return jsonify(response), status_code
 
@@ -21,7 +21,7 @@ def error_response(message, status_code=400, error_code=None):
     response = {
         "success": False,
         "error": {"message": message, "code": error_code or f"HTTP_{status_code}"},
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
     return jsonify(response), status_code
 
@@ -39,7 +39,7 @@ def paginated_response(data, total, page, per_page, pages):
             "has_next": page < pages,
             "has_prev": page > 1,
         },
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
     return jsonify(response), 200
 
@@ -53,6 +53,6 @@ def validation_error_response(errors):
             "code": "VALIDATION_ERROR",
             "details": errors,
         },
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
     return jsonify(response), 400

@@ -21,7 +21,7 @@ def send_job_notification_task(self, job_id, notification_type, recipients=None)
     """
 
     try:
-        job = Job.query.get(job_id)
+        job = db.session.get(Job, job_id)
         if not job:
             raise Exception(f"Job {job_id} not found")
 
@@ -137,7 +137,7 @@ def broadcast_job_update_task(self, job_id, update_type, data=None):
     """
 
     try:
-        job = Job.query.get(job_id)
+        job = db.session.get(Job, job_id)
         if not job:
             raise Exception(f"Job {job_id} not found")
 
