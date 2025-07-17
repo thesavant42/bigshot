@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Bars3Icon, XMarkIcon, MagnifyingGlassIcon, ChartBarIcon, CogIcon } from '@heroicons/react/24/outline';
 import { useWebSocket } from '../../hooks/useWebSocket';
-import { useKeyboard } from '../../contexts/KeyboardContext';
+import { useKeyboard } from '../../hooks/useKeyboard';
 import ThemeToggle from '../ThemeToggle';
 import StatusBadge from '../StatusBadge';
 import ChatInterface from '../chat/ChatInterface';

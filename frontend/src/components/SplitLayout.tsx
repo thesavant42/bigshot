@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { ChatBubbleLeftRightIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import { useKeyboard } from '../contexts/KeyboardContext';
+import { useKeyboard } from '../hooks/useKeyboard';
 import ChatInterface from './ChatInterface';
 
 interface SplitLayoutProps {

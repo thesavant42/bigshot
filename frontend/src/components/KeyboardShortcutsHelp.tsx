@@ -1,5 +1,5 @@
 import React from 'react';
-import { useKeyboard } from '../contexts/KeyboardContext';
+import { useKeyboard } from '../hooks/useKeyboard';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 
 const KeyboardShortcutsHelp: React.FC = () => {
