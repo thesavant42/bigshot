@@ -153,6 +153,22 @@ class ApiService {
   async updateApiKey(service: string, key: string): Promise<void> {
     await this.api.put(`/settings/api-keys/${service}`, { key });
   }
+
+  // Health and monitoring endpoints
+  async get(path: string): Promise<any> {
+    const response = await this.api.get(path);
+    return response.data;
+  }
+
+  async put(path: string, data: any): Promise<any> {
+    const response = await this.api.put(path, data);
+    return response.data;
+  }
+
+  async post(path: string, data: any): Promise<any> {
+    const response = await this.api.post(path, data);
+    return response.data;
+  }
 }
 
 export const apiService = new ApiService();
