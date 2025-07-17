@@ -2,27 +2,26 @@
 Domain enumeration service
 """
 
-import asyncio
-import aiohttp
 import json
 from datetime import datetime
 from app import db
 from app.models.models import Job, Domain, APIKey
-from app.services.external_apis import CertificateTransparencyAPI, VirusTotalAPI, ShodanAPI
 
 
 class EnumerationService:
     """Service for managing domain enumeration jobs"""
     
     def __init__(self):
-        self.supported_sources = {
-            'crt.sh': CertificateTransparencyAPI(),
-            'virustotal': VirusTotalAPI(),
-            'shodan': ShodanAPI()
-        }
+        self.supported_sources = ['crt.sh', 'virustotal', 'shodan']
     
     def start_enumeration(self, domains, sources, options):
-        """Start a new enumeration job"""
+        """Start a new enumeration job using Celery"""
+        
+        # Validate sources
+        invalid_sources = [s for s in sources if s not in self.supported_sources]
+        if invalid_sources:
+            raise ValueError(f"Unsupported sources: {invalid_sources}")
+        
         # Create job record
         job = Job(
             type='domain_enumeration',
@@ -34,104 +33,78 @@ class EnumerationService:
         db.session.add(job)
         db.session.commit()
         
-        # Start background task
-        self._start_background_enumeration(job.id, domains, sources, options)
+        # Start Celery task
+        from app.tasks.domain_enumeration import enumerate_domains_task
+        task = enumerate_domains_task.delay(job.id, domains, sources, options)
+        
+        # Store task ID for potential cancellation
+        if job.result:
+            result_data = json.loads(job.result)
+        else:
+            result_data = {}
+        
+        result_data['task_id'] = task.id
+        job.result = json.dumps(result_data)
+        db.session.commit()
+        
+        # Send notification about job start
+        from app.tasks.notifications import send_job_notification_task
+        send_job_notification_task.delay(job.id, 'started')
         
         return job
     
-    def _start_background_enumeration(self, job_id, domains, sources, options):
-        """Start background enumeration task"""
-        # In a real application, this would use Celery or similar
-        # For now, we'll simulate with a simple async task
-        import threading
+    def start_single_enumeration(self, domain, source, api_key=None):
+        """Start enumeration for a single domain and source"""
         
-        def run_enumeration():
-            asyncio.run(self._run_enumeration(job_id, domains, sources, options))
+        # Validate source
+        if source not in self.supported_sources:
+            raise ValueError(f"Unsupported source: {source}")
         
-        thread = threading.Thread(target=run_enumeration)
-        thread.daemon = True
-        thread.start()
+        # Start Celery task
+        from app.tasks.domain_enumeration import enumerate_single_domain_task
+        task = enumerate_single_domain_task.delay(domain, source, api_key)
+        
+        return {
+            'task_id': task.id,
+            'domain': domain,
+            'source': source,
+            'status': 'pending'
+        }
     
-    async def _run_enumeration(self, job_id, domains, sources, options):
-        """Run the actual enumeration"""
+    def cancel_enumeration(self, job_id):
+        """Cancel an enumeration job"""
+        
         job = Job.query.get(job_id)
         if not job:
-            return
+            return False
         
-        try:
-            job.status = 'running'
-            db.session.commit()
-            
-            total_domains = len(domains)
-            total_sources = len(sources)
-            total_tasks = total_domains * total_sources
-            completed_tasks = 0
-            
-            all_results = []
-            
-            for domain in domains:
-                for source in sources:
-                    try:
-                        # Update progress
-                        progress = int((completed_tasks / total_tasks) * 100)
-                        job.progress = progress
-                        db.session.commit()
-                        
-                        # Run enumeration for this domain and source
-                        if source in self.supported_sources:
-                            api = self.supported_sources[source]
-                            
-                            # Get API key if needed
-                            api_key = None
-                            if source in ['virustotal', 'shodan']:
-                                key_record = APIKey.query.filter_by(service=source).first()
-                                if key_record:
-                                    api_key = key_record.key_value
-                            
-                            # Run enumeration
-                            results = await api.enumerate_domain(domain, api_key)
-                            
-                            # Store results
-                            for subdomain in results:
-                                existing = Domain.query.filter_by(
-                                    subdomain=subdomain,
-                                    source=source
-                                ).first()
-                                
-                                if not existing:
-                                    domain_record = Domain(
-                                        root_domain=domain,
-                                        subdomain=subdomain,
-                                        source=source,
-                                        fetched_at=datetime.utcnow()
-                                    )
-                                    db.session.add(domain_record)
-                                    all_results.append(subdomain)
-                        
-                        completed_tasks += 1
-                        
-                    except Exception as e:
-                        # Log error but continue with other tasks
-                        print(f"Error enumerating {domain} from {source}: {e}")
-                        completed_tasks += 1
-            
-            # Commit all results
-            db.session.commit()
-            
-            # Update job status
-            job.status = 'completed'
-            job.progress = 100
-            job.result = json.dumps({
-                'total_found': len(all_results),
-                'domains_found': all_results[:100]  # Limit for storage
-            })
-            db.session.commit()
-            
-        except Exception as e:
-            # Job failed
-            job.status = 'failed'
-            job.error_message = str(e)
-            db.session.commit()
+        if job.status not in ['pending', 'running']:
+            return False
+        
+        # Get task ID from job result
+        task_id = None
+        if job.result:
+            try:
+                result_data = json.loads(job.result)
+                task_id = result_data.get('task_id')
+            except json.JSONDecodeError:
+                pass
+        
+        # Cancel Celery task
+        if task_id:
+            from celery_app import celery_app
+            celery_app.control.revoke(task_id, terminate=True)
+        
+        # Update job status
+        job.status = 'cancelled'
+        job.error_message = 'Job cancelled by user'
+        db.session.commit()
+        
+        # Send notification about job cancellation
+        from app.tasks.notifications import send_job_notification_task
+        send_job_notification_task.delay(job_id, 'cancelled')
+        
+        return True
     
     def get_job_status(self, job_id):
         """Get job status"""
@@ -139,23 +112,59 @@ class EnumerationService:
         if not job:
             return None
         
+        # Get task status if available
+        task_status = None
+        if job.result:
+            try:
+                result_data = json.loads(job.result)
+                task_id = result_data.get('task_id')
+                if task_id:
+                    from celery_app import celery_app
+                    task = celery_app.AsyncResult(task_id)
+                    task_status = {
+                        'task_id': task_id,
+                        'state': task.state,
+                        'info': task.info
+                    }
+            except json.JSONDecodeError:
+                pass
+        
         return {
             'id': job.id,
             'status': job.status,
             'progress': job.progress,
             'created_at': job.created_at.isoformat() if job.created_at else None,
-            'updated_at': job.updated_at.isoformat() if job.updated_at else None
+            'updated_at': job.updated_at.isoformat() if job.updated_at else None,
+            'task_status': task_status
         }
     
-    def cancel_job(self, job_id):
-        """Cancel a running job"""
-        job = Job.query.get(job_id)
-        if not job:
-            return False
+    def get_enumeration_stats(self):
+        """Get enumeration statistics"""
         
-        if job.status in ['pending', 'running']:
-            job.status = 'cancelled'
-            db.session.commit()
-            return True
+        # Get job statistics
+        from sqlalchemy import func
         
-        return False
+        # Jobs by status
+        status_counts = db.session.query(
+            Job.status,
+            func.count(Job.id).label('count')
+        ).filter(
+            Job.type == 'domain_enumeration'
+        ).group_by(Job.status).all()
+        
+        # Recent jobs
+        recent_jobs = Job.query.filter(
+            Job.type == 'domain_enumeration'
+        ).order_by(Job.created_at.desc()).limit(10).all()
+        
+        # Domain statistics
+        domain_stats = db.session.query(
+            Domain.source,
+            func.count(Domain.id).label('count')
+        ).group_by(Domain.source).all()
+        
+        return {
+            'job_status_counts': {status: count for status, count in status_counts},
+            'recent_jobs': [job.to_dict() for job in recent_jobs],
+            'domain_source_counts': {source: count for source, count in domain_stats}
+        }

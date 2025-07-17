@@ -2,6 +2,7 @@
 Job management API endpoints
 """
 
+import json
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app import db
@@ -165,30 +166,100 @@ def get_job_results(job_id):
 def get_job_stats():
     """Get job statistics"""
     try:
-        from sqlalchemy import func
-        
-        # Get job counts by status
-        status_counts = db.session.query(
-            Job.status,
-            func.count(Job.id).label('count')
-        ).group_by(Job.status).all()
-        
-        # Get job counts by type
-        type_counts = db.session.query(
-            Job.type,
-            func.count(Job.id).label('count')
-        ).group_by(Job.type).all()
-        
-        # Get recent jobs
-        recent_jobs = Job.query.order_by(
-            Job.created_at.desc()
-        ).limit(10).all()
-        
-        return success_response({
-            "status_counts": {status: count for status, count in status_counts},
-            "type_counts": {job_type: count for job_type, count in type_counts},
-            "recent_jobs": [job.to_dict() for job in recent_jobs]
-        })
+        job_manager = JobManager()
+        stats = job_manager.get_job_statistics()
+        return success_response(stats)
         
     except Exception as e:
         return error_response(f"Failed to fetch job statistics: {str(e)}", 500)
+
+
+@jobs_bp.route('/jobs/data/normalize', methods=['POST'])
+@jwt_required()
+def start_data_normalization():
+    """Start data normalization job"""
+    try:
+        job_manager = JobManager()
+        job = job_manager.start_data_normalization()
+        return success_response(job.to_dict(), 202)
+        
+    except Exception as e:
+        return error_response(f"Failed to start data normalization: {str(e)}", 500)
+
+
+@jobs_bp.route('/jobs/data/deduplicate', methods=['POST'])
+@jwt_required()
+def start_data_deduplication():
+    """Start data deduplication job"""
+    try:
+        job_manager = JobManager()
+        job = job_manager.start_data_deduplication()
+        return success_response(job.to_dict(), 202)
+        
+    except Exception as e:
+        return error_response(f"Failed to start data deduplication: {str(e)}", 500)
+
+
+@jobs_bp.route('/jobs/data/cleanup', methods=['POST'])
+@jwt_required()
+def start_data_cleanup():
+    """Start data cleanup job"""
+    try:
+        data = request.get_json()
+        days_old = data.get('days_old', 30)
+        
+        job_manager = JobManager()
+        job = job_manager.start_data_cleanup(days_old)
+        return success_response(job.to_dict(), 202)
+        
+    except Exception as e:
+        return error_response(f"Failed to start data cleanup: {str(e)}", 500)
+
+
+@jobs_bp.route('/jobs/<int:job_id>/task-status', methods=['GET'])
+@jwt_required()
+def get_job_task_status(job_id):
+    """Get Celery task status for a job"""
+    try:
+        job = Job.query.get_or_404(job_id)
+        
+        task_status = None
+        if job.result:
+            try:
+                result_data = json.loads(job.result)
+                task_id = result_data.get('task_id')
+                if task_id:
+                    from celery_app import celery_app
+                    task = celery_app.AsyncResult(task_id)
+                    task_status = {
+                        'task_id': task_id,
+                        'state': task.state,
+                        'info': task.info,
+                        'successful': task.successful(),
+                        'failed': task.failed(),
+                        'ready': task.ready(),
+                        'result': task.result if task.ready() else None
+                    }
+            except (json.JSONDecodeError, Exception):
+                pass
+        
+        return success_response({
+            'job_id': job_id,
+            'task_status': task_status
+        })
+        
+    except Exception as e:
+        return error_response(f"Failed to fetch task status: {str(e)}", 500)
+
+
+@jobs_bp.route('/websocket/stats', methods=['GET'])
+@jwt_required()
+def get_websocket_stats():
+    """Get WebSocket connection statistics"""
+    try:
+        from app.services.websocket import websocket_service
+        stats = websocket_service.get_connection_stats()
+        return success_response(stats)
+        
+    except Exception as e:
+        return error_response(f"Failed to fetch WebSocket stats: {str(e)}", 500)
