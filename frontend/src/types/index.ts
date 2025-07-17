@@ -36,14 +36,14 @@ export interface ChatMessage {
 }
 
 // API Response types
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
   timestamp: string;
 }
 
-export interface PaginatedResponse<T = any> {
+export interface PaginatedResponse<T = unknown> {
   data: T[];
   pagination: {
     page: number;
@@ -75,7 +75,7 @@ export interface FilterOptions {
 // WebSocket types
 export interface WebSocketMessage {
   type: string;
-  data: any;
+  data: unknown;
   timestamp: string;
 }
 
