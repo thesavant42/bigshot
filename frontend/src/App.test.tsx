@@ -10,6 +10,7 @@ describe('App', () => {
         <App />
       </BrowserRouter>
     )
-    expect(document.body).toBeInTheDocument()
+    // Test that the component renders without crashing by checking if body exists
+    expect(document.body).toBeTruthy()
   })
 })
