@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS urls (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    url TEXT UNIQUE NOT NULL,
+    url TEXT UNIQUE NOT NULL CHECK(url != ''),
     domain TEXT,
     timestamp TEXT,
     status_code INTEGER,
@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS jobs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     type TEXT,
     domain TEXT,
-    status TEXT,
+    status TEXT CHECK(status IN ('pending', 'running', 'completed', 'failed', 'cancelled')),
     progress INTEGER,
     result TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -84,9 +84,9 @@ CREATE TABLE IF NOT EXISTS assets (
 
 CREATE TABLE IF NOT EXISTS domains (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    root_domain TEXT NOT NULL,
-    subdomain TEXT NOT NULL,
-    source TEXT NOT NULL,
+    root_domain TEXT NOT NULL CHECK(root_domain != ''),
+    subdomain TEXT NOT NULL CHECK(subdomain != ''),
+    source TEXT NOT NULL CHECK(source != ''),
     tags TEXT DEFAULT '',
     cdx_indexed INTEGER DEFAULT 0,
     fetched_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
