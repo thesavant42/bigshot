@@ -74,8 +74,11 @@ class TestJobProcessing:
         """Test enumeration service with Celery"""
         service = EnumerationService()
 
-        with patch("app.tasks.domain_enumeration.enumerate_domains_task") as mock_task, \
-             patch("app.tasks.notifications.send_job_notification_task") as mock_notification:
+        with patch(
+            "app.tasks.domain_enumeration.enumerate_domains_task"
+        ) as mock_task, patch(
+            "app.tasks.notifications.send_job_notification_task"
+        ) as mock_notification:
             mock_task.delay.return_value = MagicMock(id="test-task-id")
             mock_notification.delay.return_value = MagicMock(id="notification-task-id")
 
@@ -91,7 +94,7 @@ class TestJobProcessing:
             mock_task.delay.assert_called_once_with(
                 job.id, ["example.com"], ["crt.sh"], {}
             )
-            
+
             # Check notification was called
             mock_notification.delay.assert_called_once_with(job.id, "started")
 
@@ -108,9 +111,13 @@ class TestJobProcessing:
         """Test job cancellation with Celery task revocation"""
         service = EnumerationService()
 
-        with patch("app.tasks.domain_enumeration.enumerate_domains_task") as mock_task, \
-             patch("app.tasks.notifications.send_job_notification_task") as mock_notification, \
-             patch("celery_app.celery_app.control.revoke") as mock_revoke:
+        with patch(
+            "app.tasks.domain_enumeration.enumerate_domains_task"
+        ) as mock_task, patch(
+            "app.tasks.notifications.send_job_notification_task"
+        ) as mock_notification, patch(
+            "celery_app.celery_app.control.revoke"
+        ) as mock_revoke:
             mock_task.delay.return_value = MagicMock(id="test-task-id")
             mock_notification.delay.return_value = MagicMock(id="notification-task-id")
 

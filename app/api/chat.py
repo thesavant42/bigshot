@@ -4,7 +4,7 @@ Chat API endpoints for LLM integration
 
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Dict, Any, Optional
 from flask import Blueprint, request, jsonify, Response, stream_with_context
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -38,7 +38,10 @@ def send_message():
 
         # Add current session context
         context.update(
-            {"user_id": get_jwt_identity(), "timestamp": datetime.utcnow().isoformat()}
+            {
+                "user_id": get_jwt_identity(),
+                "timestamp": datetime.now(UTC).isoformat(),
+            }
         )
 
         if stream:
@@ -74,9 +77,11 @@ def send_message():
     except Exception as e:
         # Check if this is a mock-related error or other LLM service issue
         error_message = str(e)
-        if ("Mock" in error_message and "not subscriptable" in error_message) or \
-           ("not available" in error_message.lower()) or \
-           ("client not available" in error_message.lower()):
+        if (
+            ("Mock" in error_message and "not subscriptable" in error_message)
+            or ("not available" in error_message.lower())
+            or ("client not available" in error_message.lower())
+        ):
             logger.warning(f"LLM service unavailable: {e}")
             return error_response("LLM service is not available", 503)
         else:
@@ -134,7 +139,7 @@ def get_status():
             "models": (
                 llm_service.get_available_models() if llm_service.is_available() else []
             ),
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
         return success_response(status)
@@ -162,7 +167,7 @@ def get_context():
             "recent_domains": [domain.to_dict() for domain in recent_domains],
             "active_jobs": [job.to_dict() for job in active_jobs],
             "recent_urls": [url.to_dict() for url in recent_urls],
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
         return success_response(context)
@@ -200,7 +205,7 @@ def get_conversation(session_id: str):
         conversation = {
             "session_id": session_id,
             "messages": [],
-            "created_at": datetime.utcnow().isoformat(),
+            "created_at": datetime.now(UTC).isoformat(),
         }
 
         return success_response(conversation)
@@ -249,7 +254,7 @@ def execute_mcp_tool():
                 "tool_name": tool_name,
                 "arguments": arguments,
                 "result": result,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             }
         )
 

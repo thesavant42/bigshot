@@ -179,8 +179,11 @@ class TestDomains:
             "options": {},
         }
 
-        with patch("app.tasks.domain_enumeration.enumerate_domains_task") as mock_task, \
-             patch("app.tasks.notifications.send_job_notification_task") as mock_notification:
+        with patch(
+            "app.tasks.domain_enumeration.enumerate_domains_task"
+        ) as mock_task, patch(
+            "app.tasks.notifications.send_job_notification_task"
+        ) as mock_notification:
             mock_task.delay.return_value = MagicMock(id="test-task-id")
             mock_notification.delay.return_value = MagicMock(id="notification-task-id")
 

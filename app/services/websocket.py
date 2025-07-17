@@ -5,7 +5,7 @@ WebSocket service for real-time job updates
 import json
 import redis
 import threading
-from datetime import datetime
+from datetime import datetime, UTC
 from flask import request
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from flask_jwt_extended import decode_token
@@ -67,7 +67,7 @@ class WebSocketService:
                 # Store connection info
                 self.active_connections[request.sid] = {
                     "user_id": user_id,
-                    "connected_at": datetime.utcnow().isoformat(),
+                    "connected_at": datetime.now(UTC).isoformat(),
                     "subscriptions": set(),
                 }
 
@@ -78,7 +78,7 @@ class WebSocketService:
                     "connected",
                     {
                         "message": "Connected to bigshot job updates",
-                        "timestamp": datetime.utcnow().isoformat(),
+                        "timestamp": datetime.now(UTC).isoformat(),
                     },
                 )
 
@@ -118,7 +118,7 @@ class WebSocketService:
                     {
                         "job_id": job_id,
                         "message": f"Subscribed to job {job_id} updates",
-                        "timestamp": datetime.utcnow().isoformat(),
+                        "timestamp": datetime.now(UTC).isoformat(),
                     },
                 )
 
@@ -151,7 +151,7 @@ class WebSocketService:
                     {
                         "job_id": job_id,
                         "message": f"Unsubscribed from job {job_id} updates",
-                        "timestamp": datetime.utcnow().isoformat(),
+                        "timestamp": datetime.now(UTC).isoformat(),
                     },
                 )
 
@@ -171,7 +171,7 @@ class WebSocketService:
                     "subscribed_all",
                     {
                         "message": "Subscribed to all job updates",
-                        "timestamp": datetime.utcnow().isoformat(),
+                        "timestamp": datetime.now(UTC).isoformat(),
                     },
                 )
 
@@ -214,7 +214,7 @@ class WebSocketService:
                     {
                         "jobs": jobs_data,
                         "count": len(jobs_data),
-                        "timestamp": datetime.utcnow().isoformat(),
+                        "timestamp": datetime.now(UTC).isoformat(),
                     },
                 )
 
@@ -273,7 +273,7 @@ class WebSocketService:
             broadcast_data = {
                 "job_id": job_id,
                 "update_type": update_type,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             }
 
             if data:

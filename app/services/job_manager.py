@@ -16,7 +16,7 @@ class JobManager:
 
     def get_job_status(self, job_id):
         """Get detailed status for a job"""
-        job = Job.query.get(job_id)
+        job = db.session.get(Job, job_id)
         if not job:
             return None
 
@@ -55,7 +55,7 @@ class JobManager:
 
     def cancel_job(self, job_id):
         """Cancel a running job"""
-        job = Job.query.get(job_id)
+        job = db.session.get(Job, job_id)
         if not job:
             return False
 
@@ -90,7 +90,7 @@ class JobManager:
 
     def get_job_logs(self, job_id):
         """Get logs for a job"""
-        job = Job.query.get(job_id)
+        job = db.session.get(Job, job_id)
         if not job:
             return []
 
@@ -178,7 +178,7 @@ class JobManager:
 
     def get_job_results(self, job_id):
         """Get results for a completed job"""
-        job = Job.query.get(job_id)
+        job = db.session.get(Job, job_id)
         if not job:
             return None
 

@@ -62,7 +62,7 @@ def get_jobs():
 def get_job(job_id):
     """Get a specific job"""
     try:
-        job = Job.query.get(job_id)
+        job = db.session.get(Job, job_id)
         if not job:
             return error_response("Job not found", 404)
         return success_response(job.to_dict())
@@ -75,7 +75,7 @@ def get_job(job_id):
 def cancel_job(job_id):
     """Cancel a running job"""
     try:
-        job = Job.query.get(job_id)
+        job = db.session.get(Job, job_id)
         if not job:
             return error_response("Job not found", 404)
 

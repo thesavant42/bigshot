@@ -30,7 +30,7 @@ def enumerate_domains_task(self, job_id, domains, sources, options):
 
     try:
         # Get job record
-        job = Job.query.get(job_id)
+        job = db.session.get(Job, job_id)
         if not job:
             raise Exception(f"Job {job_id} not found")
 
@@ -191,7 +191,7 @@ def enumerate_domains_task(self, job_id, domains, sources, options):
 
     except Exception as e:
         # Update job with error
-        job = Job.query.get(job_id)
+        job = db.session.get(Job, job_id)
         if job:
             job.status = "failed"
             job.error_message = str(e)
@@ -280,7 +280,7 @@ def cancel_enumeration_task(self, job_id):
     """
 
     try:
-        job = Job.query.get(job_id)
+        job = db.session.get(Job, job_id)
         if not job:
             return False
 

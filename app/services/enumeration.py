@@ -77,7 +77,7 @@ class EnumerationService:
     def cancel_enumeration(self, job_id):
         """Cancel an enumeration job"""
 
-        job = Job.query.get(job_id)
+        job = db.session.get(Job, job_id)
         if not job:
             return False
 
@@ -113,7 +113,7 @@ class EnumerationService:
 
     def get_job_status(self, job_id):
         """Get job status"""
-        job = Job.query.get(job_id)
+        job = db.session.get(Job, job_id)
         if not job:
             return None
 

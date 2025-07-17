@@ -18,10 +18,10 @@ class Domain(db.Model):
     source = db.Column(db.String(100), nullable=False)
     tags = db.Column(db.Text, default="")
     cdx_indexed = db.Column(db.Boolean, default=False)
-    fetched_at = db.Column(db.DateTime, default=datetime.utcnow)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    fetched_at = db.Column(db.DateTime, default=datetime.utcnow())
+    created_at = db.Column(db.DateTime, default=datetime.utcnow())
     updated_at = db.Column(
-        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+        db.DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow()
     )
 
     __table_args__ = (
@@ -55,9 +55,9 @@ class Job(db.Model):
     progress = db.Column(db.Integer, default=0)
     result = db.Column(db.Text)
     error_message = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow())
     updated_at = db.Column(
-        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+        db.DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow()
     )
 
     def to_dict(self):
@@ -87,9 +87,9 @@ class URL(db.Model):
     status_code = db.Column(db.Integer)
     mime_type = db.Column(db.String(100))
     tags = db.Column(db.Text, default="")
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow())
     updated_at = db.Column(
-        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+        db.DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow()
     )
 
     def to_dict(self):
@@ -115,9 +115,9 @@ class Note(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     url_id = db.Column(db.Integer, db.ForeignKey("urls.id"), nullable=False)
     content = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow())
     updated_at = db.Column(
-        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+        db.DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow()
     )
 
     url = db.relationship("URL", backref=db.backref("notes", lazy=True))
@@ -142,9 +142,9 @@ class APIKey(db.Model):
     service = db.Column(db.String(100), unique=True, nullable=False)
     key_value = db.Column(db.Text, nullable=False)
     is_active = db.Column(db.Boolean, default=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow())
     updated_at = db.Column(
-        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+        db.DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow()
     )
 
     def to_dict(self, include_key=False):
@@ -176,9 +176,9 @@ class Conversation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     session_id = db.Column(db.String(255), unique=True, nullable=False)
     title = db.Column(db.String(255))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow())
     updated_at = db.Column(
-        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+        db.DateTime, default=datetime.utcnow(), onupdate=datetime.utcnow()
     )
 
     messages = db.relationship(
@@ -209,7 +209,7 @@ class ChatMessage(db.Model):
     role = db.Column(db.String(50), nullable=False)  # 'user', 'assistant', 'system'
     content = db.Column(db.Text, nullable=False)
     function_calls = db.Column(db.Text)  # JSON string of function calls
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow())
 
     def to_dict(self):
         """Convert message to dictionary representation"""
