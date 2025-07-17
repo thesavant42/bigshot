@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+import { Bars3Icon, XMarkIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { useWebSocket } from '../../hooks/useWebSocket';
+import { useKeyboard } from '../../contexts/KeyboardContext';
+import ThemeToggle from '../ThemeToggle';
+import StatusBadge from '../StatusBadge';
 import ChatInterface from '../chat/ChatInterface';
 
 interface MainLayoutProps {
@@ -10,7 +13,29 @@ interface MainLayoutProps {
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [leftPanelWidth, setLeftPanelWidth] = useState(40); // Percentage
+  const [searchQuery, setSearchQuery] = useState('');
   const { isConnected } = useWebSocket();
+  const { addShortcut } = useKeyboard();
+
+  // Add keyboard shortcuts
+  React.useEffect(() => {
+    addShortcut({
+      key: 'k',
+      ctrlKey: true,
+      callback: () => {
+        const searchInput = document.getElementById('search-input');
+        searchInput?.focus();
+      },
+      description: 'Focus search',
+    });
+
+    addShortcut({
+      key: 'b',
+      ctrlKey: true,
+      callback: () => setSidebarOpen(!sidebarOpen),
+      description: 'Toggle sidebar',
+    });
+  }, [addShortcut, sidebarOpen]);
 
   const handleResize = (e: React.MouseEvent) => {
     const startX = e.clientX;
@@ -34,44 +59,49 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-900">
+    <div className="flex h-screen bg-gray-50 dark:bg-dark-950">
       {/* Sidebar */}
       <div
         className={`${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } fixed inset-y-0 left-0 z-50 w-64 bg-gray-800 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}
+        } fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-dark-800 border-r border-gray-200 dark:border-gray-700 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 shadow-medium lg:shadow-none`}
       >
-        <div className="flex items-center justify-between h-16 px-4 bg-gray-900">
+        <div className="flex items-center justify-between h-16 px-4 bg-gray-50 dark:bg-dark-900 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <h1 className="text-xl font-bold text-white">BigShot</h1>
+              <h1 className="text-xl font-bold text-gray-900 dark:text-white">BigShot</h1>
             </div>
           </div>
-          <button
-            className="lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-          >
-            <XMarkIcon className="h-6 w-6 text-gray-400" />
-          </button>
+          <div className="flex items-center space-x-2">
+            <ThemeToggle />
+            <button
+              className="lg:hidden p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              onClick={() => setSidebarOpen(false)}
+              aria-label="Close sidebar"
+            >
+              <XMarkIcon className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         <nav className="mt-5 px-2">
           <div className="space-y-1">
             <a
               href="#"
-              className="bg-gray-900 text-white group flex items-center px-2 py-2 text-sm font-medium rounded-md"
+              className="bg-primary-100 dark:bg-primary-900/20 text-primary-900 dark:text-primary-100 group flex items-center px-3 py-2 text-sm font-medium rounded-lg"
+              aria-current="page"
             >
               Dashboard
             </a>
             <a
               href="#"
-              className="text-gray-300 hover:bg-gray-700 hover:text-white group flex items-center px-2 py-2 text-sm font-medium rounded-md"
+              className="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-700 hover:text-gray-900 dark:hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors"
             >
               Jobs
             </a>
             <a
               href="#"
-              className="text-gray-300 hover:bg-gray-700 hover:text-white group flex items-center px-2 py-2 text-sm font-medium rounded-md"
+              className="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-700 hover:text-gray-900 dark:hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors"
             >
               Settings
             </a>
@@ -79,16 +109,16 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         </nav>
 
         {/* Connection Status */}
-        <div className="absolute bottom-0 left-0 right-0 p-4">
-          <div className="flex items-center space-x-2">
-            <div
-              className={`w-2 h-2 rounded-full ${
-                isConnected ? 'bg-green-500' : 'bg-red-500'
-              }`}
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between">
+            <StatusBadge 
+              status={isConnected ? 'success' : 'error'} 
+              label={isConnected ? 'Connected' : 'Disconnected'}
+              size="sm"
             />
-            <span className="text-sm text-gray-400">
-              {isConnected ? 'Connected' : 'Disconnected'}
-            </span>
+            <kbd className="hidden sm:inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-dark-700 text-gray-600 dark:text-gray-400 text-xs rounded">
+              Ctrl+B
+            </kbd>
           </div>
         </div>
       </div>
@@ -96,35 +126,45 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="bg-gray-800 shadow-sm">
+        <header className="bg-white dark:bg-dark-800 border-b border-gray-200 dark:border-gray-700 shadow-soft">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center">
                 <button
-                  className="lg:hidden"
+                  className="lg:hidden p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                   onClick={() => setSidebarOpen(true)}
+                  aria-label="Open sidebar"
                 >
-                  <Bars3Icon className="h-6 w-6 text-gray-400" />
+                  <Bars3Icon className="h-5 w-5" />
                 </button>
                 <div className="ml-4 flex items-center space-x-4">
                   <div className="relative">
                     <input
+                      id="search-input"
                       type="search"
                       placeholder="Search domains..."
-                      className="w-64 pl-10 pr-4 py-2 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-64 pl-10 pr-4 py-2 bg-gray-100 dark:bg-dark-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 placeholder-gray-500 dark:placeholder-gray-400"
                     />
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                      </svg>
+                      <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                      <kbd className="hidden sm:inline-flex items-center px-2 py-1 bg-gray-200 dark:bg-dark-600 text-gray-600 dark:text-gray-400 text-xs rounded">
+                        Ctrl+K
+                      </kbd>
                     </div>
                   </div>
                 </div>
               </div>
               <div className="flex items-center space-x-4">
-                <span className="text-gray-400 text-sm">
+                <span className="text-gray-600 dark:text-gray-400 text-sm">
                   Ready for reconnaissance
                 </span>
+                <div className="hidden lg:block">
+                  <ThemeToggle />
+                </div>
               </div>
             </div>
           </div>
@@ -134,12 +174,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         <div className="flex-1 flex overflow-hidden">
           {/* Left panel - Chat */}
           <div
-            className="bg-gray-800 border-r border-gray-700 overflow-hidden"
+            className="bg-white dark:bg-dark-800 border-r border-gray-200 dark:border-gray-700 overflow-hidden"
             style={{ width: `${leftPanelWidth}%` }}
           >
             <div className="h-full flex flex-col">
-              <div className="flex-shrink-0 px-4 py-3 bg-gray-900 border-b border-gray-700">
-                <h2 className="text-lg font-semibold text-white">AI Assistant</h2>
+              <div className="flex-shrink-0 px-4 py-3 bg-gray-50 dark:bg-dark-900 border-b border-gray-200 dark:border-gray-700">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">AI Assistant</h2>
               </div>
               <div className="flex-1 overflow-hidden">
                 <ChatInterface className="h-full" />
@@ -149,15 +189,18 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
           {/* Resize handle */}
           <div
-            className="w-1 bg-gray-600 hover:bg-gray-500 cursor-col-resize"
+            className="w-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 cursor-col-resize transition-colors"
             onMouseDown={handleResize}
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Resize panels"
           />
 
           {/* Right panel - Domain Dashboard */}
-          <div className="flex-1 bg-gray-900 overflow-hidden">
+          <div className="flex-1 bg-gray-50 dark:bg-dark-950 overflow-hidden">
             <div className="h-full flex flex-col">
-              <div className="flex-shrink-0 px-4 py-3 bg-gray-800 border-b border-gray-700">
-                <h2 className="text-lg font-semibold text-white">Domain Reconnaissance</h2>
+              <div className="flex-shrink-0 px-4 py-3 bg-white dark:bg-dark-800 border-b border-gray-200 dark:border-gray-700">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Domain Reconnaissance</h2>
               </div>
               <div className="flex-1 overflow-hidden">
                 {children}
@@ -172,6 +215,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         <div
           className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
           onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
         />
       )}
     </div>
