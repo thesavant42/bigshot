@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Bars3Icon, XMarkIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { Bars3Icon, XMarkIcon, MagnifyingGlassIcon, ChartBarIcon, CogIcon } from '@heroicons/react/24/outline';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { useKeyboard } from '../../contexts/KeyboardContext';
 import ThemeToggle from '../ThemeToggle';
 import StatusBadge from '../StatusBadge';
 import ChatInterface from '../chat/ChatInterface';
+import SystemMonitoringDashboard from '../monitoring/SystemMonitoringDashboard';
+import ConfigurationManagement from '../monitoring/ConfigurationManagement';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -14,6 +16,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [leftPanelWidth, setLeftPanelWidth] = useState(40); // Percentage
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeView, setActiveView] = useState<'dashboard' | 'monitoring' | 'config'>('dashboard');
   const { isConnected } = useWebSocket();
   const { addShortcut } = useKeyboard();
 
@@ -86,25 +89,38 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
         <nav className="mt-5 px-2">
           <div className="space-y-1">
-            <a
-              href="#"
-              className="bg-primary-100 dark:bg-primary-900/20 text-primary-900 dark:text-primary-100 group flex items-center px-3 py-2 text-sm font-medium rounded-lg"
-              aria-current="page"
+            <button
+              onClick={() => setActiveView('dashboard')}
+              className={`w-full group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                activeView === 'dashboard'
+                  ? 'bg-primary-100 dark:bg-primary-900/20 text-primary-900 dark:text-primary-100'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-700 hover:text-gray-900 dark:hover:text-white'
+              }`}
             >
               Dashboard
-            </a>
-            <a
-              href="#"
-              className="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-700 hover:text-gray-900 dark:hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors"
+            </button>
+            <button
+              onClick={() => setActiveView('monitoring')}
+              className={`w-full group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                activeView === 'monitoring'
+                  ? 'bg-primary-100 dark:bg-primary-900/20 text-primary-900 dark:text-primary-100'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-700 hover:text-gray-900 dark:hover:text-white'
+              }`}
             >
-              Jobs
-            </a>
-            <a
-              href="#"
-              className="text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-700 hover:text-gray-900 dark:hover:text-white group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors"
+              <ChartBarIcon className="h-5 w-5 mr-3" />
+              Monitoring
+            </button>
+            <button
+              onClick={() => setActiveView('config')}
+              className={`w-full group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                activeView === 'config'
+                  ? 'bg-primary-100 dark:bg-primary-900/20 text-primary-900 dark:text-primary-100'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-700 hover:text-gray-900 dark:hover:text-white'
+              }`}
             >
+              <CogIcon className="h-5 w-5 mr-3" />
               Settings
-            </a>
+            </button>
           </div>
         </nav>
 
@@ -172,41 +188,51 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
         {/* Split panel content */}
         <div className="flex-1 flex overflow-hidden">
-          {/* Left panel - Chat */}
-          <div
-            className="bg-white dark:bg-dark-800 border-r border-gray-200 dark:border-gray-700 overflow-hidden"
-            style={{ width: `${leftPanelWidth}%` }}
-          >
-            <div className="h-full flex flex-col">
-              <div className="flex-shrink-0 px-4 py-3 bg-gray-50 dark:bg-dark-900 border-b border-gray-200 dark:border-gray-700">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">AI Assistant</h2>
+          {activeView === 'dashboard' ? (
+            <>
+              {/* Left panel - Chat */}
+              <div
+                className="bg-white dark:bg-dark-800 border-r border-gray-200 dark:border-gray-700 overflow-hidden"
+                style={{ width: `${leftPanelWidth}%` }}
+              >
+                <div className="h-full flex flex-col">
+                  <div className="flex-shrink-0 px-4 py-3 bg-gray-50 dark:bg-dark-900 border-b border-gray-200 dark:border-gray-700">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">AI Assistant</h2>
+                  </div>
+                  <div className="flex-1 overflow-hidden">
+                    <ChatInterface className="h-full" />
+                  </div>
+                </div>
               </div>
-              <div className="flex-1 overflow-hidden">
-                <ChatInterface className="h-full" />
-              </div>
-            </div>
-          </div>
 
-          {/* Resize handle */}
-          <div
-            className="w-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 cursor-col-resize transition-colors"
-            onMouseDown={handleResize}
-            role="separator"
-            aria-orientation="vertical"
-            aria-label="Resize panels"
-          />
+              {/* Resize handle */}
+              <div
+                className="w-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 cursor-col-resize transition-colors"
+                onMouseDown={handleResize}
+                role="separator"
+                aria-orientation="vertical"
+                aria-label="Resize panels"
+              />
 
-          {/* Right panel - Domain Dashboard */}
-          <div className="flex-1 bg-gray-50 dark:bg-dark-950 overflow-hidden">
-            <div className="h-full flex flex-col">
-              <div className="flex-shrink-0 px-4 py-3 bg-white dark:bg-dark-800 border-b border-gray-200 dark:border-gray-700">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Domain Reconnaissance</h2>
+              {/* Right panel - Domain Dashboard */}
+              <div className="flex-1 bg-gray-50 dark:bg-dark-950 overflow-hidden">
+                <div className="h-full flex flex-col">
+                  <div className="flex-shrink-0 px-4 py-3 bg-white dark:bg-dark-800 border-b border-gray-200 dark:border-gray-700">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Domain Reconnaissance</h2>
+                  </div>
+                  <div className="flex-1 overflow-hidden">
+                    {children}
+                  </div>
+                </div>
               </div>
-              <div className="flex-1 overflow-hidden">
-                {children}
-              </div>
+            </>
+          ) : (
+            /* Full-width panels for monitoring and config */
+            <div className="flex-1 bg-gray-50 dark:bg-dark-950 overflow-hidden">
+              {activeView === 'monitoring' && <SystemMonitoringDashboard />}
+              {activeView === 'config' && <ConfigurationManagement />}
             </div>
-          </div>
+          )}
         </div>
       </div>
 

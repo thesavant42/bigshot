@@ -40,12 +40,14 @@ def create_app(config_class=Config):
     from app.api.auth import auth_bp
     from app.api.config import config_bp
     from app.api.chat import chat_bp
+    from app.api.health import health_bp
     
     app.register_blueprint(domains_bp, url_prefix='/api/v1')
     app.register_blueprint(jobs_bp, url_prefix='/api/v1')
     app.register_blueprint(auth_bp, url_prefix='/api/v1')
     app.register_blueprint(config_bp, url_prefix='/api/v1')
     app.register_blueprint(chat_bp, url_prefix='/api/v1')
+    app.register_blueprint(health_bp, url_prefix='/api/v1')
     
     # Create database tables
     with app.app_context():
