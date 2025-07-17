@@ -1,0 +1,111 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  database:
+    image: postgres:15
+    container_name: bigshot_dev_database
+    environment:
+      POSTGRES_DB: bigshot_dev
+      POSTGRES_USER: bigshot
+      POSTGRES_PASSWORD: bigshot_dev_password
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ./config/postgresql_schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bigshot -d bigshot_dev"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Redis Cache and Message Broker
+  redis:
+    image: redis:7-alpine
+    container_name: bigshot_dev_redis
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_dev_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Flask Backend API (Development)
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bigshot_dev_backend
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - DATABASE_URL=postgresql://bigshot:bigshot_dev_password@database:5432/bigshot_dev
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - JWT_SECRET_KEY=dev-secret-key
+    ports:
+      - "5001:5000"
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - ./instance:/app/instance
+      - ./logs:/app/logs
+    command: python server.py
+
+  # Celery Worker (Development)
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bigshot_dev_celery
+    command: python -m celery -A celery_app.celery_app worker --loglevel=debug --concurrency=2
+    environment:
+      - FLASK_ENV=development
+      - DATABASE_URL=postgresql://bigshot:bigshot_dev_password@database:5432/bigshot_dev
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - ./instance:/app/instance
+      - ./logs:/app/logs
+
+  # Frontend Development Server
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: bigshot_dev_frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:5001
+    depends_on:
+      - backend
+
+volumes:
+  postgres_dev_data:
+  redis_dev_data:
+
+networks:
+  default:
+    name: bigshot_dev_network
