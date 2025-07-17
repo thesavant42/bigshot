@@ -1,0 +1,155 @@
+"""
+Database models for the bigshot application
+"""
+
+from datetime import datetime
+from app import db
+
+
+class Domain(db.Model):
+    """Domain model for hierarchical subdomain storage"""
+    
+    __tablename__ = 'domains'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    root_domain = db.Column(db.String(255), nullable=False)
+    subdomain = db.Column(db.String(255), nullable=False)
+    source = db.Column(db.String(100), nullable=False)
+    tags = db.Column(db.Text, default='')
+    cdx_indexed = db.Column(db.Boolean, default=False)
+    fetched_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    __table_args__ = (
+        db.UniqueConstraint('subdomain', 'source', name='unique_subdomain_source'),
+    )
+    
+    def to_dict(self):
+        """Convert domain to dictionary representation"""
+        return {
+            'id': self.id,
+            'root_domain': self.root_domain,
+            'subdomain': self.subdomain,
+            'source': self.source,
+            'tags': self.tags.split(',') if self.tags else [],
+            'cdx_indexed': self.cdx_indexed,
+            'fetched_at': self.fetched_at.isoformat() if self.fetched_at else None,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+
+
+class Job(db.Model):
+    """Job model for background task management"""
+    
+    __tablename__ = 'jobs'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    type = db.Column(db.String(100), nullable=False)
+    domain = db.Column(db.String(255))
+    status = db.Column(db.String(50), default='pending')
+    progress = db.Column(db.Integer, default=0)
+    result = db.Column(db.Text)
+    error_message = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def to_dict(self):
+        """Convert job to dictionary representation"""
+        return {
+            'id': self.id,
+            'type': self.type,
+            'domain': self.domain,
+            'status': self.status,
+            'progress': self.progress,
+            'result': self.result,
+            'error_message': self.error_message,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+
+
+class URL(db.Model):
+    """URL model for storing discovered URLs"""
+    
+    __tablename__ = 'urls'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    url = db.Column(db.Text, unique=True, nullable=False)
+    domain = db.Column(db.String(255))
+    timestamp = db.Column(db.String(50))
+    status_code = db.Column(db.Integer)
+    mime_type = db.Column(db.String(100))
+    tags = db.Column(db.Text, default='')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def to_dict(self):
+        """Convert URL to dictionary representation"""
+        return {
+            'id': self.id,
+            'url': self.url,
+            'domain': self.domain,
+            'timestamp': self.timestamp,
+            'status_code': self.status_code,
+            'mime_type': self.mime_type,
+            'tags': self.tags.split(',') if self.tags else [],
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+
+
+class Note(db.Model):
+    """Note model for URL-specific annotations"""
+    
+    __tablename__ = 'notes'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    url_id = db.Column(db.Integer, db.ForeignKey('urls.id'), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    url = db.relationship('URL', backref=db.backref('notes', lazy=True))
+    
+    def to_dict(self):
+        """Convert note to dictionary representation"""
+        return {
+            'id': self.id,
+            'url_id': self.url_id,
+            'content': self.content,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+
+
+class APIKey(db.Model):
+    """API key model for storing external service credentials"""
+    
+    __tablename__ = 'api_keys'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    service = db.Column(db.String(100), unique=True, nullable=False)
+    key_value = db.Column(db.Text, nullable=False)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def to_dict(self, include_key=False):
+        """Convert API key to dictionary representation"""
+        result = {
+            'id': self.id,
+            'service': self.service,
+            'is_active': self.is_active,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+        
+        if include_key:
+            result['key_value'] = self.key_value
+        else:
+            # Mask the key for security
+            result['key_masked'] = self.key_value[:8] + '...' if len(self.key_value) > 8 else '***'
+        
+        return result
