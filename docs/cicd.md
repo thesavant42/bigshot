@@ -44,12 +44,9 @@ Triggered on:
   - Run end-to-end integration tests
   - Verify component interactions
 
-### 4. Security Scan
-- **Tool**: Trivy vulnerability scanner
-- **Scope**: File system and dependencies
-- **Output**: SARIF format uploaded to GitHub Security
 
-### 5. Performance Tests
+
+### 4. Performance Tests
 - **Dependencies**: Backend tests must pass
 - **Environment**: Database and Redis services
 - **Steps**:
@@ -137,7 +134,6 @@ CELERY_RESULT_BACKEND=redis://localhost:6379/0
 
 ### Pipeline Monitoring
 - **Slack Notifications**: On build failures
-- **Email Alerts**: On security vulnerabilities
 - **Dashboard**: GitHub Actions status page
 
 ### Application Monitoring
@@ -209,7 +205,6 @@ npm run test:ui
 - Scan dependencies regularly
 - Use secrets management
 - Rotate tokens periodically
-- Review security reports
 
 ## Pipeline Configuration
 

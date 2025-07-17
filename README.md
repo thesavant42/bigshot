@@ -123,7 +123,6 @@ The project uses GitHub Actions for continuous integration:
 - **Backend Tests**: Python tests with PostgreSQL and Redis
 - **Frontend Tests**: TypeScript/React tests with Vitest
 - **Performance Tests**: Database and API performance benchmarks
-- **Security Scanning**: Trivy vulnerability scanning
 - **Code Quality**: Black formatting and ESLint checks
 
 ## API Documentation

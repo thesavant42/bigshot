@@ -150,7 +150,6 @@ Tests are automatically run on:
 2. Frontend tests with coverage
 3. Integration tests
 4. Performance tests
-5. Security scanning
 
 ## Test Best Practices
 

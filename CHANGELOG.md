@@ -11,7 +11,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive CI/CD pipeline with GitHub Actions
 - Automated testing for backend and frontend
 - Performance testing suite
-- Security scanning with Trivy
 - Code coverage reporting
 - Frontend testing with Vitest
 - Release automation workflow
