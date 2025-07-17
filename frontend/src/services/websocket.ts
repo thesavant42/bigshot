@@ -1,9 +1,14 @@
 import { io, Socket } from 'socket.io-client';
-import type { WebSocketMessage } from '../types';
+import type { 
+  WebSocketMessage, 
+  JobUpdateData, 
+  DomainDiscoveredData, 
+  ChatMessageData 
+} from '../types';
 
 export class WebSocketService {
   private socket: Socket | null = null;
-  private eventHandlers: Map<string, Set<(data: any) => void>> = new Map();
+  private eventHandlers: Map<string, Set<(data: unknown) => void>> = new Map();
 
   connect(url: string = 'http://localhost:5000'): void {
     if (this.socket?.connected) return;
@@ -30,15 +35,15 @@ export class WebSocketService {
     });
 
     // Handle specific event types
-    this.socket.on('job_update', (data: any) => {
+    this.socket.on('job_update', (data: JobUpdateData) => {
       this.emit('job_update', data);
     });
 
-    this.socket.on('domain_discovered', (data: any) => {
+    this.socket.on('domain_discovered', (data: DomainDiscoveredData) => {
       this.emit('domain_discovered', data);
     });
 
-    this.socket.on('chat_message', (data: any) => {
+    this.socket.on('chat_message', (data: ChatMessageData) => {
       this.emit('chat_message', data);
     });
   }
@@ -54,14 +59,14 @@ export class WebSocketService {
     this.emit(message.type, message.data);
   }
 
-  private emit(event: string, data: any): void {
+  private emit(event: string, data: unknown): void {
     const handlers = this.eventHandlers.get(event);
     if (handlers) {
       handlers.forEach(handler => handler(data));
     }
   }
 
-  subscribe(event: string, handler: (data: any) => void): () => void {
+  subscribe(event: string, handler: (data: unknown) => void): () => void {
     if (!this.eventHandlers.has(event)) {
       this.eventHandlers.set(event, new Set());
     }
@@ -78,7 +83,7 @@ export class WebSocketService {
     };
   }
 
-  sendMessage(type: string, data: any): void {
+  sendMessage(type: string, data: unknown): void {
     if (this.socket?.connected) {
       this.socket.emit('message', { type, data });
     }

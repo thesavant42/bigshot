@@ -88,3 +88,82 @@ export interface AuthState {
     username: string;
   };
 }
+
+// Additional API types
+export interface BulkOperationData {
+  [key: string]: unknown;
+}
+
+export interface EnumerationOptions {
+  timeout?: number;
+  max_results?: number;
+  include_wildcards?: boolean;
+  [key: string]: unknown;
+}
+
+export interface DomainHierarchy {
+  root: string;
+  subdomains: string[];
+  relationships: Record<string, string[]>;
+}
+
+export interface ChatContext {
+  domains?: string[];
+  jobs?: string[];
+  [key: string]: unknown;
+}
+
+export interface AppSettings {
+  [key: string]: string | number | boolean;
+}
+
+export interface ApiKeyCollection {
+  [service: string]: string;
+}
+
+// Chat service specific types
+export interface FunctionCall {
+  name: string;
+  arguments: Record<string, unknown>;
+  result?: unknown;
+}
+
+export interface MCPToolParameters {
+  type: string;
+  properties: Record<string, unknown>;
+  required?: string[];
+}
+
+export interface ContextData {
+  recent_domains: Domain[];
+  active_jobs: Job[];
+  recent_urls: string[];
+  timestamp: string;
+}
+
+export interface StreamingChatChunk {
+  type: 'content' | 'function_call' | 'error' | 'completion';
+  content?: string;
+  function_call?: FunctionCall;
+  error?: string;
+}
+
+// WebSocket event data types
+export interface JobUpdateData {
+  job_id: string;
+  status: Job['status'];
+  progress?: number;
+  results_count?: number;
+  error?: string;
+}
+
+export interface DomainDiscoveredData {
+  domain: Domain;
+  source: string;
+  job_id?: string;
+}
+
+export interface ChatMessageData {
+  message: ChatMessage;
+  session_id: string;
+}
