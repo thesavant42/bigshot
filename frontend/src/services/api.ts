@@ -1,6 +1,25 @@
 import axios, { type AxiosInstance } from 'axios';
 import type { PaginatedResponse, Domain, Job, ChatMessage, FilterOptions } from '../types';
 
+// API operation types
+interface BulkOperationData {
+  tags?: string[];
+  [key: string]: unknown;
+}
+
+interface EnumerationOptions {
+  recursive?: boolean;
+  max_depth?: number;
+  timeout?: number;
+  [key: string]: unknown;
+}
+
+interface ChatContext {
+  domains?: string[];
+  jobs?: string[];
+  [key: string]: unknown;
+}
+
 class ApiService {
   private api: AxiosInstance;
 
@@ -78,7 +97,7 @@ class ApiService {
     await this.api.delete(`/domains/${id}`);
   }
 
-  async bulkDomainOperation(operation: string, domainIds: number[], data?: any): Promise<void> {
+  async bulkDomainOperation(operation: string, domainIds: number[], data?: BulkOperationData): Promise<void> {
     await this.api.post('/domains/bulk', {
       operation,
       domain_ids: domainIds,
@@ -86,7 +105,7 @@ class ApiService {
     });
   }
 
-  async enumerateDomains(domains: string[], sources: string[] = ['crt.sh'], options: any = {}): Promise<Job> {
+  async enumerateDomains(domains: string[], sources: string[] = ['crt.sh'], options: EnumerationOptions = {}): Promise<Job> {
     const response = await this.api.post('/domains/enumerate', {
       domains,
       sources,
@@ -95,7 +114,7 @@ class ApiService {
     return response.data.data;
   }
 
-  async getDomainHierarchy(rootDomain: string): Promise<any> {
+  async getDomainHierarchy(rootDomain: string): Promise<unknown> {
     const response = await this.api.get(`/domains/hierarchy/${rootDomain}`);
     return response.data.data;
   }
@@ -121,7 +140,7 @@ class ApiService {
   }
 
   // Chat endpoints
-  async sendMessage(message: string, context?: any): Promise<ChatMessage> {
+  async sendMessage(message: string, context?: ChatContext): Promise<ChatMessage> {
     const response = await this.api.post('/chat/messages', {
       message,
       context,
@@ -135,17 +154,17 @@ class ApiService {
   }
 
   // Settings endpoints
-  async getSettings(): Promise<any> {
+  async getSettings(): Promise<unknown> {
     const response = await this.api.get('/settings/config');
     return response.data.data;
   }
 
-  async updateSettings(settings: any): Promise<any> {
+  async updateSettings(settings: Record<string, unknown>): Promise<unknown> {
     const response = await this.api.put('/settings/config', settings);
     return response.data.data;
   }
 
-  async getApiKeys(): Promise<any> {
+  async getApiKeys(): Promise<unknown> {
     const response = await this.api.get('/settings/api-keys');
     return response.data.data;
   }
@@ -155,17 +174,17 @@ class ApiService {
   }
 
   // Health and monitoring endpoints
-  async get(path: string): Promise<any> {
+  async get(path: string): Promise<unknown> {
     const response = await this.api.get(path);
     return response.data;
   }
 
-  async put(path: string, data: any): Promise<any> {
+  async put(path: string, data: unknown): Promise<unknown> {
     const response = await this.api.put(path, data);
     return response.data;
   }
 
-  async post(path: string, data: any): Promise<any> {
+  async post(path: string, data: unknown): Promise<unknown> {
     const response = await this.api.post(path, data);
     return response.data;
   }

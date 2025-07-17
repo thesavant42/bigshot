@@ -1,18 +1,37 @@
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
+import type { Domain, Job } from '../types';
+
+// Function call types for chat
+interface FunctionCall {
+  name: string;
+  arguments: Record<string, unknown>;
+  result?: unknown;
+}
+
+// MCP Tool parameters - using JSON Schema like structure
+interface MCPToolParameters {
+  type: 'object';
+  properties: Record<string, {
+    type: string;
+    description?: string;
+    [key: string]: unknown;
+  }>;
+  required?: string[];
+}
 
 export interface ChatMessage {
   id?: number;
   role: 'user' | 'assistant' | 'system';
   content: string;
-  function_calls?: any[];
+  function_calls?: FunctionCall[];
   created_at?: string;
 }
 
 export interface ChatResponse {
   content: string;
   role: string;
-  function_calls?: any[];
+  function_calls?: FunctionCall[];
   usage?: {
     prompt_tokens: number;
     completion_tokens: number;
@@ -42,7 +61,7 @@ export interface MCPTool {
   function: {
     name: string;
     description: string;
-    parameters: any;
+    parameters: MCPToolParameters;
   };
 }
 
@@ -127,9 +146,9 @@ class ChatService {
   }
 
   async getContext(): Promise<{
-    recent_domains: any[];
-    active_jobs: any[];
-    recent_urls: any[];
+    recent_domains: Domain[];
+    active_jobs: Job[];
+    recent_urls: string[];
     timestamp: string;
   }> {
     const token = localStorage.getItem('token');
@@ -179,7 +198,7 @@ class ChatService {
     return response.data.data.tools;
   }
 
-  async executeMCPTool(toolName: string, args: any): Promise<any> {
+  async executeMCPTool(toolName: string, args: Record<string, unknown>): Promise<unknown> {
     const token = localStorage.getItem('token');
     const response = await axios.post(
       `${this.baseURL}/mcp/execute`,
@@ -203,9 +222,9 @@ class ChatService {
     message: string,
     conversationHistory: ChatMessage[] = [],
     context: ChatContext = {},
-    onChunk: (chunk: any) => void,
+    onChunk: (chunk: string) => void,
     onComplete: () => void,
-    onError: (error: any) => void
+    onError: (error: Error) => void
   ): Promise<void> {
     const token = localStorage.getItem('token');
     
