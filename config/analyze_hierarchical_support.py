@@ -8,12 +8,19 @@ supports hierarchical/collapsible subdomain data structures.
 """
 
 import sqlite3
-import psycopg2
+try:
+    import psycopg2
+    HAS_POSTGRESQL = True
+except ImportError:
+    HAS_POSTGRESQL = False
+    psycopg2 = None
 import argparse
 import logging
 from typing import Dict, List, Any, Optional, Tuple
 import re
 from collections import defaultdict
+from datetime import datetime
+import json
 
 # Configure logging
 logging.basicConfig(
@@ -48,7 +55,10 @@ class SubdomainHierarchyAnalyzer:
             if self.db_type == 'sqlite':
                 self.conn = sqlite3.connect(self.db_path)
                 self.conn.row_factory = sqlite3.Row
-            else:
+            elif self.db_type == 'postgresql':
+                if not HAS_POSTGRESQL:
+                    logger.error("PostgreSQL support not available. Install psycopg2-binary.")
+                    return False
                 # PostgreSQL connection would be implemented here
                 logger.error("PostgreSQL connection not implemented in this version")
                 return False
@@ -89,7 +99,8 @@ class SubdomainHierarchyAnalyzer:
             for index in indexes:
                 index_name = index[1]
                 cursor.execute(f"PRAGMA index_info({index_name})")
-                index_details[index_name] = cursor.fetchall()
+                index_info = cursor.fetchall()
+                index_details[index_name] = [{'seqno': row[0], 'cid': row[1], 'name': row[2]} for row in index_info]
             
             schema_analysis = {
                 'table_name': 'domains',
@@ -132,8 +143,8 @@ class SubdomainHierarchyAnalyzer:
         
         # Check for unique constraints that support deduplication
         has_unique_constraint = any(
-            any(col[1] == 'subdomain' for col in idx_cols) and 
-            any(col[1] == 'source' for col in idx_cols)
+            any(col.get('name') == 'subdomain' for col in idx_cols) and 
+            any(col.get('name') == 'source' for col in idx_cols)
             for idx_cols in indexes.values()
         )
         

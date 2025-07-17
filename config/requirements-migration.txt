@@ -1,0 +1,8 @@
+# Requirements for database migration tools
+# Install with: pip install -r requirements-migration.txt
+
+# PostgreSQL adapter
+psycopg2-binary>=2.9.0
+
+# Optional: for advanced database analysis
+# sqlalchemy>=1.4.0
