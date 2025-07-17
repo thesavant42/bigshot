@@ -33,6 +33,13 @@ class Config:
     # Rate limiting
     RATE_LIMIT_ENABLED = True
     RATE_LIMIT_STORAGE_URL = REDIS_URL
+    
+    # LLM and MCP settings
+    OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
+    OPENAI_API_BASE = os.environ.get('OPENAI_API_BASE', 'https://api.openai.com/v1')
+    OPENAI_MODEL = os.environ.get('OPENAI_MODEL', 'gpt-3.5-turbo')
+    MCP_SERVER_ENABLED = os.environ.get('MCP_SERVER_ENABLED', 'true').lower() == 'true'
+    MCP_SERVER_PORT = int(os.environ.get('MCP_SERVER_PORT', '8001'))
 
 
 class DevelopmentConfig(Config):
