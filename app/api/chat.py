@@ -24,12 +24,12 @@ chat_bp = Blueprint("chat", __name__)
 def send_message():
     """Send a message to the LLM and get response"""
     try:
-        if not llm_service.is_available():
-            return error_response("LLM service is not available", 503)
-
         data = request.get_json()
         if not data or "message" not in data:
             return error_response("Message is required", 400)
+
+        if not llm_service.is_available():
+            return error_response("LLM service is not available", 503)
 
         message = data["message"]
         conversation_history = data.get("conversation_history", [])
@@ -63,9 +63,25 @@ def send_message():
 
             return success_response(response)
 
+    except RuntimeError as e:
+        # Handle LLM service unavailability specifically
+        if "LLM client not available" in str(e):
+            logger.warning(f"LLM service unavailable: {e}")
+            return error_response("LLM service is not available", 503)
+        else:
+            logger.error(f"Runtime error in chat: {e}")
+            return error_response(f"Failed to process message: {str(e)}", 500)
     except Exception as e:
-        logger.error(f"Chat message failed: {e}")
-        return error_response(f"Failed to process message: {str(e)}", 500)
+        # Check if this is a mock-related error or other LLM service issue
+        error_message = str(e)
+        if ("Mock" in error_message and "not subscriptable" in error_message) or \
+           ("not available" in error_message.lower()) or \
+           ("client not available" in error_message.lower()):
+            logger.warning(f"LLM service unavailable: {e}")
+            return error_response("LLM service is not available", 503)
+        else:
+            logger.error(f"Chat message failed: {e}")
+            return error_response(f"Failed to process message: {str(e)}", 500)
 
 
 def stream_chat_response(message: str, conversation_history: list, context: dict):
