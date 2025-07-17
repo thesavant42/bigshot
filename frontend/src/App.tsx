@@ -2,6 +2,8 @@ import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import MainLayout from './components/layout/MainLayout';
 import DomainDashboard from './components/domain/DomainDashboard';
+import ChatInterface from './components/ChatInterface';
+import SplitLayout from './components/SplitLayout';
 import { useAuth } from './hooks/useApi';
 
 const queryClient = new QueryClient({
@@ -102,7 +104,10 @@ const AppContent: React.FC = () => {
 
   return (
     <MainLayout>
-      <DomainDashboard />
+      <SplitLayout
+        leftPanel={<ChatInterface />}
+        rightPanel={<DomainDashboard />}
+      />
     </MainLayout>
   );
 };

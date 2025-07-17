@@ -2,6 +2,7 @@
 Database models for the bigshot application
 """
 
+import json
 from datetime import datetime
 from app import db
 
@@ -153,3 +154,52 @@ class APIKey(db.Model):
             result['key_masked'] = self.key_value[:8] + '...' if len(self.key_value) > 8 else '***'
         
         return result
+
+
+class Conversation(db.Model):
+    """Conversation model for storing chat sessions"""
+    
+    __tablename__ = 'conversations'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    session_id = db.Column(db.String(255), unique=True, nullable=False)
+    title = db.Column(db.String(255))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    messages = db.relationship('ChatMessage', backref='conversation', lazy=True, cascade='all, delete-orphan')
+    
+    def to_dict(self):
+        """Convert conversation to dictionary representation"""
+        return {
+            'id': self.id,
+            'session_id': self.session_id,
+            'title': self.title,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+            'message_count': len(self.messages)
+        }
+
+
+class ChatMessage(db.Model):
+    """Chat message model for storing individual messages"""
+    
+    __tablename__ = 'chat_messages'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    conversation_id = db.Column(db.Integer, db.ForeignKey('conversations.id'), nullable=False)
+    role = db.Column(db.String(50), nullable=False)  # 'user', 'assistant', 'system'
+    content = db.Column(db.Text, nullable=False)
+    function_calls = db.Column(db.Text)  # JSON string of function calls
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def to_dict(self):
+        """Convert message to dictionary representation"""
+        return {
+            'id': self.id,
+            'conversation_id': self.conversation_id,
+            'role': self.role,
+            'content': self.content,
+            'function_calls': json.loads(self.function_calls) if self.function_calls else None,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
