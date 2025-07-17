@@ -3,7 +3,7 @@ Job management service
 """
 
 import json
-from datetime import datetime
+from datetime import datetime, UTC, timedelta
 from app import db
 from app.models.models import Job
 
@@ -129,7 +129,7 @@ class JobManager:
                         if "current" in task.info and "total" in task.info:
                             logs.append(
                                 {
-                                    "timestamp": datetime.utcnow().isoformat(),
+                                    "timestamp": datetime.now(UTC).isoformat(),
                                     "level": "INFO",
                                     "message": f'Progress: {task.info["current"]}/{task.info["total"]} tasks completed',
                                 }
@@ -138,7 +138,7 @@ class JobManager:
                         if "domain" in task.info and "source" in task.info:
                             logs.append(
                                 {
-                                    "timestamp": datetime.utcnow().isoformat(),
+                                    "timestamp": datetime.now(UTC).isoformat(),
                                     "level": "INFO",
                                     "message": f'Processing domain: {task.info["domain"]} from {task.info["source"]}',
                                 }
@@ -263,21 +263,26 @@ class JobManager:
 
         # Simple estimation based on progress
         if job.progress > 0:
-            elapsed = (datetime.utcnow() - job.created_at).total_seconds()
+            # Handle timezone-aware and timezone-naive datetime comparison
+            job_created_at = job.created_at
+            if job_created_at.tzinfo is None:
+                # If job.created_at is naive, assume it's UTC
+                job_created_at = job_created_at.replace(tzinfo=UTC)
+
+            elapsed = (datetime.now(UTC) - job_created_at).total_seconds()
             estimated_total = elapsed / (job.progress / 100)
             remaining = estimated_total - elapsed
 
             if remaining > 0:
-                estimated_completion = datetime.utcnow().timestamp() + remaining
+                estimated_completion = datetime.now(UTC).timestamp() + remaining
                 return datetime.fromtimestamp(estimated_completion).isoformat()
 
         return None
 
     def cleanup_old_jobs(self, days_old=7):
         """Clean up old completed jobs"""
-        from datetime import timedelta
 
-        cutoff_date = datetime.utcnow() - timedelta(days=days_old)
+        cutoff_date = datetime.now(UTC) - timedelta(days=days_old)
 
         old_jobs = Job.query.filter(
             Job.created_at < cutoff_date,
