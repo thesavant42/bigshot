@@ -10,7 +10,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # Set Flask environment
-os.environ.setdefault('FLASK_ENV', 'development')
+os.environ.setdefault("FLASK_ENV", "development")
 
 from app import create_app, db
 from celery_app import celery_app
@@ -22,14 +22,14 @@ app = create_app()
 with app.app_context():
     # Update Celery configuration with Flask context
     celery_app.conf.update(app.config)
-    
+
     # Set the task base class to include Flask context
     class ContextTask(celery_app.Task):
         def __call__(self, *args, **kwargs):
             with app.app_context():
                 return self.run(*args, **kwargs)
-    
+
     celery_app.Task = ContextTask
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     celery_app.start()

@@ -14,20 +14,20 @@ def app():
     """Create and configure a new app instance for each test"""
     # Create a temporary file for the test database
     db_fd, db_path = tempfile.mkstemp()
-    
+
     # Create test configuration
     test_config = TestingConfig()
-    test_config.SQLALCHEMY_DATABASE_URI = f'sqlite:///{db_path}'
+    test_config.SQLALCHEMY_DATABASE_URI = f"sqlite:///{db_path}"
     test_config.TESTING = True
-    
+
     # Create app
     app = create_app(test_config)
-    
+
     with app.app_context():
         db.create_all()
-    
+
     yield app
-    
+
     # Clean up
     os.close(db_fd)
     os.unlink(db_path)
@@ -49,12 +49,11 @@ def runner(app):
 def auth_headers(client):
     """Get authorization headers for authenticated requests"""
     # Login to get token
-    response = client.post('/api/v1/auth/login', json={
-        'username': 'admin',
-        'password': 'admin123'
-    })
-    
+    response = client.post(
+        "/api/v1/auth/login", json={"username": "admin", "password": "admin123"}
+    )
+
     data = response.get_json()
-    token = data['data']['access_token']
-    
-    return {'Authorization': f'Bearer {token}'}
+    token = data["data"]["access_token"]
+
+    return {"Authorization": f"Bearer {token}"}
