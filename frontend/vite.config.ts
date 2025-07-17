@@ -21,6 +21,7 @@ export default defineConfig({
       },
     },
   },
+  // @ts-expect-error - Vitest config is valid here with the reference types
   test: {
     globals: true,
     environment: 'jsdom',
