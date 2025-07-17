@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { ChatBubbleLeftRightIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import { useKeyboard } from '../contexts/KeyboardContext';
+import { useKeyboard } from '../hooks/useKeyboard';
 import ChatInterface from './ChatInterface';
 
 interface SplitLayoutProps {
@@ -48,7 +48,7 @@ const SplitLayout: React.FC<SplitLayoutProps> = ({
     e.preventDefault();
   };
 
-  const handleMouseMove = (e: MouseEvent) => {
+  const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isDragging || isMobile) return;
 
     const container = containerRef.current;
@@ -60,11 +60,11 @@ const SplitLayout: React.FC<SplitLayoutProps> = ({
     // Constrain between 20% and 80%
     const constrainedWidth = Math.min(Math.max(newLeftWidth, 20), 80);
     setLeftWidth(constrainedWidth);
-  };
+  }, [isDragging, isMobile]);
 
-  const handleMouseUp = () => {
+  const handleMouseUp = useCallback(() => {
     setIsDragging(false);
-  };
+  }, []);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (!isMobile) return;
@@ -72,7 +72,7 @@ const SplitLayout: React.FC<SplitLayoutProps> = ({
     e.preventDefault();
   };
 
-  const handleTouchMove = (e: TouchEvent) => {
+  const handleTouchMove = useCallback((e: TouchEvent) => {
     if (!isDragging || !isMobile) return;
 
     const container = containerRef.current;
@@ -84,11 +84,11 @@ const SplitLayout: React.FC<SplitLayoutProps> = ({
     
     const constrainedWidth = Math.min(Math.max(newLeftWidth, 20), 80);
     setLeftWidth(constrainedWidth);
-  };
+  }, [isDragging, isMobile]);
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = useCallback(() => {
     setIsDragging(false);
-  };
+  }, []);
 
   useEffect(() => {
     if (isDragging) {
@@ -104,7 +104,7 @@ const SplitLayout: React.FC<SplitLayoutProps> = ({
         document.removeEventListener('touchend', handleTouchEnd);
       };
     }
-  }, [isDragging]);
+  }, [isDragging, handleMouseMove, handleTouchMove, handleMouseUp, handleTouchEnd]);
 
   // Mobile layout - stacked vertically
   if (isMobile) {

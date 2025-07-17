@@ -65,7 +65,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
     setError(null);
 
     try {
-      let assistantMessage: ChatMessage = {
+      const assistantMessage: ChatMessage = {
         role: 'assistant',
         content: '',
         created_at: new Date().toISOString(),

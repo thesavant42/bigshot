@@ -1,5 +1,5 @@
 import React from 'react';
-import { useKeyboard } from '../contexts/KeyboardContext';
+import { useKeyboard, type KeyboardShortcut } from '../hooks/useKeyboard';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 
 const KeyboardShortcutsHelp: React.FC = () => {
@@ -7,7 +7,7 @@ const KeyboardShortcutsHelp: React.FC = () => {
 
   if (!isHelpVisible) return null;
 
-  const formatShortcut = (shortcut: any) => {
+  const formatShortcut = (shortcut: KeyboardShortcut) => {
     const keys = [];
     if (shortcut.ctrlKey) keys.push('Ctrl');
     if (shortcut.metaKey) keys.push('Cmd');

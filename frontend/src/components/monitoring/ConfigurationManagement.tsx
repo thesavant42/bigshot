@@ -18,7 +18,7 @@ interface ConfigurationSetting {
   name: string;
   description: string;
   type: 'string' | 'number' | 'boolean' | 'select' | 'password';
-  value: any;
+  value: string | number | boolean;
   options?: string[];
   required?: boolean;
   validation?: {
@@ -31,7 +31,7 @@ interface ConfigurationSetting {
 
 const ConfigurationManagement: React.FC = () => {
   const [activeSection, setActiveSection] = useState('general');
-  const [unsavedChanges, setUnsavedChanges] = useState<Record<string, any>>({});
+  const [unsavedChanges, setUnsavedChanges] = useState<Record<string, string | number | boolean>>({});
   const queryClient = useQueryClient();
 
   const { isLoading } = useQuery({
@@ -40,7 +40,7 @@ const ConfigurationManagement: React.FC = () => {
   });
 
   const updateConfigMutation = useMutation({
-    mutationFn: ({ section, settings }: { section: string; settings: Record<string, any> }) =>
+    mutationFn: ({ section, settings }: { section: string; settings: Record<string, string | number | boolean> }) =>
       apiService.updateSettings({ section, ...settings }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['config'] });
@@ -61,7 +61,7 @@ const ConfigurationManagement: React.FC = () => {
     },
   });
 
-  const handleSettingChange = (sectionId: string, key: string, value: any) => {
+  const handleSettingChange = (sectionId: string, key: string, value: string | number | boolean) => {
     setUnsavedChanges(prev => ({
       ...prev,
       [`${sectionId}.${key}`]: value
@@ -75,7 +75,7 @@ const ConfigurationManagement: React.FC = () => {
         const settingKey = key.split('.').slice(1).join('.');
         acc[settingKey] = value;
         return acc;
-      }, {} as Record<string, any>);
+      }, {} as Record<string, string | number | boolean>);
 
     if (Object.keys(sectionChanges).length > 0) {
       updateConfigMutation.mutate({ section: sectionId, settings: sectionChanges });

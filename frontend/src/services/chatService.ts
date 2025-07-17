@@ -259,7 +259,7 @@ class ChatService {
               } else {
                 onChunk(data);
               }
-            } catch (error) {
+            } catch {
               // Skip invalid JSON
             }
           }

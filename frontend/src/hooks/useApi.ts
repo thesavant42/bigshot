@@ -2,6 +2,25 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiService } from '../services/api';
 import type { Domain, FilterOptions } from '../types';
 
+// Additional types for API operations
+interface BulkOperationData {
+  tags?: string[];
+  [key: string]: unknown;
+}
+
+interface EnumerationOptions {
+  recursive?: boolean;
+  max_depth?: number;
+  timeout?: number;
+  [key: string]: unknown;
+}
+
+interface ChatContext {
+  domains?: string[];
+  jobs?: string[];
+  [key: string]: unknown;
+}
+
 export const useAuth = () => {
   const queryClient = useQueryClient();
 
@@ -66,7 +85,7 @@ export const useDomains = (filters: FilterOptions = {}) => {
   });
 
   const bulkOperation = useMutation({
-    mutationFn: ({ operation, domainIds, data }: { operation: string; domainIds: number[]; data?: any }) =>
+    mutationFn: ({ operation, domainIds, data }: { operation: string; domainIds: number[]; data?: BulkOperationData }) =>
       apiService.bulkDomainOperation(operation, domainIds, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['domains'] });
@@ -74,7 +93,7 @@ export const useDomains = (filters: FilterOptions = {}) => {
   });
 
   const enumerateDomains = useMutation({
-    mutationFn: ({ domains, sources, options }: { domains: string[]; sources?: string[]; options?: any }) =>
+    mutationFn: ({ domains, sources, options }: { domains: string[]; sources?: string[]; options?: EnumerationOptions }) =>
       apiService.enumerateDomains(domains, sources, options),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['jobs'] });
@@ -140,7 +159,7 @@ export const useChat = () => {
   const queryClient = useQueryClient();
 
   const sendMessage = useMutation({
-    mutationFn: ({ message, context }: { message: string; context?: any }) =>
+    mutationFn: ({ message, context }: { message: string; context?: ChatContext }) =>
       apiService.sendMessage(message, context),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['conversation'] });

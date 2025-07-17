@@ -1,23 +1,23 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
-interface VirtualScrollItem {
+interface VirtualScrollItem<T = unknown> {
   id: string;
   height: number;
-  data: any;
+  data: T;
 }
 
-interface VirtualScrollProps {
-  items: VirtualScrollItem[];
+interface VirtualScrollProps<T = unknown> {
+  items: VirtualScrollItem<T>[];
   itemHeight: number;
   containerHeight: number;
   overscan?: number;
-  renderItem: (item: VirtualScrollItem, index: number) => React.ReactNode;
+  renderItem: (item: VirtualScrollItem<T>, index: number) => React.ReactNode;
   className?: string;
   onEndReached?: () => void;
   endReachedThreshold?: number;
 }
 
-const VirtualScroll: React.FC<VirtualScrollProps> = ({
+const VirtualScroll = <T = unknown>({
   items,
   itemHeight,
   containerHeight,
@@ -26,7 +26,7 @@ const VirtualScroll: React.FC<VirtualScrollProps> = ({
   className = '',
   onEndReached,
   endReachedThreshold = 0.8,
-}) => {
+}: VirtualScrollProps<T>) => {
   const [scrollTop, setScrollTop] = useState(0);
   const scrollElementRef = useRef<HTMLDivElement>(null);
 

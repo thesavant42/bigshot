@@ -1,9 +1,22 @@
 import { useEffect, useRef, useState } from 'react';
 import { webSocketService } from '../services/websocket';
+import type { Job, Domain, ChatMessage } from '../types';
+
+// WebSocket event data types
+interface JobUpdateData extends Partial<Job> {
+  id: string;
+}
+
+interface DomainUpdateData extends Partial<Domain> {
+  id?: number;
+}
+
+// Generic WebSocket event handler
+type WebSocketEventHandler<T = unknown> = (data: T) => void;
 
 export const useWebSocket = () => {
   const [isConnected, setIsConnected] = useState(false);
-  const subscribersRef = useRef<Map<string, Set<(data: any) => void>>>(new Map());
+  const subscribersRef = useRef<Map<string, Set<WebSocketEventHandler>>>(new Map());
 
   useEffect(() => {
     webSocketService.connect();
@@ -21,7 +34,7 @@ export const useWebSocket = () => {
     };
   }, []);
 
-  const subscribe = (event: string, handler: (data: any) => void) => {
+  const subscribe = <T = unknown>(event: string, handler: WebSocketEventHandler<T>) => {
     if (!subscribersRef.current.has(event)) {
       subscribersRef.current.set(event, new Set());
     }
@@ -40,7 +53,7 @@ export const useWebSocket = () => {
     };
   };
 
-  const sendMessage = (type: string, data: any) => {
+  const sendMessage = (type: string, data: unknown) => {
     webSocketService.sendMessage(type, data);
   };
 
@@ -53,10 +66,10 @@ export const useWebSocket = () => {
 
 export const useJobUpdates = () => {
   const { subscribe } = useWebSocket();
-  const [jobUpdates, setJobUpdates] = useState<any[]>([]);
+  const [jobUpdates, setJobUpdates] = useState<JobUpdateData[]>([]);
 
   useEffect(() => {
-    const unsubscribe = subscribe('job_update', (data: any) => {
+    const unsubscribe = subscribe<JobUpdateData>('job_update', (data: JobUpdateData) => {
       setJobUpdates(prev => [...prev.slice(-49), data]); // Keep last 50 updates
     });
 
@@ -68,10 +81,10 @@ export const useJobUpdates = () => {
 
 export const useDomainUpdates = () => {
   const { subscribe } = useWebSocket();
-  const [domainUpdates, setDomainUpdates] = useState<any[]>([]);
+  const [domainUpdates, setDomainUpdates] = useState<DomainUpdateData[]>([]);
 
   useEffect(() => {
-    const unsubscribe = subscribe('domain_discovered', (data: any) => {
+    const unsubscribe = subscribe<DomainUpdateData>('domain_discovered', (data: DomainUpdateData) => {
       setDomainUpdates(prev => [...prev.slice(-99), data]); // Keep last 100 updates
     });
 
@@ -83,10 +96,10 @@ export const useDomainUpdates = () => {
 
 export const useChatUpdates = () => {
   const { subscribe } = useWebSocket();
-  const [chatUpdates, setChatUpdates] = useState<any[]>([]);
+  const [chatUpdates, setChatUpdates] = useState<ChatMessage[]>([]);
 
   useEffect(() => {
-    const unsubscribe = subscribe('chat_message', (data: any) => {
+    const unsubscribe = subscribe<ChatMessage>('chat_message', (data: ChatMessage) => {
       setChatUpdates(prev => [...prev.slice(-49), data]); // Keep last 50 messages
     });
 
