@@ -1,0 +1,146 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Install Node.js dependencies
+      working-directory: frontend
+      run: npm ci
+    
+    - name: Build frontend
+      working-directory: frontend
+      run: npm run build
+    
+    - name: Create release archive
+      run: |
+        mkdir -p release
+        cp -r app/ release/
+        cp -r frontend/dist/ release/frontend/
+        cp -r docs/ release/
+        cp requirements.txt release/
+        cp run.py release/
+        cp server.py release/
+        cp -r config/ release/
+        cp docker-compose.yml release/
+        cp Dockerfile release/
+        cp README.md release/
+        cp LICENSE release/
+        
+        # Create version file
+        echo "${GITHUB_REF#refs/tags/}" > release/VERSION
+        
+        # Archive the release
+        tar -czf bigshot-${GITHUB_REF#refs/tags/}.tar.gz -C release .
+    
+    - name: Generate changelog
+      id: changelog
+      run: |
+        # Extract version from tag
+        VERSION=${GITHUB_REF#refs/tags/}
+        
+        # Get the latest two tags
+        PREVIOUS_TAG=$(git tag --sort=-version:refname | sed -n '2p')
+        
+        # Generate changelog
+        echo "## Changes in $VERSION" > changelog.md
+        echo "" >> changelog.md
+        
+        if [ ! -z "$PREVIOUS_TAG" ]; then
+          echo "### Commits since $PREVIOUS_TAG:" >> changelog.md
+          git log --oneline $PREVIOUS_TAG..HEAD --pretty=format:"- %s" >> changelog.md
+        else
+          echo "### Initial release" >> changelog.md
+          git log --oneline --pretty=format:"- %s" >> changelog.md
+        fi
+        
+        echo "" >> changelog.md
+        echo "Full Changelog: https://github.com/${{ github.repository }}/compare/$PREVIOUS_TAG...$VERSION" >> changelog.md
+        
+        # Set output for later use
+        echo "changelog<<EOF" >> $GITHUB_OUTPUT
+        cat changelog.md >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+    
+    - name: Create GitHub Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        body: ${{ steps.changelog.outputs.changelog }}
+        draft: false
+        prerelease: false
+    
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./bigshot-${{ github.ref }}.tar.gz
+        asset_name: bigshot-${{ github.ref }}.tar.gz
+        asset_content_type: application/gzip
+
+  docker-release:
+    runs-on: ubuntu-latest
+    needs: release
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+    
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: bigshot/app
+        tags: |
+          type=ref,event=tag
+          type=raw,value=latest,enable={{is_default_branch}}
+    
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max

@@ -20,42 +20,46 @@ from app.services.job_manager import JobManager
 
 def demo_epic3_implementation():
     """Demonstrate Epic 3 implementation features"""
-    
+
     # Create Flask app
     app = create_app()
-    
+
     with app.app_context():
         # Create database tables
         db.create_all()
-        
+
         print("=" * 60)
         print("EPIC 3: Background Task & Job Processing Demo")
         print("=" * 60)
         print()
-        
+
         # 1. Demonstrate Celery integration
         print("1. CELERY INTEGRATION")
         print("-" * 30)
-        
+
         # Check Celery tasks are available
         from app.tasks.domain_enumeration import enumerate_domains_task
-        from app.tasks.data_processing import normalize_domains_task, deduplicate_domains_task
+        from app.tasks.data_processing import (
+            normalize_domains_task,
+            deduplicate_domains_task,
+        )
         from app.tasks.notifications import send_job_notification_task
-        
+
         print("✅ Celery tasks imported successfully:")
         print(f"   - Domain enumeration: {enumerate_domains_task.name}")
         print(f"   - Data normalization: {normalize_domains_task.name}")
         print(f"   - Data deduplication: {deduplicate_domains_task.name}")
         print(f"   - Notifications: {send_job_notification_task.name}")
         print()
-        
+
         # 2. Demonstrate Redis connection
         print("2. REDIS MESSAGE BROKER")
         print("-" * 30)
-        
+
         try:
             import redis
             from config.config import Config
+
             redis_client = redis.Redis.from_url(Config.REDIS_URL)
             redis_client.ping()
             print("✅ Redis connection successful")
@@ -64,15 +68,15 @@ def demo_epic3_implementation():
         except Exception as e:
             print(f"❌ Redis connection failed: {e}")
         print()
-        
+
         # 3. Demonstrate domain enumeration workers
         print("3. DOMAIN ENUMERATION WORKERS")
         print("-" * 30)
-        
+
         service = EnumerationService()
         print(f"✅ Enumeration service initialized")
         print(f"   - Supported sources: {service.supported_sources}")
-        
+
         # Show how to start enumeration (without actually running it)
         print("\n📝 Example enumeration job creation:")
         print("   domains = ['example.com']")
@@ -80,29 +84,31 @@ def demo_epic3_implementation():
         print("   job = service.start_enumeration(domains, sources, {})")
         print("   -> Job would be queued with Celery for background processing")
         print()
-        
+
         # 4. Demonstrate job status tracking
         print("4. JOB STATUS & PROGRESS TRACKING")
         print("-" * 30)
-        
+
         job_manager = JobManager()
-        
+
         # Create a sample job to demonstrate tracking
         sample_job = Job(
-            type='domain_enumeration',
-            domain='example.com',
-            status='completed',
+            type="domain_enumeration",
+            domain="example.com",
+            status="completed",
             progress=100,
-            result=json.dumps({
-                'total_found': 50,
-                'new_domains': 30,
-                'updated_domains': 20,
-                'domains_found': ['sub1.example.com', 'sub2.example.com']
-            })
+            result=json.dumps(
+                {
+                    "total_found": 50,
+                    "new_domains": 30,
+                    "updated_domains": 20,
+                    "domains_found": ["sub1.example.com", "sub2.example.com"],
+                }
+            ),
         )
         db.session.add(sample_job)
         db.session.commit()
-        
+
         status = job_manager.get_job_status(sample_job.id)
         print("✅ Job status tracking:")
         print(f"   - Job ID: {status['id']}")
@@ -110,40 +116,50 @@ def demo_epic3_implementation():
         print(f"   - Progress: {status['progress']}%")
         print(f"   - Type: {status['type']}")
         print()
-        
+
         # 5. Demonstrate data normalization and deduplication
         print("5. DATA NORMALIZATION & DEDUPLICATION")
         print("-" * 30)
-        
+
         # Create some test domains
         test_domains = [
-            Domain(root_domain='example.com', subdomain='WWW.EXAMPLE.COM', source='crt.sh'),
-            Domain(root_domain='example.com', subdomain='www.example.com.', source='virustotal'),
-            Domain(root_domain='example.com', subdomain='api.example.com', source='crt.sh'),
-            Domain(root_domain='example.com', subdomain='api.example.com', source='shodan'),  # Duplicate
+            Domain(
+                root_domain="example.com", subdomain="WWW.EXAMPLE.COM", source="crt.sh"
+            ),
+            Domain(
+                root_domain="example.com",
+                subdomain="www.example.com.",
+                source="virustotal",
+            ),
+            Domain(
+                root_domain="example.com", subdomain="api.example.com", source="crt.sh"
+            ),
+            Domain(
+                root_domain="example.com", subdomain="api.example.com", source="shodan"
+            ),  # Duplicate
         ]
-        
+
         for domain in test_domains:
             db.session.add(domain)
         db.session.commit()
-        
+
         print("✅ Data processing capabilities:")
         print(f"   - Created {len(test_domains)} test domains")
         print("   - Normalization: Converts 'WWW.EXAMPLE.COM' -> 'example.com'")
         print("   - Deduplication: Merges duplicate domains from different sources")
         print("   - Cleanup: Removes old domains based on age")
-        
+
         # Show how to start data processing jobs
         print("\n📝 Example data processing jobs:")
         print("   normalize_job = job_manager.start_data_normalization()")
         print("   dedupe_job = job_manager.start_data_deduplication()")
         print("   cleanup_job = job_manager.start_data_cleanup(days_old=30)")
         print()
-        
+
         # 6. Demonstrate notification hooks
         print("6. NOTIFICATION HOOKS")
         print("-" * 30)
-        
+
         print("✅ Notification system features:")
         print("   - Job started notifications")
         print("   - Job progress updates")
@@ -152,31 +168,32 @@ def demo_epic3_implementation():
         print("   - WebSocket real-time broadcasts")
         print("   - Redis pub/sub for scalability")
         print()
-        
+
         # 7. Demonstrate WebSocket integration
         print("7. WEBSOCKET REAL-TIME UPDATES")
         print("-" * 30)
-        
+
         try:
             from app.services.websocket import websocket_service
+
             print("✅ WebSocket service initialized")
             print("   - Real-time job progress updates")
             print("   - Job status change notifications")
             print("   - Client subscription management")
             print("   - Room-based broadcasting")
-            
+
             # Show connection stats
             stats = websocket_service.get_connection_stats()
             print(f"   - Active connections: {stats['active_connections']}")
             print()
-            
+
         except Exception as e:
             print(f"❌ WebSocket service error: {e}")
-        
+
         # 8. Show API endpoints
         print("8. API ENDPOINTS")
         print("-" * 30)
-        
+
         endpoints = [
             "GET /api/v1/jobs - List jobs with filtering",
             "GET /api/v1/jobs/{id} - Get specific job",
@@ -189,18 +206,18 @@ def demo_epic3_implementation():
             "POST /api/v1/jobs/data/deduplicate - Start deduplication",
             "POST /api/v1/jobs/data/cleanup - Start cleanup",
             "GET /api/v1/jobs/stats - Get job statistics",
-            "GET /api/v1/websocket/stats - Get WebSocket stats"
+            "GET /api/v1/websocket/stats - Get WebSocket stats",
         ]
-        
+
         print("✅ Available API endpoints:")
         for endpoint in endpoints:
             print(f"   - {endpoint}")
         print()
-        
+
         # 9. Show testing coverage
         print("9. TESTING COVERAGE")
         print("-" * 30)
-        
+
         print("✅ Comprehensive test suite:")
         print("   - Job processing with Celery")
         print("   - Task cancellation and error handling")
@@ -209,11 +226,11 @@ def demo_epic3_implementation():
         print("   - WebSocket connection testing")
         print("   - Performance and error case testing")
         print()
-        
+
         # 10. Show performance and scalability features
         print("10. PERFORMANCE & SCALABILITY")
         print("-" * 30)
-        
+
         print("✅ Scalability features:")
         print("   - Celery distributed task queue")
         print("   - Redis message broker for high throughput")
@@ -223,12 +240,12 @@ def demo_epic3_implementation():
         print("   - Database connection pooling")
         print("   - Task result caching")
         print()
-        
+
         # Final summary
         print("=" * 60)
         print("EPIC 3 IMPLEMENTATION SUMMARY")
         print("=" * 60)
-        
+
         checklist = [
             "✅ Integrate Celery with Flask for background jobs",
             "✅ Connect Redis as message broker and cache",
@@ -236,12 +253,12 @@ def demo_epic3_implementation():
             "✅ Build job status/progress tracking (including real-time updates via WebSockets)",
             "✅ Implement data normalization and deduplication pipeline",
             "✅ Add notification hooks to UI/backend",
-            "✅ Write tests for job processing, error cases, and performance"
+            "✅ Write tests for job processing, error cases, and performance",
         ]
-        
+
         for item in checklist:
             print(item)
-        
+
         print("\n🎉 Epic 3 implementation complete!")
         print("\nTo run the system:")
         print("1. Start Redis: redis-server")
@@ -249,7 +266,7 @@ def demo_epic3_implementation():
         print("3. Start Flask app: python run.py")
         print("4. Test WebSocket: python test_websocket_client.py")
         print()
-        
+
         # Show next steps
         print("🚀 Next steps for production:")
         print("   - Deploy with Docker containers")
@@ -260,5 +277,6 @@ def demo_epic3_implementation():
         print("   - Configure SSL/TLS")
         print()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     demo_epic3_implementation()

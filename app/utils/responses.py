@@ -9,9 +9,9 @@ from datetime import datetime
 def success_response(data, status_code=200):
     """Create a successful API response"""
     response = {
-        'success': True,
-        'data': data,
-        'timestamp': datetime.utcnow().isoformat()
+        "success": True,
+        "data": data,
+        "timestamp": datetime.utcnow().isoformat(),
     }
     return jsonify(response), status_code
 
@@ -19,12 +19,9 @@ def success_response(data, status_code=200):
 def error_response(message, status_code=400, error_code=None):
     """Create an error API response"""
     response = {
-        'success': False,
-        'error': {
-            'message': message,
-            'code': error_code or f'HTTP_{status_code}'
-        },
-        'timestamp': datetime.utcnow().isoformat()
+        "success": False,
+        "error": {"message": message, "code": error_code or f"HTTP_{status_code}"},
+        "timestamp": datetime.utcnow().isoformat(),
     }
     return jsonify(response), status_code
 
@@ -32,17 +29,17 @@ def error_response(message, status_code=400, error_code=None):
 def paginated_response(data, total, page, per_page, pages):
     """Create a paginated API response"""
     response = {
-        'success': True,
-        'data': data,
-        'pagination': {
-            'total': total,
-            'page': page,
-            'per_page': per_page,
-            'pages': pages,
-            'has_next': page < pages,
-            'has_prev': page > 1
+        "success": True,
+        "data": data,
+        "pagination": {
+            "total": total,
+            "page": page,
+            "per_page": per_page,
+            "pages": pages,
+            "has_next": page < pages,
+            "has_prev": page > 1,
         },
-        'timestamp': datetime.utcnow().isoformat()
+        "timestamp": datetime.utcnow().isoformat(),
     }
     return jsonify(response), 200
 
@@ -50,12 +47,12 @@ def paginated_response(data, total, page, per_page, pages):
 def validation_error_response(errors):
     """Create a validation error response"""
     response = {
-        'success': False,
-        'error': {
-            'message': 'Validation failed',
-            'code': 'VALIDATION_ERROR',
-            'details': errors
+        "success": False,
+        "error": {
+            "message": "Validation failed",
+            "code": "VALIDATION_ERROR",
+            "details": errors,
         },
-        'timestamp': datetime.utcnow().isoformat()
+        "timestamp": datetime.utcnow().isoformat(),
     }
     return jsonify(response), 400
