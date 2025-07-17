@@ -16,7 +16,7 @@ type WebSocketEventHandler<T = unknown> = (data: T) => void;
 
 export const useWebSocket = () => {
   const [isConnected, setIsConnected] = useState(false);
-  const subscribersRef = useRef<Map<string, Set<WebSocketEventHandler>>>(new Map());
+  const subscribersRef = useRef<Map<string, Set<WebSocketEventHandler<unknown>>>>(new Map());
 
   useEffect(() => {
     webSocketService.connect();
@@ -40,13 +40,14 @@ export const useWebSocket = () => {
     }
     
     const subscribers = subscribersRef.current.get(event)!;
-    subscribers.add(handler);
+    // Type assertion is safe here as we're controlling the handler type
+    subscribers.add(handler as WebSocketEventHandler<unknown>);
 
     const unsubscribe = webSocketService.subscribe(event, handler);
 
     return () => {
       unsubscribe();
-      subscribers.delete(handler);
+      subscribers.delete(handler as WebSocketEventHandler<unknown>);
       if (subscribers.size === 0) {
         subscribersRef.current.delete(event);
       }
