@@ -4,7 +4,7 @@ Chat API endpoints for LLM integration
 
 import json
 import logging
-from datetime import datetime, UTC
+from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 from flask import Blueprint, request, jsonify, Response, stream_with_context
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -40,7 +40,7 @@ def send_message():
         context.update(
             {
                 "user_id": get_jwt_identity(),
-                "timestamp": datetime.now(UTC).isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
         )
 
@@ -139,7 +139,7 @@ def get_status():
             "models": (
                 llm_service.get_available_models() if llm_service.is_available() else []
             ),
-            "timestamp": datetime.now(UTC).isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         return success_response(status)
@@ -167,7 +167,7 @@ def get_context():
             "recent_domains": [domain.to_dict() for domain in recent_domains],
             "active_jobs": [job.to_dict() for job in active_jobs],
             "recent_urls": [url.to_dict() for url in recent_urls],
-            "timestamp": datetime.now(UTC).isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         return success_response(context)
@@ -205,7 +205,7 @@ def get_conversation(session_id: str):
         conversation = {
             "session_id": session_id,
             "messages": [],
-            "created_at": datetime.now(UTC).isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
         }
 
         return success_response(conversation)
@@ -254,7 +254,7 @@ def execute_mcp_tool():
                 "tool_name": tool_name,
                 "arguments": arguments,
                 "result": result,
-                "timestamp": datetime.now(UTC).isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
         )
 
