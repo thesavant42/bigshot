@@ -676,3 +676,23 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+bigshot.code-workspace
+config/__pycache__/**
+db_dump.sql
+logs/
+venv/
+
+# Add these additional Flask/Python sensitive patterns:
+*.db
+*.sqlite
+*.sqlite3
+instance/
+.flask_session
+migrations/versions/*.pyc
+.secrets/
+config/local.py
+config/development.py
+config/production.py
+.coverage
+.pytest_cache/
