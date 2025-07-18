@@ -265,6 +265,14 @@ temp/
 uploads/
 downloads/
 
+# E2E testing
+test-results/
+playwright-report/
+playwright/.cache/
+/test-results/
+/playwright-report/
+/blob-report/
+
 # Docker
 .dockerignore
 docker-compose.override.yml
