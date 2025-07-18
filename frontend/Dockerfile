@@ -13,6 +13,9 @@ RUN npm ci
 # Copy source code
 COPY . .
 
+# Set production environment variable for API URL (nginx will proxy /api to backend)
+ENV VITE_API_URL=""
+
 # Build the application
 RUN npm run build
 

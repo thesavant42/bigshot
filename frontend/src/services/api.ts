@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+
 import axios, { type AxiosInstance } from 'axios';
 import type { 
   PaginatedResponse, 
@@ -13,22 +15,22 @@ import type {
 } from '../types';
 import type { ChatContext } from './chatService';
 
-interface GlobalWithEnv {
-  process?: {
-    env?: {
-      REACT_APP_API_URL?: string;
-    };
-  };
-}
-
-const globalWithEnv = globalThis as unknown as GlobalWithEnv;
-
 class ApiService {
   private api: AxiosInstance;
 
   constructor() {
+    // For production, use relative URLs (empty string) that nginx will proxy  
+    // For development, use the environment variable or localhost fallback
+    const getApiBaseUrl = () => {
+      const envUrl = import.meta.env.VITE_API_URL;
+      if (envUrl === "") {
+        return "/api/v1"; // Production: use relative URLs, nginx will proxy
+      }
+      return (envUrl || 'http://localhost:5000') + '/api/v1'; // Development
+    };
+
     this.api = axios.create({
-      baseURL: globalWithEnv.process?.env?.REACT_APP_API_URL || 'http://localhost:5000/api/v1',
+      baseURL: getApiBaseUrl(),
       timeout: 10000,
       headers: {
         'Content-Type': 'application/json',

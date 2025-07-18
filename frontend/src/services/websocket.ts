@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+
 import { io, Socket } from 'socket.io-client';
 import type { 
   WebSocketMessage, 
@@ -6,16 +8,26 @@ import type {
   ChatMessageData 
 } from '../types';
 
+// Get WebSocket URL based on environment
+const getWebSocketUrl = () => {
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (envUrl === "") {
+    return window.location.origin; // Production: use current origin, nginx will proxy
+  }
+  return envUrl || 'http://localhost:5000'; // Development
+};
+
 export class WebSocketService {
   private socket: Socket | null = null;
   private eventHandlers: Map<string, Set<(data: unknown) => void>> = new Map();
 
-  connect(url: string = 'http://localhost:5000'): void {
+  connect(url?: string): void {
     if (this.socket?.connected) return;
 
+    const wsUrl = url || getWebSocketUrl();
     const token = localStorage.getItem('auth_token');
     
-    this.socket = io(url, {
+    this.socket = io(wsUrl, {
       transports: ['websocket'],
       auth: {
         token,
