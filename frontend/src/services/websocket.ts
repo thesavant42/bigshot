@@ -9,12 +9,25 @@ import type {
 } from '../types';
 
 // Get WebSocket URL based on environment
+// Uses the same smart environment detection as API configuration
 const getWebSocketUrl = () => {
   const envUrl = import.meta.env.VITE_API_URL;
-  if (envUrl === "") {
-    return window.location.origin; // Production: use current origin, nginx will proxy
+  
+  // In development mode (vite dev server), always use current origin
+  // This allows vite's proxy configuration to handle websocket routing
+  // regardless of whether backend is on localhost or in Docker
+  if (import.meta.env.DEV) {
+    return window.location.origin; // Let vite proxy handle /socket.io -> backend
   }
-  return envUrl || 'http://localhost:5000'; // Development
+  
+  // For production and Docker environments, use current origin
+  // nginx will proxy these to the appropriate backend service
+  if (envUrl === "") {
+    return window.location.origin; // Production/Docker: use current origin, nginx will proxy
+  }
+  
+  // Fallback for explicit URL override (rare cases)
+  return envUrl || 'http://localhost:5000';
 };
 
 export class WebSocketService {
