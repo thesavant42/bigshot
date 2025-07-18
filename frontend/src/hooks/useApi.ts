@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiService } from '../services/api';
 import type { Domain, FilterOptions } from '../types';
+import type { ChatContext } from '../services/chatService';
 
 // Additional types for API operations
 interface BulkOperationData {
@@ -12,12 +13,6 @@ interface EnumerationOptions {
   recursive?: boolean;
   max_depth?: number;
   timeout?: number;
-  [key: string]: unknown;
-}
-
-interface ChatContext {
-  domains?: string[];
-  jobs?: string[];
   [key: string]: unknown;
 }
 

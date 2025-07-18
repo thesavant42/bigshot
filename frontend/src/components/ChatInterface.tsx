@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { PaperAirplaneIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { chatService, type ChatMessage, type ChatContext } from '../services/chatService';
+import { convertContextDataToChatContext } from '../utils/contextConversion';
 
 interface ChatInterfaceProps {
   className?: string;
@@ -41,11 +42,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
     try {
       const contextData = await chatService.getContext();
       // Convert ContextData to ChatContext format
-      setContext({
-        current_domains: contextData.recent_domains?.map(d => d.root_domain),
-        active_jobs: contextData.active_jobs?.map(j => j.id),
-        timestamp: contextData.timestamp
-      });
+      setContext(convertContextDataToChatContext(contextData));
     } catch (error) {
       console.error('Failed to load context:', error);
     }
