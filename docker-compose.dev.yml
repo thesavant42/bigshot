@@ -98,7 +98,7 @@ services:
       - /app/node_modules
     environment:
       - NODE_ENV=development
-      - VITE_API_URL=http://localhost:5001
+      - VITE_API_URL=http://backend:5000
     depends_on:
       - backend
 
