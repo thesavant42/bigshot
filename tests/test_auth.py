@@ -12,7 +12,7 @@ class TestAuth:
     def test_login_success(self, client):
         """Test successful login"""
         response = client.post(
-            "/api/v1/auth/login", json={"username": "admin", "password": "admin123"}
+            "/api/v1/auth/login", json={"username": "admin", "password": "password"}
         )
 
         assert response.status_code == 200

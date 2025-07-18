@@ -50,7 +50,7 @@ def auth_headers(client):
     """Get authorization headers for authenticated requests"""
     # Login to get token
     response = client.post(
-        "/api/v1/auth/login", json={"username": "admin", "password": "admin123"}
+        "/api/v1/auth/login", json={"username": "admin", "password": "password"}
     )
 
     data = response.get_json()

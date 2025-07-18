@@ -137,7 +137,7 @@ class TestChatAPI:
 
         # Create test user and get token
         response = self.client.post(
-            "/api/v1/auth/login", json={"username": "admin", "password": "admin123"}
+            "/api/v1/auth/login", json={"username": "admin", "password": "password"}
         )
         json_data = response.get_json()
         assert "data" in json_data, f"Login failed: {json_data}"
