@@ -11,7 +11,9 @@ import type {
   EnumerationOptions,
   DomainHierarchy,
   AppSettings,
-  ApiKeyCollection
+  ApiKeyCollection,
+  ConnectivityProofResponse,
+  ApiResponse
 } from '../types';
 import type { ChatContext } from './chatService';
 
@@ -77,7 +79,7 @@ class ApiService {
     }
   }
 
-  async getConnectivityProof(): Promise<any> {
+  async getConnectivityProof(): Promise<ApiResponse<ConnectivityProofResponse>> {
     const response = await this.api.get('/auth/connectivity-proof');
     return response.data;
   }
