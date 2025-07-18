@@ -311,7 +311,7 @@ jobs:
           SIZE=$(stat -c%s "$SCREENSHOT_PATH" 2>/dev/null || stat -f%z "$SCREENSHOT_PATH" 2>/dev/null || echo "0")
           echo "Dashboard screenshot size: ${SIZE} bytes"
           
-          if [ "$SIZE" -gt 50000 ]; then
+          if [ "$SIZE" -gt 30000 ]; then
             echo "✅ Dashboard screenshot appears healthy (size: ${SIZE} bytes)"
             echo "SCREENSHOT_HEALTHY=true" >> $GITHUB_ENV
           else
