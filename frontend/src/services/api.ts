@@ -12,13 +12,16 @@ import type {
   ApiKeyCollection
 } from '../types';
 import type { ChatContext } from './chatService';
+import type { GlobalWithEnv } from '../types/global';
+
+const globalWithEnv = globalThis as GlobalWithEnv;
 
 class ApiService {
   private api: AxiosInstance;
 
   constructor() {
     this.api = axios.create({
-      baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api/v1',
+      baseURL: globalWithEnv.process?.env?.REACT_APP_API_URL || 'http://localhost:5000/api/v1',
       timeout: 10000,
       headers: {
         'Content-Type': 'application/json',
