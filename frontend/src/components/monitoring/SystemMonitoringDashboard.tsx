@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import type { ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ChartBarIcon, CircleStackIcon, ServerIcon, CpuChipIcon } from '@heroicons/react/24/outline';
 import { apiService } from '../../services/api';
@@ -96,7 +97,7 @@ const MetricCard: React.FC<{
           <div>
             <h3 className="text-sm font-medium text-gray-600 dark:text-gray-400">{title}</h3>
             <p className={`text-2xl font-bold ${getStatusColor()}`}>{value}</p>
-            {subtitle && <p className="text-xs text-gray-500 dark:text-gray-500">{subtitle}</p>}
+            {subtitle && <p className="text-xs text-gray-500 dark:text-gray-500">{subtitle as ReactNode}</p>}
           </div>
         </div>
         {trend && (
