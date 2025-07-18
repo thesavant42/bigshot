@@ -200,3 +200,67 @@ export interface ConnectivityProofResponse {
     status: 'HEALTHY' | 'DEGRADED';
   };
 }
+
+// LLM Provider types
+export interface LLMProviderConfig {
+  id: number;
+  provider: 'openai' | 'lmstudio' | 'custom';
+  name: string;
+  base_url: string;
+  api_key_masked?: string;
+  model: string;
+  is_active: boolean;
+  is_default: boolean;
+  connection_timeout: number;
+  max_tokens: number;
+  temperature: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LLMProviderConfigInput {
+  provider: 'openai' | 'lmstudio' | 'custom';
+  name: string;
+  base_url: string;
+  api_key?: string;
+  model: string;
+  is_default?: boolean;
+  connection_timeout?: number;
+  max_tokens?: number;
+  temperature?: number;
+}
+
+export interface LLMProviderTestResult {
+  success: boolean;
+  response_time?: number;
+  models_available?: string[];
+  test_response?: string;
+  error?: string;
+  provider_info: {
+    name: string;
+    provider: string;
+    base_url: string;
+    model: string;
+  };
+  timestamp: string;
+}
+
+export interface LLMProviderAuditLog {
+  id: number;
+  provider_config_id?: number;
+  action: 'created' | 'updated' | 'activated' | 'tested' | 'deleted';
+  old_values?: Record<string, unknown>;
+  new_values?: Record<string, unknown>;
+  test_result?: LLMProviderTestResult;
+  user_id?: number;
+  created_at: string;
+}
+
+export interface LLMProviderPreset {
+  provider: 'openai' | 'lmstudio' | 'custom';
+  name: string;
+  base_url: string;
+  model: string;
+  requires_api_key: boolean;
+  description: string;
+}

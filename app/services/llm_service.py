@@ -27,12 +27,18 @@ class LLMService:
     def __init__(self, config: Config = None):
         self.config = config or Config()
         self.client = None
+        self.current_provider_config = None
         self.provider = self.config.LLM_PROVIDER.lower()
         self._initialize_client()
 
     def _initialize_client(self):
         """Initialize LLM client based on configured provider"""
         try:
+            # Try to load active provider from database first
+            if self._load_active_provider_from_db():
+                return
+            
+            # Fall back to config-based initialization
             if self.provider == "lmstudio":
                 self._initialize_lmstudio_client()
             else:
@@ -40,6 +46,48 @@ class LLMService:
         except Exception as e:
             logger.error(f"Failed to initialize LLM client: {e}")
             self.client = None
+
+    def _load_active_provider_from_db(self):
+        """Load active provider configuration from database"""
+        try:
+            from flask import has_app_context
+            if not has_app_context():
+                return False
+                
+            from app.models.models import LLMProviderConfig
+            active_provider = LLMProviderConfig.query.filter_by(is_active=True).first()
+            
+            if active_provider:
+                self._initialize_client_from_config(active_provider)
+                return True
+            return False
+        except Exception as e:
+            logger.warning(f"Could not load provider from database: {e}")
+            return False
+
+    def _initialize_client_from_config(self, provider_config):
+        """Initialize client from a provider configuration"""
+        try:
+            self.current_provider_config = provider_config
+            self.provider = provider_config.provider.lower()
+            
+            # Use the provider config for initialization
+            api_key = provider_config.api_key or "dummy-key"
+            if provider_config.provider.lower() == "lmstudio":
+                api_key = api_key or "lm-studio"
+
+            self.client = OpenAI(
+                api_key=api_key,
+                base_url=provider_config.base_url,
+                timeout=provider_config.connection_timeout
+            )
+            
+            logger.info(f"LLM client initialized with provider: {provider_config.name}")
+            
+        except Exception as e:
+            logger.error(f"Failed to initialize client from config: {e}")
+            self.client = None
+            self.current_provider_config = None
 
     def _initialize_openai_client(self):
         """Initialize OpenAI client with configuration"""
@@ -90,10 +138,121 @@ class LLMService:
 
     def get_default_model(self) -> str:
         """Get the default model for the current provider"""
-        if self.provider == "lmstudio":
+        if self.current_provider_config:
+            return self.current_provider_config.model
+        elif self.provider == "lmstudio":
             return self.config.LMSTUDIO_MODEL
         else:
             return self.config.OPENAI_MODEL
+
+    def get_current_provider_info(self) -> dict:
+        """Get information about the current provider"""
+        if self.current_provider_config:
+            return {
+                "id": self.current_provider_config.id,
+                "name": self.current_provider_config.name,
+                "provider": self.current_provider_config.provider,
+                "base_url": self.current_provider_config.base_url,
+                "model": self.current_provider_config.model,
+                "source": "database"
+            }
+        else:
+            return {
+                "name": f"{self.provider.upper()} (Legacy)",
+                "provider": self.provider,
+                "base_url": self._get_legacy_base_url(),
+                "model": self.get_default_model(),
+                "source": "config"
+            }
+
+    def _get_legacy_base_url(self) -> str:
+        """Get base URL for legacy configuration"""
+        if self.provider == "lmstudio":
+            return self.config.LMSTUDIO_API_BASE
+        else:
+            return self.config.OPENAI_API_BASE
+
+    def switch_provider(self, provider_config):
+        """Switch to a different provider configuration at runtime"""
+        try:
+            old_provider = self.get_current_provider_info()
+            self._initialize_client_from_config(provider_config)
+            
+            if self.client:
+                logger.info(f"Successfully switched from {old_provider.get('name')} to {provider_config.name}")
+                return True
+            else:
+                logger.error(f"Failed to switch to provider {provider_config.name}")
+                return False
+        except Exception as e:
+            logger.error(f"Error switching provider: {e}")
+            return False
+
+    def test_provider_connection(self, provider_config):
+        """Test connection to a provider without switching the active client"""
+        try:
+            # Create a temporary client for testing
+            api_key = provider_config.api_key or "dummy-key"
+            if provider_config.provider.lower() == "lmstudio":
+                api_key = api_key or "lm-studio"
+
+            test_client = OpenAI(
+                api_key=api_key,
+                base_url=provider_config.base_url,
+                timeout=provider_config.connection_timeout
+            )
+
+            # Test with a simple request
+            start_time = datetime.now()
+            
+            # Try to list models first
+            try:
+                models = test_client.models.list()
+                model_list = [model.id for model in models.data]
+                if not model_list:
+                    model_list = [provider_config.model]  # Fallback to configured model
+            except Exception:
+                model_list = [provider_config.model]  # Fallback if models endpoint fails
+
+            # Test a simple completion
+            test_response = test_client.chat.completions.create(
+                model=provider_config.model,
+                messages=[{"role": "user", "content": "Hello, this is a connection test. Please respond with 'OK'."}],
+                max_tokens=10,
+                timeout=10
+            )
+
+            end_time = datetime.now()
+            response_time = (end_time - start_time).total_seconds()
+
+            result = {
+                "success": True,
+                "response_time": response_time,
+                "models_available": model_list,
+                "test_response": test_response.choices[0].message.content.strip(),
+                "provider_info": {
+                    "name": provider_config.name,
+                    "provider": provider_config.provider,
+                    "base_url": provider_config.base_url,
+                    "model": provider_config.model
+                },
+                "timestamp": datetime.now().isoformat()
+            }
+
+            return result
+
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "provider_info": {
+                    "name": provider_config.name,
+                    "provider": provider_config.provider,
+                    "base_url": provider_config.base_url,
+                    "model": provider_config.model
+                },
+                "timestamp": datetime.now().isoformat()
+            }
 
     def is_available(self) -> bool:
         """Check if LLM service is available"""

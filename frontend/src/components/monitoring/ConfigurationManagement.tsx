@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { CogIcon, ShieldCheckIcon, CircleStackIcon, ServerIcon, CloudIcon } from '@heroicons/react/24/outline';
+import { CogIcon, ShieldCheckIcon, CircleStackIcon, ServerIcon, CloudIcon, BeakerIcon } from '@heroicons/react/24/outline';
 import { apiService } from '../../services/api';
 import LoadingSpinner from '../LoadingSpinner';
 import StatusBadge from '../StatusBadge';
+import LLMProviderConfigSection from './LLMProviderConfigSection';
 
 interface ConfigurationSection {
   id: string;
@@ -173,6 +174,13 @@ const ConfigurationManagement: React.FC = () => {
 
   // Mock configuration sections - in real app, this would come from the API
   const configSections: ConfigurationSection[] = [
+    {
+      id: 'llm-providers',
+      name: 'LLM Providers',
+      description: 'Manage AI chat providers and configurations',
+      icon: BeakerIcon,
+      settings: [], // Special case - handled by custom component
+    },
     {
       id: 'general',
       name: 'General Settings',
@@ -451,33 +459,37 @@ const ConfigurationManagement: React.FC = () => {
 
               {/* Settings */}
               <div className="space-y-6">
-                {activeConfigSection.settings.map((setting) => (
-                  <div key={setting.key} className="bg-white dark:bg-dark-800 rounded-xl p-6 shadow-soft border border-gray-200 dark:border-gray-700">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2">
-                          <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-                            {setting.name}
-                          </h3>
-                          {setting.required && (
-                            <span className="text-red-500 text-sm">*</span>
-                          )}
-                          {setting.sensitive && (
-                            <span className="px-2 py-1 bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-400 text-xs rounded-full">
-                              Sensitive
-                            </span>
-                          )}
+                {activeSection === 'llm-providers' ? (
+                  <LLMProviderConfigSection />
+                ) : (
+                  activeConfigSection.settings.map((setting) => (
+                    <div key={setting.key} className="bg-white dark:bg-dark-800 rounded-xl p-6 shadow-soft border border-gray-200 dark:border-gray-700">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2">
+                            <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                              {setting.name}
+                            </h3>
+                            {setting.required && (
+                              <span className="text-red-500 text-sm">*</span>
+                            )}
+                            {setting.sensitive && (
+                              <span className="px-2 py-1 bg-yellow-100 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-400 text-xs rounded-full">
+                                Sensitive
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-gray-600 dark:text-gray-400 mt-1 text-sm">
+                            {setting.description}
+                          </p>
                         </div>
-                        <p className="text-gray-600 dark:text-gray-400 mt-1 text-sm">
-                          {setting.description}
-                        </p>
-                      </div>
-                      <div className="w-64 ml-6">
-                        {renderSettingInput(activeConfigSection, setting)}
+                        <div className="w-64 ml-6">
+                          {renderSettingInput(activeConfigSection, setting)}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           )}
