@@ -13,7 +13,12 @@ import type {
   AppSettings,
   ApiKeyCollection,
   ConnectivityProofResponse,
-  ApiResponse
+  ApiResponse,
+  LLMProviderConfig,
+  LLMProviderConfigInput,
+  LLMProviderTestResult,
+  LLMProviderAuditLog,
+  LLMProviderPreset
 } from '../types';
 import type { ChatContext } from './chatService';
 
@@ -198,6 +203,51 @@ class ApiService {
 
   async updateApiKey(service: string, key: string): Promise<void> {
     await this.api.put(`/settings/api-keys/${service}`, { key });
+  }
+
+  // LLM Provider endpoints
+  async getLLMProviders(): Promise<LLMProviderConfig[]> {
+    const response = await this.api.get('/llm-providers');
+    return response.data.data;
+  }
+
+  async getActiveLLMProvider(): Promise<LLMProviderConfig> {
+    const response = await this.api.get('/llm-providers/active');
+    return response.data.data;
+  }
+
+  async createLLMProvider(provider: LLMProviderConfigInput): Promise<LLMProviderConfig> {
+    const response = await this.api.post('/llm-providers', provider);
+    return response.data.data;
+  }
+
+  async updateLLMProvider(id: number, updates: Partial<LLMProviderConfigInput>): Promise<LLMProviderConfig> {
+    const response = await this.api.put(`/llm-providers/${id}`, updates);
+    return response.data.data;
+  }
+
+  async deleteLLMProvider(id: number): Promise<void> {
+    await this.api.delete(`/llm-providers/${id}`);
+  }
+
+  async activateLLMProvider(id: number): Promise<{ message: string; provider: LLMProviderConfig }> {
+    const response = await this.api.post(`/llm-providers/${id}/activate`);
+    return response.data.data;
+  }
+
+  async testLLMProvider(id: number): Promise<{ provider_id: number; test_result: LLMProviderTestResult }> {
+    const response = await this.api.post(`/llm-providers/${id}/test`);
+    return response.data.data;
+  }
+
+  async getLLMProviderAuditLogs(limit: number = 50): Promise<LLMProviderAuditLog[]> {
+    const response = await this.api.get('/llm-providers/audit-logs', { params: { limit } });
+    return response.data.data;
+  }
+
+  async getLLMProviderPresets(): Promise<LLMProviderPreset[]> {
+    const response = await this.api.get('/llm-providers/presets');
+    return response.data.data;
   }
 
   // Health and monitoring endpoints
