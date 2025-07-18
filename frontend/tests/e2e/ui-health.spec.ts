@@ -216,109 +216,107 @@ async function analyzeScreenshot(screenshotPath: string): Promise<{ isHealthy: b
   }
 }
 
-test.describe('UI Health Check', () => {
-  test('should login, pass verification, and capture healthy dashboard screenshot', async ({ page }) => {
-    console.log('🚀 Starting UI health check test...');
-    
-    // Set longer timeout for this test
-    test.setTimeout(180000);
-    
-    try {
-      // Step 1: Perform login
-      await performLogin(page);
-      
-      // Step 2: Handle post-auth verification if present
-      await handlePostAuthVerification(page);
-      
-      // Step 3: Validate dashboard is loaded
-      const elementCounts = await validateDashboard(page);
-      
-      // Step 4: Take screenshot
-      console.log('📸 Taking dashboard screenshot...');
-      const screenshotPath = path.join(process.cwd(), 'test-results', 'dashboard-health.png');
-      
-      // Ensure test-results directory exists
-      await fs.mkdir(path.dirname(screenshotPath), { recursive: true });
-      
-      await page.screenshot({ 
-        path: screenshotPath, 
-        fullPage: true,
-        timeout: 30000
-      });
-      
-      console.log(`💾 Screenshot saved to: ${screenshotPath}`);
-      
-      // Step 5: Analyze screenshot
-      const analysis = await analyzeScreenshot(screenshotPath);
-      
-      console.log(`📋 Screenshot analysis: ${analysis.reason} (${analysis.size} bytes)`);
-      
-      // Test assertions with more flexible requirements
-      expect(elementCounts.total).toBeGreaterThan(0);
-      expect(analysis.isHealthy).toBe(true);
-      
-      // Additional checks for CI environments
-      if (process.env.CI) {
-        console.log('🏗️ Running in CI environment - performing additional checks');
-        
-        // Verify the page isn't showing only loading spinners
-        const loadingSpinners = await page.locator('[class*="loading"], [class*="spinner"], text=Loading').count();
-        if (loadingSpinners > 0) {
-          console.log(`⚠️ Found ${loadingSpinners} loading indicators - may still be loading`);
-        }
-        
-        // Check page is not blank
-        const bodyText = await page.locator('body').textContent();
-        expect(bodyText?.length || 0).toBeGreaterThan(50);
-      }
-      
-      console.log('✅ UI health check completed successfully!');
-      console.log(`📈 Summary: Found ${elementCounts.primary} primary + ${elementCounts.alternative} alternative elements, screenshot ${analysis.size} bytes`);
-      
-    } catch (error) {
-      console.error('❌ UI health check failed:', error);
-      
-      // Take a screenshot on failure for debugging
-      try {
-        const failureScreenshotPath = path.join(process.cwd(), 'test-results', 'dashboard-failure.png');
-        await fs.mkdir(path.dirname(failureScreenshotPath), { recursive: true });
-        await page.screenshot({ 
-          path: failureScreenshotPath, 
-          fullPage: true 
-        });
-        console.log(`🐛 Failure screenshot saved to: ${failureScreenshotPath}`);
-        
-        // Also capture page content for debugging
-        const pageContent = await page.content();
-        const debugPath = path.join(process.cwd(), 'test-results', 'page-debug.html');
-        await fs.writeFile(debugPath, pageContent);
-        console.log(`🔍 Page content saved to: ${debugPath}`);
-        
-      } catch (screenshotError) {
-        console.error('Failed to take failure screenshot:', screenshotError);
-      }
-      
-      throw error;
-    }
-  });
+test('should login, pass verification, and capture healthy dashboard screenshot', async ({ page }) => {
+  console.log('🚀 Starting UI health check test...');
   
-  test('should detect and fail on blank/corrupted screenshots', async () => {
-    console.log('🧪 Testing screenshot validation...');
+  // Set longer timeout for this test
+  test.setTimeout(180000);
+  
+  try {
+    // Step 1: Perform login
+    await performLogin(page);
     
-    // Create a tiny fake screenshot to test validation
-    const testScreenshotPath = path.join(process.cwd(), 'test-results', 'test-small.png');
-    await fs.mkdir(path.dirname(testScreenshotPath), { recursive: true });
-    await fs.writeFile(testScreenshotPath, Buffer.alloc(100)); // Very small file
+    // Step 2: Handle post-auth verification if present
+    await handlePostAuthVerification(page);
     
-    const analysis = await analyzeScreenshot(testScreenshotPath);
+    // Step 3: Validate dashboard is loaded
+    const elementCounts = await validateDashboard(page);
     
-    // This should fail validation
-    expect(analysis.isHealthy).toBe(false);
-    expect(analysis.reason).toContain('too small');
+    // Step 4: Take screenshot
+    console.log('📸 Taking dashboard screenshot...');
+    const screenshotPath = path.join(process.cwd(), 'test-results', 'dashboard-health.png');
     
-    console.log('✅ Screenshot validation test passed');
+    // Ensure test-results directory exists
+    await fs.mkdir(path.dirname(screenshotPath), { recursive: true });
     
-    // Clean up
-    await fs.unlink(testScreenshotPath).catch(() => {});
-  });
+    await page.screenshot({ 
+      path: screenshotPath, 
+      fullPage: true,
+      timeout: 30000
+    });
+    
+    console.log(`💾 Screenshot saved to: ${screenshotPath}`);
+    
+    // Step 5: Analyze screenshot
+    const analysis = await analyzeScreenshot(screenshotPath);
+    
+    console.log(`📋 Screenshot analysis: ${analysis.reason} (${analysis.size} bytes)`);
+    
+    // Test assertions with more flexible requirements
+    expect(elementCounts.total).toBeGreaterThan(0);
+    expect(analysis.isHealthy).toBe(true);
+    
+    // Additional checks for CI environments
+    if (process.env.CI) {
+      console.log('🏗️ Running in CI environment - performing additional checks');
+      
+      // Verify the page isn't showing only loading spinners
+      const loadingSpinners = await page.locator('[class*="loading"], [class*="spinner"], text=Loading').count();
+      if (loadingSpinners > 0) {
+        console.log(`⚠️ Found ${loadingSpinners} loading indicators - may still be loading`);
+      }
+      
+      // Check page is not blank
+      const bodyText = await page.locator('body').textContent();
+      expect(bodyText?.length || 0).toBeGreaterThan(50);
+    }
+    
+    console.log('✅ UI health check completed successfully!');
+    console.log(`📈 Summary: Found ${elementCounts.primary} primary + ${elementCounts.alternative} alternative elements, screenshot ${analysis.size} bytes`);
+    
+  } catch (error) {
+    console.error('❌ UI health check failed:', error);
+    
+    // Take a screenshot on failure for debugging
+    try {
+      const failureScreenshotPath = path.join(process.cwd(), 'test-results', 'dashboard-failure.png');
+      await fs.mkdir(path.dirname(failureScreenshotPath), { recursive: true });
+      await page.screenshot({ 
+        path: failureScreenshotPath, 
+        fullPage: true 
+      });
+      console.log(`🐛 Failure screenshot saved to: ${failureScreenshotPath}`);
+      
+      // Also capture page content for debugging
+      const pageContent = await page.content();
+      const debugPath = path.join(process.cwd(), 'test-results', 'page-debug.html');
+      await fs.writeFile(debugPath, pageContent);
+      console.log(`🔍 Page content saved to: ${debugPath}`);
+      
+    } catch (screenshotError) {
+      console.error('Failed to take failure screenshot:', screenshotError);
+    }
+    
+    throw error;
+  }
+});
+
+test('should detect and fail on blank/corrupted screenshots', async () => {
+  console.log('🧪 Testing screenshot validation...');
+  
+  // Create a tiny fake screenshot to test validation
+  const testScreenshotPath = path.join(process.cwd(), 'test-results', 'test-small.png');
+  await fs.mkdir(path.dirname(testScreenshotPath), { recursive: true });
+  await fs.writeFile(testScreenshotPath, Buffer.alloc(100)); // Very small file
+  
+  const analysis = await analyzeScreenshot(testScreenshotPath);
+  
+  // This should fail validation
+  expect(analysis.isHealthy).toBe(false);
+  expect(analysis.reason).toContain('too small');
+  
+  console.log('✅ Screenshot validation test passed');
+  
+  // Clean up
+  await fs.unlink(testScreenshotPath).catch(() => {});
 });
