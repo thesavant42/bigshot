@@ -15,6 +15,8 @@ interface EnumerationOptions {
   [key: string]: unknown;
 }
 
+
+
 export const useAuth = () => {
   const queryClient = useQueryClient();
 

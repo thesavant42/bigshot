@@ -21,6 +21,7 @@ export interface ChatResponse {
   };
 }
 
+
 export interface Conversation {
   id: number;
   session_id: string;
