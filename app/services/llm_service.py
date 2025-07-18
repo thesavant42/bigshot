@@ -33,7 +33,7 @@ class LLMService:
     def _initialize_client(self):
         """Initialize LLM client based on configured provider"""
         try:
-            if self.provider == 'lmstudio':
+            if self.provider == "lmstudio":
                 self._initialize_lmstudio_client()
             else:
                 self._initialize_openai_client()
@@ -70,10 +70,11 @@ class LLMService:
         # LMStudio uses a dummy API key by default
         api_key = self.config.LMSTUDIO_API_KEY or "lm-studio"
         base_url = self.config.LMSTUDIO_API_BASE
-        
+
         # Check if LMStudio server is accessible (optional check)
         try:
             import requests
+
             response = requests.get(f"{base_url.rstrip('/v1')}/v1/models", timeout=5)
             if response.status_code != 200:
                 logger.warning(f"LMStudio server may not be accessible at {base_url}")
@@ -89,7 +90,7 @@ class LLMService:
 
     def get_default_model(self) -> str:
         """Get the default model for the current provider"""
-        if self.provider == 'lmstudio':
+        if self.provider == "lmstudio":
             return self.config.LMSTUDIO_MODEL
         else:
             return self.config.OPENAI_MODEL

@@ -136,11 +136,17 @@ def get_status():
     try:
         status = {
             "available": llm_service.is_available(),
-            "provider": llm_service.get_current_provider() if llm_service.is_available() else None,
+            "provider": (
+                llm_service.get_current_provider()
+                if llm_service.is_available()
+                else None
+            ),
             "models": (
                 llm_service.get_available_models() if llm_service.is_available() else []
             ),
-            "default_model": llm_service.get_default_model() if llm_service.is_available() else None,
+            "default_model": (
+                llm_service.get_default_model() if llm_service.is_available() else None
+            ),
             "timestamp": datetime.now(UTC).isoformat(),
         }
 
