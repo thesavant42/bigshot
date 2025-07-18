@@ -1,4 +1,4 @@
-version: '3.8'
+
 
 services:
   # PostgreSQL Database
@@ -91,6 +91,8 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: bigshot_frontend
+    environment:
+      - VITE_API_URL=""
     ports:
       - "80:80"
     depends_on:
