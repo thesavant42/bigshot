@@ -16,7 +16,7 @@ type WebSocketEventHandler<T = unknown> = (data: T) => void;
 
 export const useWebSocket = () => {
   const [isConnected, setIsConnected] = useState(false);
-  const subscribersRef = useRef<Map<string, Set<WebSocketEventHandler<unknown>>>>(new Map());
+  const subscribersRef = useRef<Map<string, Set<(data: unknown) => void>>>(new Map());
 
   useEffect(() => {
     webSocketService.connect();
@@ -40,13 +40,16 @@ export const useWebSocket = () => {
     }
     
     const subscribers = subscribersRef.current.get(event)!;
-    subscribers.add(handler as WebSocketEventHandler<unknown>);
+    // Type-safe: WebSocketEventHandler<T> = (data: T) => void
+    // is assignable to (data: unknown) => void since T extends unknown
+    const unknownHandler = handler as (data: unknown) => void;
+    subscribers.add(unknownHandler);
 
-    const unsubscribe = webSocketService.subscribe(event, handler as WebSocketEventHandler<unknown>);
+    const unsubscribe = webSocketService.subscribe(event, unknownHandler);
 
     return () => {
       unsubscribe();
-      subscribers.delete(handler as WebSocketEventHandler<unknown>);
+      subscribers.delete(unknownHandler);
       if (subscribers.size === 0) {
         subscribersRef.current.delete(event);
       }
