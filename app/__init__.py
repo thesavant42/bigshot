@@ -51,8 +51,37 @@ def create_app(config_class=Config):
     app.register_blueprint(chat_bp, url_prefix="/api/v1")
     app.register_blueprint(health_bp, url_prefix="/api/v1")
 
-    # Create database tables
+    # Create database tables and ensure default user exists
     with app.app_context():
         db.create_all()
+        _ensure_default_user_exists()
 
     return app
+
+
+def _ensure_default_user_exists():
+    """Ensure default admin user exists in the database"""
+    from app.models.models import User
+    from werkzeug.security import generate_password_hash
+    
+    try:
+        # Check if admin user already exists
+        admin_user = User.query.filter_by(username='admin').first()
+        
+        if not admin_user:
+            # Create default admin user
+            admin_user = User(
+                username='admin',
+                password_hash=generate_password_hash('password'),  # Default password
+                is_active=True
+            )
+            db.session.add(admin_user)
+            db.session.commit()
+            print("Default admin user created with username 'admin' and password 'password'")
+            print("IMPORTANT: Change the default password in production!")
+        else:
+            print("Admin user already exists")
+            
+    except Exception as e:
+        print(f"Error ensuring default user exists: {e}")
+        db.session.rollback()
