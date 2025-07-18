@@ -8,6 +8,7 @@ This guide describes how to build, run, and test BigShot using Docker and Docker
 
 - [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/) installed
 - [Git](https://git-scm.com/downloads)
+- **Node.js 20+** (required for Vite compatibility - containers use Node.js 20-alpine)
 - Clone this repo:
   ```bash
   git clone https://github.com/thesavant42/bigshot.git
@@ -94,6 +95,15 @@ docker compose -f docker-compose.dev.yml down
 - **Database/Redis Not Ready:**  
   Compose waits for DB/Redis healthchecks before starting backend/celery.
 
+- **Node.js Version Issues:**  
+  If you see `crypto.hash is not a function` errors in the frontend:
+  - This indicates Node.js version incompatibility
+  - Containers use Node.js 20-alpine (required for Vite 7.0.4+)
+  - Rebuild with `--build` flag to pull latest base images:
+    ```bash
+    docker compose -f docker-compose.dev.yml up --build
+    ```
+
 - **Rebuilding Containers:**  
   If dependencies or code change, use `--build` flag:
   ```bash
@@ -133,7 +143,7 @@ docker compose -f docker-compose.dev.yml down
 ## 9. **File/Directory Reference**
 
 - **Backend:** Flask API, Celery worker (`Dockerfile` in root)
-- **Frontend:** React app (`frontend/Dockerfile`, dev: `frontend/Dockerfile.dev`)
+- **Frontend:** React app (`frontend/Dockerfile`, dev: `frontend/Dockerfile.dev`) - uses Node.js 20-alpine
 - **Compose Files:**  
   - `docker-compose.yml` – generic/legacy  
   - `docker-compose.dev.yml` – development  
