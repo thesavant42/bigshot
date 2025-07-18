@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiService } from '../services/api';
-import type { Domain, FilterOptions, ChatContext } from '../types';
+import type { Domain, FilterOptions } from '../types';
 
 // Additional types for API operations
 interface BulkOperationData {
@@ -15,7 +15,11 @@ interface EnumerationOptions {
   [key: string]: unknown;
 }
 
-
+interface ChatContext {
+  domains?: string[];
+  jobs?: string[];
+  [key: string]: unknown;
+}
 
 export const useAuth = () => {
   const queryClient = useQueryClient();

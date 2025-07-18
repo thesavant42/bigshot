@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { PaperAirplaneIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
-import { chatService, type ChatMessage } from '../services/chatService';
-import type { ChatContext } from '../types';
+import { chatService, type ChatMessage, type ChatContext } from '../services/chatService';
 
 interface ChatInterfaceProps {
   className?: string;
