@@ -1,6 +1,6 @@
 import { test, expect, Page } from '@playwright/test';
 import { promises as fs } from 'fs';
-import path from 'path';
+import * as path from 'path';
 
 const TEST_CREDENTIALS = {
   username: 'admin',

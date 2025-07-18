@@ -1,5 +1,5 @@
-<testsuites id="" name="" tests="2" failures="0" skipped="2" errors="0" time="0.1686690000000001">
-<testsuite name="ui-health.spec.ts" timestamp="2025-07-18T21:46:24.888Z" hostname="chromium" tests="2" failures="0" skipped="2" time="0" errors="0">
+<testsuites id="" name="" tests="2" failures="0" skipped="2" errors="0" time="0.32147699999999996">
+<testsuite name="ui-health.spec.ts" timestamp="2025-07-18T21:56:22.582Z" hostname="chromium" tests="2" failures="0" skipped="2" time="0" errors="0">
 <testcase name="UI Health Check › should login, pass verification, and capture healthy dashboard screenshot" classname="ui-health.spec.ts" time="0">
 <skipped>
 </skipped>
