@@ -77,6 +77,11 @@ class ApiService {
     }
   }
 
+  async getConnectivityProof(): Promise<any> {
+    const response = await this.api.get('/auth/connectivity-proof');
+    return response.data;
+  }
+
   // Domain endpoints
   async getDomains(filters: FilterOptions = {}): Promise<PaginatedResponse<Domain>> {
     const response = await this.api.get('/domains', { params: filters });

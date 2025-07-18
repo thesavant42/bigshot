@@ -8,6 +8,7 @@ import ChatInterface from './components/ChatInterface';
 import SplitLayout from './components/SplitLayout';
 import KeyboardShortcutsHelp from './components/KeyboardShortcutsHelp';
 import LoadingSpinner from './components/LoadingSpinner';
+import PostAuthProof from './components/auth/PostAuthProof';
 import { useAuth } from './hooks/useApi';
 
 const queryClient = new QueryClient({
@@ -19,7 +20,7 @@ const queryClient = new QueryClient({
   },
 });
 
-const LoginScreen: React.FC = () => {
+const LoginScreen: React.FC<{ onLoginSuccess: () => void }> = ({ onLoginSuccess }) => {
   const { login } = useAuth();
   const [credentials, setCredentials] = React.useState({
     username: '',
@@ -30,6 +31,9 @@ const LoginScreen: React.FC = () => {
     e.preventDefault();
     try {
       await login.mutateAsync(credentials);
+      // Set flag to show post-auth proof
+      sessionStorage.setItem('just_logged_in', 'true');
+      onLoginSuccess();
     } catch (error) {
       console.error('Login failed:', error);
     }
@@ -110,6 +114,19 @@ const LoginScreen: React.FC = () => {
 
 const AppContent: React.FC = () => {
   const { isAuthenticated, isLoading } = useAuth();
+  const [showPostAuthProof, setShowPostAuthProof] = React.useState(false);
+
+  // Show post-auth proof page after successful login
+  React.useEffect(() => {
+    if (isAuthenticated && !showPostAuthProof) {
+      // Check if we just logged in by looking for a flag in sessionStorage
+      const justLoggedIn = sessionStorage.getItem('just_logged_in');
+      if (justLoggedIn) {
+        setShowPostAuthProof(true);
+        sessionStorage.removeItem('just_logged_in');
+      }
+    }
+  }, [isAuthenticated, showPostAuthProof]);
 
   if (isLoading) {
     return (
@@ -120,7 +137,11 @@ const AppContent: React.FC = () => {
   }
 
   if (!isAuthenticated) {
-    return <LoginScreen />;
+    return <LoginScreen onLoginSuccess={() => setShowPostAuthProof(true)} />;
+  }
+
+  if (showPostAuthProof) {
+    return <PostAuthProof onContinue={() => setShowPostAuthProof(false)} />;
   }
 
   return (
