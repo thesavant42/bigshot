@@ -137,7 +137,7 @@ class TestChatAPI:
 
         # Create test user and get token
         response = self.client.post(
-            "/api/v1/auth/login", json={"username": "admin", "password": "admin123"}
+            "/api/v1/auth/login", json={"username": "admin", "password": "password"}
         )
         self.token = response.get_json()["data"]["access_token"]
         self.headers = {"Authorization": f"Bearer {self.token}"}
