@@ -143,6 +143,13 @@ The project uses GitHub Actions for continuous integration:
 ## API Documentation
 
 ### Authentication
+
+**Default Admin Credentials:**
+- **Username:** `admin`
+- **Password:** `password`
+
+> **⚠️ IMPORTANT:** Change the default password immediately in production environments!
+
 ```bash
 # Login
 POST /api/v1/auth/login

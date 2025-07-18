@@ -202,3 +202,11 @@ COMMENT ON TABLE jobs IS 'Manages background enumeration and processing jobs';
 COMMENT ON TABLE notes IS 'User annotations for specific URLs';
 COMMENT ON TABLE text_notes IS 'General user notes not tied to specific URLs';
 COMMENT ON TABLE users IS 'Stores user accounts for authentication and access control';
+
+-- Insert default admin user if it doesn't exist
+-- Default password is 'password' - CHANGE THIS IN PRODUCTION!
+INSERT INTO users (username, password_hash, is_active) 
+SELECT 'admin', 'scrypt:32768:8:1$N8lDMMot48cgFxKP$e58ea9213d30c0de02ff2e2ab642108856ec42b869cae56ffb2b1d23279600b19bc889e75e76d1c2d829363d8bcfd53e3536f45315739cf730e00382fb70c748', true
+WHERE NOT EXISTS (
+    SELECT 1 FROM users WHERE username = 'admin'
+);
