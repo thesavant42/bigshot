@@ -25,7 +25,7 @@ Authorization: Bearer <token>
 ```json
 {
   "username": "admin",
-  "password": "admin123"
+  "password": "password"
 }
 ```
 
@@ -97,7 +97,7 @@ Authenticate and get access token.
 ```json
 {
   "username": "admin",
-  "password": "admin123"
+  "password": "password"
 }
 ```
 
@@ -790,7 +790,7 @@ ws.onmessage = function(event) {
 # 1. Login
 curl -X POST http://localhost:5000/api/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username": "admin", "password": "admin123"}'
+  -d '{"username": "admin", "password": "password"}'
 
 # 2. Start enumeration
 curl -X POST http://localhost:5000/api/v1/domains/enumerate \
