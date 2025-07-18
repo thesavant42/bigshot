@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
-import type { FunctionCall, MCPToolParameters, ContextData, StreamingChatChunk } from '../types';
+import type { FunctionCall, MCPToolParameters, ContextData, StreamingChatChunk, ChatContext } from '../types';
 
 export interface ChatMessage {
   id?: number;
@@ -19,14 +19,6 @@ export interface ChatResponse {
     completion_tokens: number;
     total_tokens: number;
   };
-}
-
-export interface ChatContext {
-  user_id?: string;
-  current_domains?: string[];
-  active_jobs?: string[];
-  session_id?: string;
-  timestamp?: string;
 }
 
 export interface Conversation {

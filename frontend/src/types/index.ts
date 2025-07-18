@@ -108,8 +108,11 @@ export interface DomainHierarchy {
 }
 
 export interface ChatContext {
-  domains?: string[];
-  jobs?: string[];
+  user_id?: string;
+  current_domains?: string[];
+  active_jobs?: string[];
+  session_id?: string;
+  timestamp?: string;
   [key: string]: unknown;
 }
 
