@@ -30,17 +30,26 @@ A comprehensive domain enumeration and intelligence gathering platform with inte
 
 ## Quick Start
 
+### Installation Guides
+
+Choose the installation guide that matches your environment:
+
+- **Windows 11 + WSL2**: [Comprehensive Windows WSL2 Installation Guide](docs/windows_wsl2_installation.md) - **Recommended for Windows users**
+- **Linux/macOS**: Use the basic setup below (native installation supported)
+
+For dependency mapping and CI/CD optimization, see: [Dependency Mapping Guide](docs/dependency_mapping.md)
+
 ### Prerequisites
-- Python 3.12+
-- Node.js 20+
+- Python 3.12+ (3.12.3 or later recommended)
+- Node.js 20+ (20.19.3 or later recommended)  
 - PostgreSQL 15+
 - Redis 7+ (required for background task processing and caching)
 
 ### Platform Requirements
-- **Windows**: WSL2 is required and is the only tested environment for Windows users
+- **Windows**: WSL2 is **required** and is the only tested environment for Windows users
 - **Linux/macOS**: Native installation supported
 
-### Development Setup
+### Basic Development Setup (Linux/macOS)
 
 1. **Clone the repository**
    ```bash
@@ -83,6 +92,8 @@ A comprehensive domain enumeration and intelligence gathering platform with inte
    npm install
    npm run dev
    ```
+
+> **Note for Windows Users**: The above commands should be run in WSL2. For detailed Windows 11 + WSL2 setup instructions including version requirements, environment setup, and troubleshooting, see the [Windows WSL2 Installation Guide](docs/windows_wsl2_installation.md).
 
 ### Docker Setup
 
@@ -199,6 +210,8 @@ CELERY_RESULT_BACKEND=redis://localhost:6379/0
 OPENAI_API_KEY=your-openai-key
 ```
 
+> **Note**: For detailed environment setup including PostgreSQL user creation and configuration, see the [Windows WSL2 Installation Guide](docs/windows_wsl2_installation.md).
+
 ### Production Deployment
 
 1. **Database Setup**
@@ -258,12 +271,21 @@ OPENAI_API_KEY=your-openai-key
 
 ## Documentation
 
+### Installation & Setup
+- [Windows 11 + WSL2 Installation Guide](docs/windows_wsl2_installation.md) - **Comprehensive installation tutorial**
+- [Dependency Mapping & CI/CD Optimization](docs/dependency_mapping.md) - **Installation order and requirements**
+
+### Development & Architecture  
 - [API Documentation](docs/api.md)
 - [Frontend Architecture](docs/frontend_architecture.md)
 - [Database Schema](docs/database_schema.md)
-- [Deployment Guide](docs/deployment.md)
+- [User Guide](docs/user_guide.md)
 - [Testing Guide](docs/testing.md)
+
+### Operations & Deployment
+- [Deployment Guide](docs/deployment.md)
 - [CI/CD Pipeline](docs/cicd.md)
+- [Troubleshooting](docs/troubleshooting.md)
 
 ## License
 
