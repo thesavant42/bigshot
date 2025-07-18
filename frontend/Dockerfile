@@ -1,5 +1,5 @@
 # Frontend Dockerfile for BigShot React App
-FROM node:18-alpine as build
+FROM node:20-alpine as build
 
 # Set working directory
 WORKDIR /app
@@ -8,13 +8,13 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci --only=production
+RUN npm ci
 
 # Copy source code
 COPY . .
 
 # Build the application
-RUN npm run build
+RUN npx tsc -b && npx vite build
 
 # Production stage
 FROM nginx:alpine
