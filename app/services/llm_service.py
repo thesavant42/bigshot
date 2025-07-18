@@ -27,35 +27,72 @@ class LLMService:
     def __init__(self, config: Config = None):
         self.config = config or Config()
         self.client = None
+        self.provider = self.config.LLM_PROVIDER.lower()
         self._initialize_client()
 
     def _initialize_client(self):
-        """Initialize OpenAI client with configuration"""
+        """Initialize LLM client based on configured provider"""
         try:
-            api_key = self.config.OPENAI_API_KEY
-            if not api_key:
-                # Try to get from database (only if in app context)
-                try:
-                    from flask import has_app_context
-
-                    if has_app_context():
-                        api_key_record = APIKey.query.filter_by(
-                            service="openai", is_active=True
-                        ).first()
-                        if api_key_record:
-                            api_key = api_key_record.key_value
-                except ImportError:
-                    pass
-
-            if not api_key:
-                logger.warning("No OpenAI API key configured")
-                return
-
-            self.client = OpenAI(api_key=api_key, base_url=self.config.OPENAI_API_BASE)
-            logger.info("LLM client initialized successfully")
+            if self.provider == 'lmstudio':
+                self._initialize_lmstudio_client()
+            else:
+                self._initialize_openai_client()
         except Exception as e:
             logger.error(f"Failed to initialize LLM client: {e}")
             self.client = None
+
+    def _initialize_openai_client(self):
+        """Initialize OpenAI client with configuration"""
+        api_key = self.config.OPENAI_API_KEY
+        if not api_key:
+            # Try to get from database (only if in app context)
+            try:
+                from flask import has_app_context
+
+                if has_app_context():
+                    api_key_record = APIKey.query.filter_by(
+                        service="openai", is_active=True
+                    ).first()
+                    if api_key_record:
+                        api_key = api_key_record.key_value
+            except ImportError:
+                pass
+
+        if not api_key:
+            logger.warning("No OpenAI API key configured")
+            return
+
+        self.client = OpenAI(api_key=api_key, base_url=self.config.OPENAI_API_BASE)
+        logger.info("OpenAI client initialized successfully")
+
+    def _initialize_lmstudio_client(self):
+        """Initialize LMStudio client using OpenAI-compatible API"""
+        # LMStudio uses a dummy API key by default
+        api_key = self.config.LMSTUDIO_API_KEY or "lm-studio"
+        base_url = self.config.LMSTUDIO_API_BASE
+        
+        # Check if LMStudio server is accessible (optional check)
+        try:
+            import requests
+            response = requests.get(f"{base_url.rstrip('/v1')}/v1/models", timeout=5)
+            if response.status_code != 200:
+                logger.warning(f"LMStudio server may not be accessible at {base_url}")
+        except Exception as e:
+            logger.warning(f"Could not verify LMStudio server accessibility: {e}")
+
+        self.client = OpenAI(api_key=api_key, base_url=base_url)
+        logger.info(f"LMStudio client initialized successfully at {base_url}")
+
+    def get_current_provider(self) -> str:
+        """Get the current LLM provider"""
+        return self.provider
+
+    def get_default_model(self) -> str:
+        """Get the default model for the current provider"""
+        if self.provider == 'lmstudio':
+            return self.config.LMSTUDIO_MODEL
+        else:
+            return self.config.OPENAI_MODEL
 
     def is_available(self) -> bool:
         """Check if LLM service is available"""
@@ -85,7 +122,7 @@ class LLMService:
         if not self.client:
             raise RuntimeError("LLM client not available")
 
-        model = model or self.config.OPENAI_MODEL
+        model = model or self.get_default_model()
 
         try:
             response = self.client.chat.completions.create(
@@ -142,8 +179,10 @@ class LLMService:
 
     def _build_system_message(self, context: Optional[Dict[str, Any]] = None) -> str:
         """Build system message with context"""
-        system_message = """You are an AI assistant helping with cybersecurity reconnaissance and bug bounty research. 
+        system_message = f"""You are an AI assistant helping with cybersecurity reconnaissance and bug bounty research. 
         You have access to a database of discovered domains, URLs, and reconnaissance job information.
+        
+        Current LLM Provider: {self.get_current_provider().upper()}
         
         You can help with:
         - Analyzing discovered domains and subdomains
