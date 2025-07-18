@@ -283,7 +283,7 @@ const LLMProviderConfigSection: React.FC = () => {
                 </label>
                 <select
                   value={formData.provider}
-                  onChange={(e) => setFormData({ ...formData, provider: e.target.value as any })}
+                  onChange={(e) => setFormData({ ...formData, provider: e.target.value as 'openai' | 'lmstudio' | 'custom' })}
                   className="w-full px-3 py-2 bg-white dark:bg-dark-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                 >
                   <option value="openai">OpenAI</option>
