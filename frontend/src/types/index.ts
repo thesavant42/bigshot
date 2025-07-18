@@ -107,12 +107,6 @@ export interface DomainHierarchy {
   relationships: Record<string, string[]>;
 }
 
-export interface ChatContext {
-  domains?: string[];
-  jobs?: string[];
-  [key: string]: unknown;
-}
-
 export interface AppSettings {
   [key: string]: string | number | boolean;
 }
@@ -135,8 +129,8 @@ export interface MCPToolParameters {
 }
 
 export interface ContextData {
-  recent_domains: Domain[];
-  active_jobs: Job[];
+  recent_domains?: Domain[];
+  active_jobs?: Job[];
   recent_urls: string[];
   timestamp: string;
 }

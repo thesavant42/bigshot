@@ -8,10 +8,10 @@ import type {
   BulkOperationData,
   EnumerationOptions,
   DomainHierarchy,
-  ChatContext,
   AppSettings,
   ApiKeyCollection
 } from '../types';
+import type { ChatContext } from './chatService';
 
 class ApiService {
   private api: AxiosInstance;
