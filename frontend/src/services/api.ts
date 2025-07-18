@@ -53,7 +53,7 @@ class ApiService {
       (error) => {
         if (error.response?.status === 401) {
           localStorage.removeItem('auth_token');
-          window.location.href = '/login';
+          // Don't reload the page, let React handle the state change
         }
         return Promise.reject(error);
       }
@@ -63,12 +63,12 @@ class ApiService {
   // Auth endpoints
   async login(username: string, password: string): Promise<{ token: string }> {
     const response = await this.api.post('/auth/login', { username, password });
-    return response.data;
+    return { token: response.data.data.access_token };
   }
 
   async verifyToken(): Promise<boolean> {
     try {
-      await this.api.get('/auth/verify');
+      await this.api.post('/auth/verify');
       return true;
     } catch {
       return false;
