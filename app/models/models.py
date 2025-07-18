@@ -267,3 +267,93 @@ class User(db.Model):
             result["password_hash"] = self.password_hash
             
         return result
+
+
+class LLMProviderConfig(db.Model):
+    """LLM provider configuration model for runtime provider switching"""
+
+    __tablename__ = "llm_provider_configs"
+
+    id = db.Column(db.Integer, primary_key=True)
+    provider = db.Column(db.String(50), nullable=False)  # 'openai', 'lmstudio', 'custom'
+    name = db.Column(db.String(100), nullable=False)  # Display name
+    base_url = db.Column(db.String(500), nullable=False)
+    api_key = db.Column(db.Text)  # Can be null for providers that don't need keys
+    model = db.Column(db.String(100), nullable=False)
+    is_active = db.Column(db.Boolean, default=False)  # Only one can be active
+    is_default = db.Column(db.Boolean, default=False)  # System default
+    connection_timeout = db.Column(db.Integer, default=30)
+    max_tokens = db.Column(db.Integer, default=4000)
+    temperature = db.Column(db.Float, default=0.7)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
+    updated_at = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+    )
+
+    __table_args__ = (
+        db.UniqueConstraint("name", name="unique_provider_name"),
+    )
+
+    def to_dict(self, include_sensitive=False):
+        """Convert LLM provider config to dictionary representation"""
+        result = {
+            "id": self.id,
+            "provider": self.provider,
+            "name": self.name,
+            "base_url": self.base_url,
+            "model": self.model,
+            "is_active": self.is_active,
+            "is_default": self.is_default,
+            "connection_timeout": self.connection_timeout,
+            "max_tokens": self.max_tokens,
+            "temperature": self.temperature,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+        if include_sensitive and self.api_key:
+            result["api_key"] = self.api_key
+        elif self.api_key:
+            # Mask the key for security
+            result["api_key_masked"] = (
+                self.api_key[:8] + "..." if len(self.api_key) > 8 else "***"
+            )
+        else:
+            result["api_key_masked"] = None
+
+        return result
+
+
+class LLMProviderAuditLog(db.Model):
+    """Audit log for LLM provider configuration changes"""
+
+    __tablename__ = "llm_provider_audit_logs"
+
+    id = db.Column(db.Integer, primary_key=True)
+    provider_config_id = db.Column(
+        db.Integer, db.ForeignKey("llm_provider_configs.id"), nullable=True
+    )
+    action = db.Column(db.String(50), nullable=False)  # 'created', 'updated', 'activated', 'tested'
+    old_values = db.Column(db.Text)  # JSON string of old values
+    new_values = db.Column(db.Text)  # JSON string of new values
+    test_result = db.Column(db.Text)  # JSON string of test results
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
+
+    provider_config = db.relationship("LLMProviderConfig", backref="audit_logs")
+    user = db.relationship("User", backref="llm_provider_actions")
+
+    def to_dict(self):
+        """Convert audit log to dictionary representation"""
+        return {
+            "id": self.id,
+            "provider_config_id": self.provider_config_id,
+            "action": self.action,
+            "old_values": json.loads(self.old_values) if self.old_values else None,
+            "new_values": json.loads(self.new_values) if self.new_values else None,
+            "test_result": json.loads(self.test_result) if self.test_result else None,
+            "user_id": self.user_id,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+        }

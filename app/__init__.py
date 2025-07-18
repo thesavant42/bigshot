@@ -68,6 +68,7 @@ def create_app(config_class=Config):
     from app.api.config import config_bp
     from app.api.chat import chat_bp
     from app.api.health import health_bp
+    from app.api.llm_providers import llm_providers_bp
 
     app.register_blueprint(domains_bp, url_prefix="/api/v1")
     app.register_blueprint(jobs_bp, url_prefix="/api/v1")
@@ -75,6 +76,7 @@ def create_app(config_class=Config):
     app.register_blueprint(config_bp, url_prefix="/api/v1")
     app.register_blueprint(chat_bp, url_prefix="/api/v1")
     app.register_blueprint(health_bp, url_prefix="/api/v1")
+    app.register_blueprint(llm_providers_bp, url_prefix="/api/v1")
     app.logger.info("API blueprints registered successfully")
 
     # Create database tables and ensure default user exists
@@ -82,7 +84,11 @@ def create_app(config_class=Config):
     with app.app_context():
         db.create_all()
         _ensure_default_user_exists()
+        _ensure_default_llm_providers_exist()
     app.logger.info("Database setup completed")
+    
+    # Register error handlers
+    _register_error_handlers(app)
     
     # Log service connectivity status
     with app.app_context():
@@ -90,6 +96,36 @@ def create_app(config_class=Config):
 
     app.logger.info("Flask application created and configured successfully")
     return app
+
+
+def _register_error_handlers(app):
+    """Register error handlers to ensure proper HTTP status codes"""
+    from flask import jsonify
+    from werkzeug.exceptions import BadRequest, UnprocessableEntity
+    from app.utils.responses import error_response
+    
+    @app.errorhandler(BadRequest)
+    def handle_bad_request(err):
+        """Handle 400 Bad Request errors"""
+        return error_response(str(err.description), 400)
+    
+    @app.errorhandler(UnprocessableEntity)
+    def handle_unprocessable_entity(err):
+        """Handle 422 Unprocessable Entity errors and convert to 400"""
+        return error_response(str(err.description), 400)
+    
+    @app.errorhandler(ValueError)
+    def handle_value_error(err):
+        """Handle ValueError exceptions and return as 400"""
+        return error_response(f"Invalid request: {str(err)}", 400)
+    
+    # Handle JSON decode errors
+    @app.errorhandler(400)
+    def handle_json_error(err):
+        """Handle JSON parsing errors"""
+        if "Failed to decode JSON object" in str(err.description):
+            return error_response("Invalid JSON format", 400)
+        return error_response(str(err.description), 400)
 
 
 def _ensure_default_user_exists():
@@ -125,4 +161,94 @@ def _ensure_default_user_exists():
     except Exception as e:
         logger.error(f"✗ Error ensuring default user exists: {e}")
         print(f"Error ensuring default user exists: {e}")
+        db.session.rollback()
+
+
+def _ensure_default_llm_providers_exist():
+    """Ensure default LLM provider configurations exist in the database"""
+    from app.models.models import LLMProviderConfig
+    from flask import current_app
+    import logging
+    
+    logger = logging.getLogger('bigshot.llm')
+    
+    try:
+        logger.info("Checking for default LLM provider configurations...")
+        
+        # Check if any providers already exist
+        existing_providers = LLMProviderConfig.query.count()
+        
+        if existing_providers == 0:
+            # Create default provider configurations
+            default_providers = [
+                {
+                    "provider": "openai",
+                    "name": "OpenAI GPT-4",
+                    "base_url": "https://api.openai.com/v1",
+                    "model": "gpt-4",
+                    "is_default": True,
+                    "is_active": False,  # Will be activated if API key is available
+                },
+                {
+                    "provider": "openai",
+                    "name": "OpenAI GPT-3.5 Turbo",
+                    "base_url": "https://api.openai.com/v1",
+                    "model": "gpt-3.5-turbo",
+                    "is_default": False,
+                    "is_active": False,
+                },
+                {
+                    "provider": "lmstudio",
+                    "name": "LMStudio Local",
+                    "base_url": "http://localhost:1234/v1",
+                    "model": "model-identifier",
+                    "is_default": False,
+                    "is_active": False,
+                },
+            ]
+            
+            # Get configuration from environment
+            openai_key = current_app.config.get('OPENAI_API_KEY')
+            lmstudio_base = current_app.config.get('LMSTUDIO_API_BASE', 'http://localhost:1234/v1')
+            lmstudio_model = current_app.config.get('LMSTUDIO_MODEL', 'model-identifier')
+            current_provider = current_app.config.get('LLM_PROVIDER', 'openai').lower()
+            
+            # Update LMStudio config from environment
+            for provider in default_providers:
+                if provider['provider'] == 'lmstudio':
+                    provider['base_url'] = lmstudio_base
+                    provider['model'] = lmstudio_model
+                elif provider['provider'] == 'openai' and openai_key:
+                    provider['api_key'] = openai_key
+            
+            # Create provider records
+            for provider_data in default_providers:
+                provider = LLMProviderConfig(**provider_data)
+                db.session.add(provider)
+            
+            db.session.flush()  # Get IDs
+            
+            # Activate the configured provider
+            if current_provider == 'lmstudio':
+                lmstudio_provider = LLMProviderConfig.query.filter_by(provider='lmstudio').first()
+                if lmstudio_provider:
+                    lmstudio_provider.is_active = True
+                    logger.info("✓ Activated LMStudio provider from environment configuration")
+            elif current_provider == 'openai' and openai_key:
+                openai_provider = LLMProviderConfig.query.filter_by(
+                    provider='openai', model='gpt-4'
+                ).first()
+                if openai_provider:
+                    openai_provider.is_active = True
+                    logger.info("✓ Activated OpenAI GPT-4 provider from environment configuration")
+            
+            db.session.commit()
+            logger.info("✓ Default LLM provider configurations created")
+            print("Default LLM provider configurations created")
+        else:
+            logger.info("✓ LLM provider configurations already exist")
+            
+    except Exception as e:
+        logger.error(f"✗ Error ensuring default LLM providers exist: {e}")
+        print(f"Error ensuring default LLM providers exist: {e}")
         db.session.rollback()
