@@ -90,22 +90,27 @@ const ConfigurationManagement: React.FC = () => {
     const currentValue = unsavedChanges[`${section.id}.${setting.key}`] ?? setting.value;
     
     switch (setting.type) {
-      case 'boolean':
+      case 'boolean': {
+        // For boolean: ensure the type matches before assignment
+        const boolValue: boolean | undefined = typeof currentValue === 'boolean' ? currentValue : undefined;
         return (
           <div className="flex items-center">
             <input
               type="checkbox"
-              checked={Boolean(currentValue)}
+              checked={boolValue ?? false}
               onChange={(e) => handleSettingChange(section.id, setting.key, e.target.checked)}
               className="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
             />
           </div>
         );
+      }
       
-      case 'select':
+      case 'select': {
+        // For select: ensure the value is string
+        const stringValue: string | undefined = typeof currentValue === 'string' ? currentValue : undefined;
         return (
           <select
-            value={String(currentValue)}
+            value={stringValue ?? ''}
             onChange={(e) => handleSettingChange(section.id, setting.key, e.target.value)}
             className="w-full px-3 py-2 bg-white dark:bg-dark-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
@@ -116,39 +121,53 @@ const ConfigurationManagement: React.FC = () => {
             ))}
           </select>
         );
+      }
       
-      case 'number':
+      case 'number': {
+        // For number: ensure the value is number or convert string to number safely
+        const numberValue: number | undefined = typeof currentValue === 'number' 
+          ? currentValue 
+          : typeof currentValue === 'string' && !isNaN(Number(currentValue))
+          ? Number(currentValue)
+          : undefined;
         return (
           <input
             type="number"
-            value={String(currentValue)}
+            value={numberValue ?? ''}
             onChange={(e) => handleSettingChange(section.id, setting.key, Number(e.target.value))}
             min={setting.validation?.min}
             max={setting.validation?.max}
             className="w-full px-3 py-2 bg-white dark:bg-dark-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
         );
+      }
       
-      case 'password':
+      case 'password': {
+        // For password: ensure the value is string  
+        const passwordValue: string | undefined = typeof currentValue === 'string' ? currentValue : undefined;
         return (
           <input
             type="password"
-            value={String(currentValue)}
+            value={passwordValue ?? ''}
             onChange={(e) => handleSettingChange(section.id, setting.key, e.target.value)}
             className="w-full px-3 py-2 bg-white dark:bg-dark-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
         );
+      }
       
-      default:
+      default: {
+        // For text: ensure the value is string
+        const textValue: string | undefined = typeof currentValue === 'string' ? currentValue : undefined;
         return (
           <input
             type="text"
-            value={String(currentValue)}
+            value={textValue ?? ''}
             onChange={(e) => handleSettingChange(section.id, setting.key, e.target.value)}
             pattern={setting.validation?.pattern}
             className="w-full px-3 py-2 bg-white dark:bg-dark-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
         );
+      }
     }
   };
 
