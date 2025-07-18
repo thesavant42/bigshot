@@ -161,3 +161,42 @@ export interface ChatMessageData {
   message: ChatMessage;
   session_id: string;
 }
+
+// Connectivity proof types for backend health check
+export interface ServiceStatus {
+  status: 'HEALTHY' | 'DEGRADED' | 'FAILED';
+  message: string;
+  connection_url?: string;
+  active_workers?: number;
+  broker_url?: string;
+}
+
+export interface ConnectivityProofResponse {
+  authentication: {
+    status: 'SUCCESS';
+    user: string;
+    timestamp: string;
+    message: string;
+  };
+  backend_services: {
+    database: ServiceStatus;
+    redis: ServiceStatus;
+    celery: ServiceStatus;
+  };
+  environment: {
+    service_name: string;
+    hostname: string;
+    flask_env: string;
+    container_id: string;
+  };
+  client: {
+    ip_address: string;
+    user_agent: string;
+    request_timestamp: string;
+  };
+  overall_status: {
+    healthy_services: number;
+    total_services: number;
+    status: 'HEALTHY' | 'DEGRADED';
+  };
+}
