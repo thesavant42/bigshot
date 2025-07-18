@@ -106,7 +106,7 @@ async function handlePostAuthVerification(page: Page) {
       const authSuccess = page.locator('text=successful, text=SUCCESS, text=authenticated').first();
       await authSuccess.waitFor({ timeout: 5000 });
       console.log('✅ Authentication status confirmed');
-    } catch (e) {
+    } catch {
       console.log('⚠️ Could not confirm auth status, but continuing');
     }
     
@@ -119,7 +119,7 @@ async function handlePostAuthVerification(page: Page) {
     // Wait for navigation to dashboard
     await page.waitForTimeout(5000);
     
-  } catch (error) {
+  } catch {
     console.log('ℹ️ No post-auth verification screen found, proceeding...');
     // If post-auth screen is not present, that's also fine
   }
@@ -148,7 +148,7 @@ async function validateDashboard(page: Page) {
       await locator.waitFor({ timeout: 3000 });
       console.log(`✅ Found primary element: ${element}`);
       foundElements++;
-    } catch (error) {
+    } catch {
       console.log(`⚠️ Missing primary element: ${element}`);
     }
   }
@@ -160,7 +160,7 @@ async function validateDashboard(page: Page) {
       await locator.waitFor({ timeout: 2000 });
       console.log(`✅ Found alternative element: ${element}`);
       foundAlternatives++;
-    } catch (error) {
+    } catch {
       console.log(`ℹ️ Alternative element not found: ${element}`);
     }
   }
@@ -302,7 +302,7 @@ test.describe('UI Health Check', () => {
     }
   });
   
-  test('should detect and fail on blank/corrupted screenshots', async ({ page }) => {
+  test('should detect and fail on blank/corrupted screenshots', async () => {
     console.log('🧪 Testing screenshot validation...');
     
     // Create a tiny fake screenshot to test validation

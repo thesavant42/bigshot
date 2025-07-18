@@ -1,0 +1,12 @@
+<testsuites id="" name="" tests="2" failures="0" skipped="2" errors="0" time="0.16525999999999988">
+<testsuite name="ui-health.spec.ts" timestamp="2025-07-18T21:20:20.804Z" hostname="chromium" tests="2" failures="0" skipped="2" time="0" errors="0">
+<testcase name="UI Health Check › should login, pass verification, and capture healthy dashboard screenshot" classname="ui-health.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+<testcase name="UI Health Check › should detect and fail on blank/corrupted screenshots" classname="ui-health.spec.ts" time="0">
+<skipped>
+</skipped>
+</testcase>
+</testsuite>
+</testsuites>
