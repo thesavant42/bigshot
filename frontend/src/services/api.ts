@@ -68,7 +68,7 @@ class ApiService {
 
   async verifyToken(): Promise<boolean> {
     try {
-      await this.api.get('/auth/verify');
+      await this.api.post('/auth/verify');
       return true;
     } catch {
       return false;

@@ -13,7 +13,7 @@ auth_bp = Blueprint("auth", __name__)
 # In production, this would be in a database
 DEFAULT_USER = {
     "username": "admin",
-    "password_hash": generate_password_hash("admin123"),  # Change in production
+    "password_hash": generate_password_hash("password"),  # Change in production
     "active": True,
 }
 
