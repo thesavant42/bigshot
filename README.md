@@ -6,6 +6,9 @@ A comprehensive domain enumeration and intelligence gathering platform with inte
 
 - **Domain Enumeration**: Automated subdomain discovery and enumeration
 - **AI Chat Integration**: LLM-powered chat interface with domain intelligence
+  - OpenAI API support with GPT models
+  - LMStudio integration for local AI hosting
+  - Privacy-focused local inference options
 - **Real-time Updates**: WebSocket-based real-time communication
 - **Background Processing**: Celery-based asynchronous task processing
 - **Modern UI**: React-based frontend with TypeScript and Tailwind CSS
