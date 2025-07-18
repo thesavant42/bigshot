@@ -261,8 +261,13 @@ class ChatService {
           }
         }
       }
-    } catch (error) {
-      onError(error instanceof Error ? error : new Error(String(error)));
+    } catch (e) {
+      // Handle unknown error types safely by checking instance before passing to onError
+      if (e instanceof Error) {
+        onError(e);
+      } else {
+        onError(new Error(String(e)));
+      }
     }
   }
 }
