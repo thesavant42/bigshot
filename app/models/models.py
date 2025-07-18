@@ -235,3 +235,35 @@ class ChatMessage(db.Model):
             ),
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
+
+
+class User(db.Model):
+    """User model for authentication and user management"""
+
+    __tablename__ = "users"
+
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
+    updated_at = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+    )
+
+    def to_dict(self, include_sensitive=False):
+        """Convert user to dictionary representation"""
+        result = {
+            "id": self.id,
+            "username": self.username,
+            "is_active": self.is_active,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }
+        
+        if include_sensitive:
+            result["password_hash"] = self.password_hash
+            
+        return result
