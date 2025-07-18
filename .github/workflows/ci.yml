@@ -218,3 +218,123 @@ jobs:
         REDIS_URL: redis://localhost:6379/0
       run: |
         python -m pytest tests/ -v -k "performance" --tb=short || echo "No performance tests found"
+
+  ui-health-tests:
+    runs-on: ubuntu-latest
+    needs: [backend-tests, frontend-tests]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Start application services
+      run: |
+        docker compose -f docker-compose.test.yml up -d --build
+        echo "Waiting for services to be healthy..."
+        
+        # Wait for services to be ready with timeout
+        timeout 300 bash -c '
+          until docker compose -f docker-compose.test.yml ps --format json | jq -r ".[].Health" | grep -v "healthy" | wc -l | grep -q "^0$"; do
+            echo "Waiting for all services to be healthy..."
+            docker compose -f docker-compose.test.yml ps
+            sleep 10
+          done
+        '
+        
+        echo "✅ All services are healthy"
+        docker compose -f docker-compose.test.yml ps
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: Install frontend dependencies
+      working-directory: frontend
+      run: npm ci
+    
+    - name: Install Playwright Browsers
+      working-directory: frontend
+      run: npx playwright install --with-deps chromium
+    
+    - name: Wait for application to be ready
+      run: |
+        echo "Waiting for frontend to be accessible..."
+        timeout 60 bash -c '
+          until curl -f http://localhost:80 > /dev/null 2>&1; do
+            echo "Waiting for frontend..."
+            sleep 5
+          done
+        '
+        
+        echo "Waiting for backend API to be ready..."
+        timeout 60 bash -c '
+          until curl -f http://localhost:5000/api/v1/health > /dev/null 2>&1; do
+            echo "Waiting for backend API..."
+            sleep 5
+          done
+        '
+        
+        echo "✅ Application is ready for testing"
+    
+    - name: Run UI health tests
+      working-directory: frontend
+      run: |
+        # Update Playwright config for CI environment
+        export PLAYWRIGHT_BASE_URL=http://localhost:80
+        npm run test:e2e
+      env:
+        CI: true
+    
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: ui-test-results
+        path: |
+          frontend/test-results/
+          frontend/playwright-report/
+        retention-days: 30
+    
+    - name: Upload screenshots
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: ui-screenshots
+        path: frontend/test-results/*.png
+        retention-days: 30
+    
+    - name: Analyze screenshot health
+      if: always()
+      run: |
+        echo "📊 Analyzing UI health test results..."
+        
+        # Check if dashboard screenshot exists and analyze it
+        SCREENSHOT_PATH="frontend/test-results/dashboard-health.png"
+        if [ -f "$SCREENSHOT_PATH" ]; then
+          SIZE=$(stat -c%s "$SCREENSHOT_PATH" 2>/dev/null || stat -f%z "$SCREENSHOT_PATH" 2>/dev/null || echo "0")
+          echo "Dashboard screenshot size: ${SIZE} bytes"
+          
+          if [ "$SIZE" -gt 50000 ]; then
+            echo "✅ Dashboard screenshot appears healthy (size: ${SIZE} bytes)"
+            echo "SCREENSHOT_HEALTHY=true" >> $GITHUB_ENV
+          else
+            echo "❌ Dashboard screenshot too small - likely blank or corrupted (size: ${SIZE} bytes)"
+            echo "SCREENSHOT_HEALTHY=false" >> $GITHUB_ENV
+            exit 1
+          fi
+        else
+          echo "❌ Dashboard screenshot not found"
+          echo "SCREENSHOT_HEALTHY=false" >> $GITHUB_ENV
+          exit 1
+        fi
+    
+    - name: Stop services
+      if: always()
+      run: |
+        docker compose -f docker-compose.test.yml logs
+        docker compose -f docker-compose.test.yml down -v
