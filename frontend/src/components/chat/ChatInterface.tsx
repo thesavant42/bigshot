@@ -50,7 +50,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
       .replace(/\n/g, '<br>');
   };
 
-  const messages = conversation || [];
+  const messages = Array.isArray(conversation) ? conversation : [];
 
   return (
     <div className={`flex flex-col h-full ${className}`}>
