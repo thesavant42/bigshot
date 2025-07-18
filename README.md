@@ -34,7 +34,11 @@ A comprehensive domain enumeration and intelligence gathering platform with inte
 - Python 3.12+
 - Node.js 20+
 - PostgreSQL 15+
-- Redis 7+
+- Redis 7+ (required for background task processing and caching)
+
+### Platform Requirements
+- **Windows**: WSL2 is required and is the only tested environment for Windows users
+- **Linux/macOS**: Native installation supported
 
 ### Development Setup
 
@@ -48,7 +52,7 @@ A comprehensive domain enumeration and intelligence gathering platform with inte
    ```bash
    # Create virtual environment
    python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   source venv/bin/activate  # On Windows WSL2: source venv/bin/activate
    
    # Install dependencies
    pip install -r requirements.txt
@@ -61,23 +65,23 @@ A comprehensive domain enumeration and intelligence gathering platform with inte
    flask db upgrade
    ```
 
-3. **Frontend Setup**
+3. **Start Backend Services**
    ```bash
-   cd frontend
-   npm install
-   npm run dev
-   ```
-
-4. **Start Services**
-   ```bash
-   # Start Redis
+   # Start Redis (required for the application to function)
    redis-server
    
-   # Start Celery worker
+   # Start Celery worker (requires Redis to be running)
    celery -A celery_app worker --loglevel=info
    
    # Start Flask backend
    python run.py
+   ```
+
+4. **Frontend Setup**
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
    ```
 
 ### Docker Setup
