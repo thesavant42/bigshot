@@ -18,7 +18,7 @@ class ApiService {
 
   constructor() {
     this.api = axios.create({
-      baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api/v1',
+      baseURL: (globalThis as any)?.process?.env?.REACT_APP_API_URL || 'http://localhost:5000/api/v1',
       timeout: 10000,
       headers: {
         'Content-Type': 'application/json',
@@ -167,7 +167,7 @@ class ApiService {
   }
 
   // Health and monitoring endpoints
-  async get(path: string): Promise<unknown> {
+  async get<T = unknown>(path: string): Promise<T> {
     const response = await this.api.get(path);
     return response.data;
   }

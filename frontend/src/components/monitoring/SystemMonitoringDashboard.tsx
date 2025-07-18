@@ -149,27 +149,27 @@ const ProgressBar: React.FC<{
 const SystemMonitoringDashboard: React.FC = () => {
   const [refreshInterval, setRefreshInterval] = useState(30000); // 30 seconds
 
-  const { data: healthData, isLoading: healthLoading } = useQuery<HealthStatus>({
+  const { data: healthData, isLoading: healthLoading } = useQuery({
     queryKey: ['health', 'detailed'],
-    queryFn: () => apiService.get('/health/detailed') as Promise<HealthStatus>,
+    queryFn: () => apiService.get<HealthStatus>('/health/detailed'),
     refetchInterval: refreshInterval,
   });
 
-  const { data: metricsData, isLoading: metricsLoading } = useQuery<SystemMetrics>({
+  const { data: metricsData, isLoading: metricsLoading } = useQuery({
     queryKey: ['metrics'],
-    queryFn: () => apiService.get('/metrics') as Promise<SystemMetrics>,
+    queryFn: () => apiService.get<SystemMetrics>('/metrics'),
     refetchInterval: refreshInterval,
   });
 
-  const { data: systemInfo } = useQuery<SystemInfo>({
+  const { data: systemInfo } = useQuery({
     queryKey: ['system', 'info'],
-    queryFn: () => apiService.get('/system/info') as Promise<SystemInfo>,
+    queryFn: () => apiService.get<SystemInfo>('/system/info'),
     refetchInterval: 300000, // 5 minutes
   });
 
-  const { data: backupStatus } = useQuery<BackupStatus>({
+  const { data: backupStatus } = useQuery({
     queryKey: ['backup', 'status'],
-    queryFn: () => apiService.get('/backup/status') as Promise<BackupStatus>,
+    queryFn: () => apiService.get<BackupStatus>('/backup/status'),
     refetchInterval: 300000, // 5 minutes
   });
 
