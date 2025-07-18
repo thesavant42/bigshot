@@ -87,12 +87,45 @@ def create_app(config_class=Config):
         _ensure_default_llm_providers_exist()
     app.logger.info("Database setup completed")
     
+    # Register error handlers
+    _register_error_handlers(app)
+    
     # Log service connectivity status
     with app.app_context():
         log_service_connectivity()
 
     app.logger.info("Flask application created and configured successfully")
     return app
+
+
+def _register_error_handlers(app):
+    """Register error handlers to ensure proper HTTP status codes"""
+    from flask import jsonify
+    from werkzeug.exceptions import BadRequest, UnprocessableEntity
+    from app.utils.responses import error_response
+    
+    @app.errorhandler(BadRequest)
+    def handle_bad_request(err):
+        """Handle 400 Bad Request errors"""
+        return error_response(str(err.description), 400)
+    
+    @app.errorhandler(UnprocessableEntity)
+    def handle_unprocessable_entity(err):
+        """Handle 422 Unprocessable Entity errors and convert to 400"""
+        return error_response(str(err.description), 400)
+    
+    @app.errorhandler(ValueError)
+    def handle_value_error(err):
+        """Handle ValueError exceptions and return as 400"""
+        return error_response(f"Invalid request: {str(err)}", 400)
+    
+    # Handle JSON decode errors
+    @app.errorhandler(400)
+    def handle_json_error(err):
+        """Handle JSON parsing errors"""
+        if "Failed to decode JSON object" in str(err.description):
+            return error_response("Invalid JSON format", 400)
+        return error_response(str(err.description), 400)
 
 
 def _ensure_default_user_exists():

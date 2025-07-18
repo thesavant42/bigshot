@@ -49,6 +49,9 @@ def create_llm_provider():
     """Create a new LLM provider configuration"""
     try:
         data = request.get_json()
+        if not data:
+            return error_response("Request must contain valid JSON data", 400)
+        
         user_id = get_jwt_identity()
 
         # Validate required fields
@@ -94,7 +97,15 @@ def create_llm_provider():
     except Exception as e:
         db.session.rollback()
         logger.error(f"Failed to create LLM provider: {e}")
-        return error_response(f"Failed to create LLM provider: {str(e)}", 500)
+        
+        # Check if it's a Flask HTTP exception and return appropriate status
+        error_message = str(e)
+        if "400 Bad Request" in error_message or "JSON data" in error_message:
+            return error_response("Invalid JSON data provided", 400)
+        elif "415 Unsupported Media Type" in error_message or "Content-Type" in error_message:
+            return error_response("Request must have Content-Type: application/json", 400)
+        else:
+            return error_response(f"Failed to create LLM provider: {str(e)}", 500)
 
 
 @llm_providers_bp.route("/llm-providers/<int:provider_id>", methods=["PUT"])
@@ -103,6 +114,9 @@ def update_llm_provider(provider_id):
     """Update an LLM provider configuration"""
     try:
         data = request.get_json()
+        if not data:
+            return error_response("Request must contain valid JSON data", 400)
+        
         user_id = get_jwt_identity()
 
         provider_config = LLMProviderConfig.query.get_or_404(provider_id)
@@ -155,7 +169,15 @@ def update_llm_provider(provider_id):
     except Exception as e:
         db.session.rollback()
         logger.error(f"Failed to update LLM provider: {e}")
-        return error_response(f"Failed to update LLM provider: {str(e)}", 500)
+        
+        # Check if it's a Flask HTTP exception and return appropriate status
+        error_message = str(e)
+        if "400 Bad Request" in error_message or "JSON data" in error_message:
+            return error_response("Invalid JSON data provided", 400)
+        elif "415 Unsupported Media Type" in error_message or "Content-Type" in error_message:
+            return error_response("Request must have Content-Type: application/json", 400)
+        else:
+            return error_response(f"Failed to update LLM provider: {str(e)}", 500)
 
 
 @llm_providers_bp.route("/llm-providers/<int:provider_id>", methods=["DELETE"])
