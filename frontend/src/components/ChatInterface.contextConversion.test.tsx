@@ -93,8 +93,8 @@ describe('ChatInterface context conversion', () => {
 
   it('should handle explicitly undefined arrays', () => {
     const contextData: ContextData = {
-      recent_domains: undefined,
-      active_jobs: undefined,
+      recent_domains: undefined as any,
+      active_jobs: undefined as any,
       recent_urls: [],
       timestamp: '2024-01-01T12:00:00Z'
     };
