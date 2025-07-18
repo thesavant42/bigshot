@@ -256,7 +256,7 @@ jobs:
     - name: Wait for application to be ready
       run: |
         echo "Waiting for frontend to be accessible..."
-        timeout 60 bash -c '
+        timeout 180 bash -c '
           until curl -f http://localhost:80 > /dev/null 2>&1; do
             echo "Waiting for frontend..."
             sleep 5
@@ -264,7 +264,7 @@ jobs:
         '
         
         echo "Waiting for backend API to be ready..."
-        timeout 60 bash -c '
+        timeout 180 bash -c '
           until curl -f http://localhost:5000/api/v1/health > /dev/null 2>&1; do
             echo "Waiting for backend API..."
             sleep 5
