@@ -54,6 +54,7 @@ def auth_headers(client):
     )
 
     data = response.get_json()
+    assert "data" in data, f"Login failed: {data}"
     token = data["data"]["access_token"]
 
     return {"Authorization": f"Bearer {token}"}

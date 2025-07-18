@@ -139,7 +139,9 @@ class TestChatAPI:
         response = self.client.post(
             "/api/v1/auth/login", json={"username": "admin", "password": "admin123"}
         )
-        self.token = response.get_json()["data"]["access_token"]
+        json_data = response.get_json()
+        assert "data" in json_data, f"Login failed: {json_data}"
+        self.token = json_data["data"]["access_token"]
         self.headers = {"Authorization": f"Bearer {self.token}"}
 
     def teardown_method(self):
