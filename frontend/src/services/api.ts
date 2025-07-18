@@ -13,12 +13,22 @@ import type {
 } from '../types';
 import type { ChatContext } from './chatService';
 
+interface GlobalWithEnv {
+  process?: {
+    env?: {
+      REACT_APP_API_URL?: string;
+    };
+  };
+}
+
+const globalWithEnv = globalThis as unknown as GlobalWithEnv;
+
 class ApiService {
   private api: AxiosInstance;
 
   constructor() {
     this.api = axios.create({
-      baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api/v1',
+      baseURL: globalWithEnv.process?.env?.REACT_APP_API_URL || 'http://localhost:5000/api/v1',
       timeout: 10000,
       headers: {
         'Content-Type': 'application/json',
@@ -167,7 +177,7 @@ class ApiService {
   }
 
   // Health and monitoring endpoints
-  async get(path: string): Promise<unknown> {
+  async get<T = unknown>(path: string): Promise<T> {
     const response = await this.api.get(path);
     return response.data;
   }
