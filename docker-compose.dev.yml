@@ -60,7 +60,7 @@ services:
       - .:/app
       - ./instance:/app/instance
       - ./logs:/app/logs
-    command: python server.py
+    command: python run.py
 
   # Celery Worker (Development)
   celery:
