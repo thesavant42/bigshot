@@ -25,3 +25,4 @@ This is a Flask and React based repository. Please follow these guidelines when 
 3. Use dependency injection patterns where appropriate
 4. Write unit tests for new functionality. Use table-driven unit tests when possible.
 5. Document public APIs and complex logic. Suggest changes to the `docs/` folder when appropriate
+6. Use context7 mcp for code reviews and programming.
