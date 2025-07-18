@@ -42,6 +42,25 @@ interface HealthStatus {
   };
 }
 
+interface SystemInfo {
+  system: {
+    platform: string;
+    python_version: string;
+    architecture: string;
+  };
+  environment: {
+    flask_env: string;
+    database_url: string;
+    redis_url: string;
+  };
+}
+
+interface BackupStatus {
+  backups: Array<unknown>;
+  total_size: number;
+  last_backup: string | null;
+}
+
 const formatBytes = (bytes: number): string => {
   if (bytes === 0) return '0 B';
   const k = 1024;
@@ -132,25 +151,25 @@ const SystemMonitoringDashboard: React.FC = () => {
 
   const { data: healthData, isLoading: healthLoading } = useQuery<HealthStatus>({
     queryKey: ['health', 'detailed'],
-    queryFn: () => apiService.get('/health/detailed'),
+    queryFn: () => apiService.get('/health/detailed') as Promise<HealthStatus>,
     refetchInterval: refreshInterval,
   });
 
   const { data: metricsData, isLoading: metricsLoading } = useQuery<SystemMetrics>({
     queryKey: ['metrics'],
-    queryFn: () => apiService.get('/metrics'),
+    queryFn: () => apiService.get('/metrics') as Promise<SystemMetrics>,
     refetchInterval: refreshInterval,
   });
 
-  const { data: systemInfo } = useQuery({
+  const { data: systemInfo } = useQuery<SystemInfo>({
     queryKey: ['system', 'info'],
-    queryFn: () => apiService.get('/system/info'),
+    queryFn: () => apiService.get('/system/info') as Promise<SystemInfo>,
     refetchInterval: 300000, // 5 minutes
   });
 
-  const { data: backupStatus } = useQuery({
+  const { data: backupStatus } = useQuery<BackupStatus>({
     queryKey: ['backup', 'status'],
-    queryFn: () => apiService.get('/backup/status'),
+    queryFn: () => apiService.get('/backup/status') as Promise<BackupStatus>,
     refetchInterval: 300000, // 5 minutes
   });
 
@@ -317,15 +336,15 @@ const SystemMonitoringDashboard: React.FC = () => {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">Platform:</span>
-                    <span className="text-gray-900 dark:text-white">{systemInfo.system.platform}</span>
+                    <span className="text-gray-900 dark:text-white">{systemInfo?.system?.platform || 'N/A'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">Python:</span>
-                    <span className="text-gray-900 dark:text-white">{systemInfo.system.python_version}</span>
+                    <span className="text-gray-900 dark:text-white">{systemInfo?.system?.python_version || 'N/A'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">Architecture:</span>
-                    <span className="text-gray-900 dark:text-white">{systemInfo.system.architecture}</span>
+                    <span className="text-gray-900 dark:text-white">{systemInfo?.system?.architecture || 'N/A'}</span>
                   </div>
                 </div>
               </div>
@@ -334,15 +353,15 @@ const SystemMonitoringDashboard: React.FC = () => {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">Flask Environment:</span>
-                    <span className="text-gray-900 dark:text-white">{systemInfo.environment.flask_env}</span>
+                    <span className="text-gray-900 dark:text-white">{systemInfo?.environment?.flask_env || 'N/A'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">Database:</span>
-                    <span className="text-gray-900 dark:text-white">{systemInfo.environment.database_url}</span>
+                    <span className="text-gray-900 dark:text-white">{systemInfo?.environment?.database_url || 'N/A'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">Redis:</span>
-                    <span className="text-gray-900 dark:text-white">{systemInfo.environment.redis_url}</span>
+                    <span className="text-gray-900 dark:text-white">{systemInfo?.environment?.redis_url || 'N/A'}</span>
                   </div>
                 </div>
               </div>
@@ -357,16 +376,16 @@ const SystemMonitoringDashboard: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-dark-700 rounded-lg">
                 <span className="text-gray-600 dark:text-gray-400">Total Backups</span>
-                <span className="font-medium text-gray-900 dark:text-white">{backupStatus.backups.length}</span>
+                <span className="font-medium text-gray-900 dark:text-white">{backupStatus?.backups?.length || 0}</span>
               </div>
               <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-dark-700 rounded-lg">
                 <span className="text-gray-600 dark:text-gray-400">Total Size</span>
-                <span className="font-medium text-gray-900 dark:text-white">{formatBytes(backupStatus.total_size)}</span>
+                <span className="font-medium text-gray-900 dark:text-white">{formatBytes(backupStatus?.total_size || 0)}</span>
               </div>
               <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-dark-700 rounded-lg">
                 <span className="text-gray-600 dark:text-gray-400">Last Backup</span>
                 <span className="font-medium text-gray-900 dark:text-white">
-                  {backupStatus.last_backup ? new Date(backupStatus.last_backup).toLocaleDateString() : 'None'}
+                  {backupStatus?.last_backup ? new Date(backupStatus.last_backup).toLocaleDateString() : 'None'}
                 </span>
               </div>
             </div>

@@ -262,7 +262,7 @@ class ChatService {
         }
       }
     } catch (error) {
-      onError(error);
+      onError(error instanceof Error ? error : new Error(String(error)));
     }
   }
 }

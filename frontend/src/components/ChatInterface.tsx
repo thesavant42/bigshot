@@ -40,7 +40,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
   const loadContext = async () => {
     try {
       const contextData = await chatService.getContext();
-      setContext(contextData);
+      // Convert ContextData to ChatContext format
+      setContext({
+        current_domains: contextData.recent_domains?.map(d => d.root_domain),
+        active_jobs: contextData.active_jobs?.map(j => j.id),
+        timestamp: contextData.timestamp
+      });
     } catch (error) {
       console.error('Failed to load context:', error);
     }
@@ -140,7 +145,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
               <div className="font-semibold">Function calls:</div>
               {message.function_calls.map((call, i) => (
                 <div key={i} className="mt-1">
-                  {call.function}: {JSON.stringify(call.arguments)}
+                  {call.name}: {JSON.stringify(call.arguments)}
                 </div>
               ))}
             </div>
