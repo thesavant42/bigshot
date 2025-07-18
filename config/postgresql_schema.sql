@@ -4,6 +4,16 @@
 -- Enable required extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+-- Users table for authentication and user management
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(80) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- URLs table for storing discovered URLs
 CREATE TABLE IF NOT EXISTS urls (
     id SERIAL PRIMARY KEY,
@@ -140,6 +150,9 @@ CREATE INDEX IF NOT EXISTS idx_assets_path ON assets(path);
 CREATE INDEX IF NOT EXISTS idx_notes_url_id ON notes(url_id);
 CREATE INDEX IF NOT EXISTS idx_notes_created_at ON notes(created_at);
 
+CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
+CREATE INDEX IF NOT EXISTS idx_users_is_active ON users(is_active);
+
 -- Constraints for data integrity
 ALTER TABLE domains ADD CONSTRAINT chk_domains_subdomain_not_empty CHECK (subdomain != '');
 ALTER TABLE domains ADD CONSTRAINT chk_domains_root_domain_not_empty CHECK (root_domain != '');
@@ -147,6 +160,7 @@ ALTER TABLE domains ADD CONSTRAINT chk_domains_source_not_empty CHECK (source !=
 
 ALTER TABLE urls ADD CONSTRAINT chk_urls_url_not_empty CHECK (url != '');
 ALTER TABLE jobs ADD CONSTRAINT chk_jobs_status_valid CHECK (status IN ('pending', 'running', 'completed', 'failed', 'cancelled'));
+ALTER TABLE users ADD CONSTRAINT chk_users_username_not_empty CHECK (username != '');
 
 -- Triggers for automatic timestamp updates
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -172,6 +186,9 @@ CREATE TRIGGER update_notes_updated_at BEFORE UPDATE ON notes
 CREATE TRIGGER update_text_notes_updated_at BEFORE UPDATE ON text_notes
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
 -- Comments for documentation
 COMMENT ON TABLE domains IS 'Stores hierarchical subdomain information for reconnaissance targets';
 COMMENT ON COLUMN domains.root_domain IS 'The root domain (e.g., example.com)';
@@ -184,3 +201,4 @@ COMMENT ON TABLE urls IS 'Stores discovered URLs with metadata';
 COMMENT ON TABLE jobs IS 'Manages background enumeration and processing jobs';
 COMMENT ON TABLE notes IS 'User annotations for specific URLs';
 COMMENT ON TABLE text_notes IS 'General user notes not tied to specific URLs';
+COMMENT ON TABLE users IS 'Stores user accounts for authentication and access control';
