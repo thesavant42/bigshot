@@ -89,8 +89,8 @@ async function performLogin(page: Page) {
   
   console.log('🚀 Login submitted');
   
-  // Wait a moment for login to process
-  await page.waitForTimeout(5000);
+  // Wait for the dashboard to appear, indicating login success
+  await page.waitForSelector('text=BigShot', { state: 'visible' });
 }
 
 /**
