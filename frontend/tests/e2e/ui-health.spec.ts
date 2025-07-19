@@ -33,8 +33,8 @@ async function waitForPageReady(page: Page) {
   // Wait for the app to be rendered (look for main content)
   await page.waitForSelector('body', { state: 'visible' });
   
-  // Give React time to mount and render
-  await page.waitForTimeout(3000);
+  // Wait for React components to mount and render
+  await page.waitForSelector('[data-react-ready="true"]', { state: 'visible' });
 }
 
 /**
