@@ -56,7 +56,7 @@ class ChatService {
     context: ChatContext = {},
     stream: boolean = false
   ): Promise<ChatResponse | EventSource> {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('auth_token');
     
     if (stream) {
       // Note: EventSource doesn't support custom headers, so we'll use fetch with SSE
@@ -102,7 +102,7 @@ class ChatService {
   }
 
   async getModels(): Promise<string[]> {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('auth_token');
     const response = await axios.get(`${this.baseURL}/chat/models`, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -117,7 +117,7 @@ class ChatService {
     models: string[];
     timestamp: string;
   }> {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('auth_token');
     const response = await axios.get(`${this.baseURL}/chat/status`, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -128,7 +128,7 @@ class ChatService {
   }
 
   async getContext(): Promise<ContextData> {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('auth_token');
     const response = await axios.get(`${this.baseURL}/chat/context`, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -139,7 +139,7 @@ class ChatService {
   }
 
   async getConversations(): Promise<Conversation[]> {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('auth_token');
     const response = await axios.get(`${this.baseURL}/chat/conversations`, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -154,7 +154,7 @@ class ChatService {
     messages: ChatMessage[];
     created_at: string;
   }> {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('auth_token');
     const response = await axios.get(`${this.baseURL}/chat/conversations/${sessionId}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -165,7 +165,7 @@ class ChatService {
   }
 
   async getMCPTools(): Promise<MCPTool[]> {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('auth_token');
     const response = await axios.get(`${this.baseURL}/mcp/tools`, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -176,7 +176,7 @@ class ChatService {
   }
 
   async executeMCPTool(toolName: string, args: Record<string, unknown>): Promise<unknown> {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('auth_token');
     const response = await axios.post(
       `${this.baseURL}/mcp/execute`,
       {
@@ -203,7 +203,7 @@ class ChatService {
     onComplete: () => void,
     onError: (error: Error) => void
   ): Promise<void> {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('auth_token');
     
     try {
       const response = await fetch(`${this.baseURL}/chat/messages`, {

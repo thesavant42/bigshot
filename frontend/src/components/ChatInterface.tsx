@@ -18,33 +18,72 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
-    checkServiceStatus();
-    loadContext();
+    isMountedRef.current = true;
+    
+    const checkStatus = async () => {
+      try {
+        if (!isMountedRef.current) return;
+        const status = await chatService.getStatus();
+        if (isMountedRef.current) {
+          setIsServiceAvailable(status.available);
+        }
+      } catch (error) {
+        console.error('Failed to check service status:', error);
+        if (isMountedRef.current) {
+          setIsServiceAvailable(false);
+        }
+      }
+    };
+
+    const loadContextData = async () => {
+      try {
+        if (!isMountedRef.current) return;
+        const contextData = await chatService.getContext();
+        if (isMountedRef.current) {
+          setContext(convertContextDataToChatContext(contextData));
+        }
+      } catch (error) {
+        console.error('Failed to load context:', error);
+      }
+    };
+
+    // Add small delay to prevent immediate re-execution
+    const timeoutId = setTimeout(() => {
+      checkStatus();
+      loadContextData();
+    }, 100);
+
+    return () => {
+      isMountedRef.current = false;
+      clearTimeout(timeoutId);
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
   }, []);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  const checkServiceStatus = async () => {
+  const retryConnection = async () => {
     try {
+      if (!isMountedRef.current) return;
       const status = await chatService.getStatus();
-      setIsServiceAvailable(status.available);
+      if (isMountedRef.current) {
+        setIsServiceAvailable(status.available);
+      }
     } catch (error) {
       console.error('Failed to check service status:', error);
-      setIsServiceAvailable(false);
-    }
-  };
-
-  const loadContext = async () => {
-    try {
-      const contextData = await chatService.getContext();
-      // Convert ContextData to ChatContext format
-      setContext(convertContextDataToChatContext(contextData));
-    } catch (error) {
-      console.error('Failed to load context:', error);
+      if (isMountedRef.current) {
+        setIsServiceAvailable(false);
+      }
     }
   };
 
@@ -170,7 +209,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
               The AI chat service is currently unavailable. Please check your configuration.
             </p>
             <button
-              onClick={checkServiceStatus}
+              onClick={retryConnection}
               className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             >
               Retry
