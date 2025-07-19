@@ -212,7 +212,7 @@ async function analyzeScreenshot(screenshotPath: string): Promise<{ isHealthy: b
     
     // Basic file size check - a healthy screenshot should be reasonably sized
     // Lowered threshold for CI environments where screenshots might be smaller
-    if (size > 30000) { // 30KB minimum for a real screenshot
+    if (size > SCREENSHOT_SIZE_THRESHOLD) { // 30KB minimum for a real screenshot
       return { isHealthy: true, reason: 'Screenshot appears to contain content', size };
     } else {
       return { isHealthy: false, reason: 'Screenshot too small, may be blank or mostly empty', size };
