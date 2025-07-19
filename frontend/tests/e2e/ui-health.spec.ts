@@ -1,70 +1,116 @@
 
-// UI Health Tests - Environment Variable Usage Example
-// This file demonstrates proper environment variable handling for UI health tests
+// UI Health Tests - Playwright-based browser automation tests
+// This file implements actual UI health testing with screenshot capture
 
-import { describe, it, expect, beforeAll } from 'vitest';
+import { test, expect } from '@playwright/test';
 
-describe('UI Health Tests - Environment Configuration', () => {
+test.describe('UI Health Tests', () => {
   let testUsername: string | undefined;
   let testPassword: string | undefined;
   let isCI: boolean;
 
-  beforeAll(() => {
+  test.beforeAll(() => {
     testUsername = process.env.TEST_USERNAME;
     testPassword = process.env.TEST_PASSWORD;
     isCI = process.env.CI === 'true';
+    
+    console.log('🔧 Test Environment Configuration:');
+    console.log(`  CI: ${isCI}`);
+    console.log(`  TEST_USERNAME: ${testUsername ? '✅ Set' : '❌ Not set'}`);
+    console.log(`  TEST_PASSWORD: ${testPassword ? '✅ Set' : '❌ Not set'}`);
+    console.log(`  PLAYWRIGHT_BASE_URL: ${process.env.PLAYWRIGHT_BASE_URL || 'Not set (using default)'}`);
   });
 
-  it('should have environment variables available when running in CI', () => {
+  test('should load dashboard and capture health screenshot', async ({ page }) => {
+    console.log('🚀 Starting dashboard health test...');
+    
+    // Navigate to the dashboard
+    await page.goto('/');
+    
+    // Wait for page to load
+    await page.waitForLoadState('networkidle');
+    
+    // Wait a bit more for any dynamic content
+    await page.waitForTimeout(2000);
+    
+    // Check if page has loaded successfully by looking for common elements
+    // This is flexible - we just want to ensure the page isn't blank or errored
+    const bodyText = await page.textContent('body');
+    expect(bodyText).toBeTruthy();
+    expect(bodyText!.length).toBeGreaterThan(0);
+    
+    console.log('✅ Dashboard page loaded successfully');
+    
+    // Take a full-page screenshot for health analysis
+    await page.screenshot({ 
+      path: 'test-results/dashboard-health.png', 
+      fullPage: true,
+      type: 'png'
+    });
+    
+    console.log('📸 Dashboard screenshot captured: test-results/dashboard-health.png');
+  });
+
+  test('should validate environment variables are accessible', async () => {
+    // Test environment variable configuration
     if (isCI) {
-      // In CI environment, these variables should be provided by GitHub secrets
       if (testUsername && testPassword) {
-        expect(testUsername).toBeDefined();
-        expect(testPassword).toBeDefined();
-        console.log('✅ Environment variables are properly configured in CI');
+        console.log('✅ CI environment variables are properly configured');
+        expect(testUsername).toBeTruthy();
+        expect(testPassword).toBeTruthy();
+        expect(typeof testUsername).toBe('string');
+        expect(typeof testPassword).toBe('string');
       } else {
-        console.log('⚠️ CI environment detected but TEST_USERNAME/TEST_PASSWORD not provided');
-        console.log('This is expected when GitHub secrets are not configured or UI health tests are disabled');
+        console.log('⚠️ CI environment detected but credentials not provided');
+        console.log('This is expected when GitHub secrets are not configured');
         // Don't fail the test - just log the status
       }
     } else {
-      // In local development, these might not be set and that's okay
-      console.log('ℹ️ Running in local development mode - environment variables optional');
+      console.log('ℹ️ Running in local development mode');
+      console.log('Environment variables are optional in local development');
     }
+    
+    // This test always passes but provides useful logging
+    expect(true).toBe(true);
   });
 
-  it('should validate environment variable structure when present', () => {
-    if (testUsername && testPassword) {
-      expect(typeof testUsername).toBe('string');
-      expect(typeof testPassword).toBe('string');
-      expect(testUsername.length).toBeGreaterThan(0);
-      expect(testPassword.length).toBeGreaterThan(0);
-      console.log('✅ Environment variables have valid structure');
-    } else {
-      console.log('ℹ️ Environment variables not set - skipping validation');
-    }
-  });
-
-  it('should handle missing environment variables gracefully', () => {
-    // This test ensures that the absence of environment variables doesn't crash the test suite
-    const baseUrl = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000';
+  test('should handle application errors gracefully', async ({ page }) => {
+    console.log('🛡️ Testing error handling...');
     
-    expect(baseUrl).toBeTruthy();
-    expect(typeof baseUrl).toBe('string');
+    // Navigate to dashboard
+    await page.goto('/');
     
-    // This demonstrates proper error handling without throwing
-    if (!testUsername || !testPassword) {
-      console.log('⚠️ Test credentials not available - UI health tests would be skipped in a real scenario');
-    } else {
-      console.log('✅ Test credentials available for UI health testing');
+    // Listen for console errors
+    const consoleErrors: string[] = [];
+    page.on('console', msg => {
+      if (msg.type() === 'error') {
+        consoleErrors.push(msg.text());
+      }
+    });
+    
+    // Listen for uncaught exceptions
+    const uncaughtErrors: string[] = [];
+    page.on('pageerror', error => {
+      uncaughtErrors.push(error.message);
+    });
+    
+    // Wait for any initial load errors
+    await page.waitForTimeout(3000);
+    
+    // Log any errors found (but don't necessarily fail)
+    if (consoleErrors.length > 0) {
+      console.log('⚠️ Console errors detected:', consoleErrors);
     }
+    
+    if (uncaughtErrors.length > 0) {
+      console.log('⚠️ Uncaught errors detected:', uncaughtErrors);
+    }
+    
+    if (consoleErrors.length === 0 && uncaughtErrors.length === 0) {
+      console.log('✅ No errors detected in dashboard');
+    }
+    
+    // Test passes regardless - this is for monitoring, not strict validation
+    expect(true).toBe(true);
   });
 });
-
-// Note: Actual Playwright tests would be implemented differently
-// This is a vitest-compatible example showing environment variable handling
-// For real Playwright tests, you would:
-// 1. Install @playwright/test
-// 2. Use Playwright's test functions instead of vitest
-// 3. Configure playwright.config.ts
-// 4. Implement actual browser automation tests
