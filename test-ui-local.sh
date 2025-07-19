@@ -3,6 +3,10 @@
 
 set -e
 
+# Configuration variables
+BACKEND_HEALTH_URL="http://localhost:5000/api/v1/health"
+SCREENSHOT_SIZE_THRESHOLD=30000  # 30KB minimum for a real screenshot
+
 echo "🧪 Starting local UI health test validation..."
 
 # Check if required dependencies are available
@@ -43,12 +47,6 @@ docker-compose -f docker-compose.test.yml ps
 # Test the endpoints manually
 echo "🔍 Testing application endpoints..."
 
-# Ensure BACKEND_HEALTH_URL is defined
-if [ -z "$BACKEND_HEALTH_URL" ]; then
-    echo "❌ BACKEND_HEALTH_URL is not defined"
-    docker-compose -f docker-compose.test.yml down -v
-    exit 1
-fi
 # Test backend health
 if curl -f "$BACKEND_HEALTH_URL" > /dev/null 2>&1; then
     echo "✅ Backend health endpoint is responding"
@@ -97,7 +95,7 @@ if npm run test:e2e; then
         SIZE=$(stat -c%s "test-results/dashboard-health.png" 2>/dev/null || stat -f%z "test-results/dashboard-health.png" 2>/dev/null || echo "0")
         echo "📸 Dashboard screenshot created: ${SIZE} bytes"
         
-        if [ "$SIZE" -gt 30000 ]; then
+        if [ "$SIZE" -gt "$SCREENSHOT_SIZE_THRESHOLD" ]; then
             echo "✅ Screenshot appears healthy"
         else
             echo "⚠️ Screenshot may be too small"
