@@ -21,6 +21,15 @@ class TestLLMService:
         self.app_context.push()
         db.create_all()
 
+        # Ensure LLM service starts in a clean state for each test
+        from app.models.models import LLMProviderConfig
+        LLMProviderConfig.query.update({"is_active": False})
+        db.session.commit()
+        
+        # Reset the global LLM service instance to clean state
+        llm_service.client = None
+        llm_service.current_provider_config = None
+
         # Create test data
         self.test_domain = Domain(
             root_domain="example.com",
@@ -39,7 +48,7 @@ class TestLLMService:
 
     def test_llm_service_initialization(self):
         """Test LLM service initialization"""
-        # Without API key, should not be available
+        # After setup_method, no providers should be active
         assert not llm_service.is_available()
 
         # With API key, should be available (mocked)
@@ -135,6 +144,15 @@ class TestChatAPI:
         self.client = self.app.test_client()
         db.create_all()
 
+        # Ensure LLM service starts in a clean state for each test
+        from app.models.models import LLMProviderConfig
+        LLMProviderConfig.query.update({"is_active": False})
+        db.session.commit()
+        
+        # Reset the global LLM service instance to clean state
+        llm_service.client = None
+        llm_service.current_provider_config = None
+
         # Create test user and get token
         response = self.client.post(
             "/api/v1/auth/login", json={"username": "admin", "password": "password"}
@@ -172,6 +190,14 @@ class TestChatAPI:
 
     def test_mcp_tools_endpoint(self):
         """Test MCP tools endpoint"""
+        # Activate a test provider for MCP tools testing
+        from app.models.models import LLMProviderConfig
+        test_provider = LLMProviderConfig.query.first()
+        if test_provider:
+            test_provider.is_active = True
+            db.session.commit()
+            llm_service._initialize_client()
+        
         response = self.client.get("/api/v1/mcp/tools", headers=self.headers)
 
         assert response.status_code == 200
@@ -181,6 +207,14 @@ class TestChatAPI:
 
     def test_mcp_execute_endpoint(self):
         """Test MCP execute endpoint"""
+        # Activate a test provider for MCP execution testing
+        from app.models.models import LLMProviderConfig
+        test_provider = LLMProviderConfig.query.first()
+        if test_provider:
+            test_provider.is_active = True
+            db.session.commit()
+            llm_service._initialize_client()
+        
         # Create test domain
         domain = Domain(
             root_domain="example.com", subdomain="test.example.com", source="crt.sh"
