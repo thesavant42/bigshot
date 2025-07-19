@@ -56,7 +56,8 @@ class TestJobsErrorMessageFix:
 
     def test_job_error_message_column_in_postgresql_schema(self):
         """Test that the PostgreSQL schema file includes error_message column"""
-        schema_path = '/home/runner/work/bigshot/bigshot/config/postgresql_schema.sql'
+        project_root = os.path.dirname(os.path.abspath(__file__))
+        schema_path = os.path.join(project_root, '..', 'config', 'postgresql_schema.sql')
         with open(schema_path, 'r') as f:
             schema_content = f.read()
         
