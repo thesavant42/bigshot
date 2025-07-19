@@ -173,7 +173,7 @@ def create_llm_provider():
             model=data["model"].strip(),
             is_active=False,  # New providers start inactive
             is_default=bool(data.get("is_default", False)),
-            connection_timeout=int(data.get("connection_timeout", 30)),
+            connection_timeout=validated_connection_timeout,
             max_tokens=int(data.get("max_tokens", 4000)),
             temperature=validated_temperature,
         )
