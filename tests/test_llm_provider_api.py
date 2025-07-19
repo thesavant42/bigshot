@@ -5,42 +5,34 @@ Integration tests for LLM Provider configuration management
 import json
 import pytest
 from app import create_app, db
-from app.models.models import User, LLMProviderConfig, LLMProviderAuditLog
-from werkzeug.security import generate_password_hash
-from flask_jwt_extended import create_access_token
+from app.models.models import LLMProviderConfig, LLMProviderAuditLog
 
 
 @pytest.fixture
 def app():
     """Create and configure test app"""
-    app = create_app()
-    app.config.update({
-        "TESTING": True,
-        "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
-        "WTF_CSRF_ENABLED": False,
-        "JWT_SECRET_KEY": "test-secret",
-    })
+    import tempfile
+    import os
+    from config.config import TestingConfig
     
-    with app.app_context():
-        db.create_all()
-        
-        # Create test user
-        user = User(
-            username="testuser",
-            password_hash=generate_password_hash("testpass"),
-            is_active=True
-        )
-        db.session.add(user)
-        db.session.commit()
-        
-        # Clear any default providers that might have been created
-        LLMProviderConfig.query.delete()
-        db.session.commit()
-        
-        yield app
-        
-        db.session.remove()
-        db.drop_all()
+    # Create a temporary file for the test database
+    db_fd, db_path = tempfile.mkstemp()
+    
+    # Create test configuration
+    test_config = TestingConfig()
+    test_config.SQLALCHEMY_DATABASE_URI = f"sqlite:///{db_path}"
+    test_config.TESTING = True
+    test_config.WTF_CSRF_ENABLED = False
+    test_config.JWT_SECRET_KEY = "test-secret"
+    
+    # Create app with test config - this will automatically create admin user and default providers
+    app = create_app(test_config)
+    
+    yield app
+    
+    # Clean up
+    os.close(db_fd)
+    os.unlink(db_path)
 
 
 @pytest.fixture
@@ -50,12 +42,18 @@ def client(app):
 
 
 @pytest.fixture
-def auth_headers(app):
-    """Create authorization headers for test requests"""
-    with app.app_context():
-        user = User.query.filter_by(username="testuser").first()
-        token = create_access_token(identity=user.id)
-        return {"Authorization": f"Bearer {token}"}
+def auth_headers(app, client):
+    """Create authorization headers for test requests using default admin user"""
+    # Use the default admin user created by the app
+    response = client.post(
+        "/api/v1/auth/login", 
+        json={"username": "admin", "password": "password"}
+    )
+    assert response.status_code == 200, f"Login failed: {response.get_json()}"
+    
+    data = response.get_json()
+    token = data["data"]["access_token"]
+    return {"Authorization": f"Bearer {token}"}
 
 
 class TestLLMProviderAPI:
