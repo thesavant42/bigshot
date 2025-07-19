@@ -21,11 +21,22 @@ llm_providers_bp = Blueprint("llm_providers", __name__)
 def get_llm_providers():
     """Get all LLM provider configurations"""
     try:
+        logger.debug("Fetching all LLM providers")
         providers = LLMProviderConfig.query.all()
-        return success_response([provider.to_dict() for provider in providers])
+        provider_list = [provider.to_dict() for provider in providers]
+        logger.debug(f"Successfully fetched {len(provider_list)} LLM providers")
+        return success_response(provider_list)
     except Exception as e:
         logger.error(f"Failed to fetch LLM providers: {e}")
-        return error_response(f"Failed to fetch LLM providers: {str(e)}", 500)
+        logger.error(f"Exception type: {type(e)}")
+        
+        # Enhanced error handling to prevent unexpected status codes
+        error_message = str(e)
+        if "422" in error_message or "Unprocessable Entity" in error_message:
+            # Convert any 422 errors to 500 for GET requests
+            return error_response("Internal server error while fetching providers", 500)
+        else:
+            return error_response(f"Failed to fetch LLM providers: {str(e)}", 500)
 
 
 @llm_providers_bp.route("/llm-providers/active", methods=["GET"])
@@ -48,35 +59,123 @@ def get_active_llm_provider():
 def create_llm_provider():
     """Create a new LLM provider configuration"""
     try:
-        data = request.get_json()
+        # Enhanced request validation for CI environment compatibility
+        logger.debug(f"Request Content-Type: {request.content_type}")
+        logger.debug(f"Request Headers: {dict(request.headers)}")
+        
+        # Check Content-Type first to prevent 422 errors
+        if not request.is_json:
+            logger.warning(f"Invalid Content-Type: {request.content_type}")
+            return error_response("Request must have Content-Type: application/json", 400)
+        
+        # Safely parse JSON with comprehensive error handling
+        try:
+            data = request.get_json(force=False, silent=False)
+        except Exception as json_error:
+            logger.error(f"JSON parsing failed: {json_error}")
+            return error_response("Invalid JSON format in request body", 400)
+        
+        # Validate JSON data exists and is not empty
+        if data is None:
+            logger.warning("Request JSON data is None")
+            return error_response("Request body must contain valid JSON data", 400)
+        
+        if not isinstance(data, dict):
+            logger.warning(f"Request JSON is not a dict: {type(data)}")
+            return error_response("Request body must be a JSON object", 400)
+        
         if not data:
-            return error_response("Request must contain valid JSON data", 400)
+            logger.warning("Request JSON data is empty")
+            return error_response("Request body cannot be empty", 400)
         
         user_id = get_jwt_identity()
+        logger.debug(f"Creating provider for user_id: {user_id}")
 
-        # Validate required fields
+        # Validate required fields with detailed error messages
         required_fields = ["provider", "name", "base_url", "model"]
+        missing_fields = []
         for field in required_fields:
-            if not data.get(field):
-                return error_response(f"Field '{field}' is required", 400)
+            if field not in data:
+                missing_fields.append(field)
+            elif not data.get(field) or (isinstance(data.get(field), str) and not data.get(field).strip()):
+                missing_fields.append(field)
+        
+        if missing_fields:
+            logger.warning(f"Missing required fields: {missing_fields}")
+            return error_response(f"Missing required fields: {', '.join(missing_fields)}", 400)
+
+        # Validate field types and formats
+        validation_errors = []
+        
+        # Validate provider field
+        if not isinstance(data["provider"], str) or len(data["provider"].strip()) == 0:
+            validation_errors.append("'provider' must be a non-empty string")
+        
+        # Validate name field
+        if not isinstance(data["name"], str) or len(data["name"].strip()) == 0:
+            validation_errors.append("'name' must be a non-empty string")
+        
+        # Validate base_url field
+        if not isinstance(data["base_url"], str) or len(data["base_url"].strip()) == 0:
+            validation_errors.append("'base_url' must be a non-empty string")
+        
+        # Validate model field
+        if not isinstance(data["model"], str) or len(data["model"].strip()) == 0:
+            validation_errors.append("'model' must be a non-empty string")
+        
+        # Validate optional fields
+        if "api_key" in data and data["api_key"] is not None and not isinstance(data["api_key"], str):
+            validation_errors.append("'api_key' must be a string or null")
+        
+        if "is_default" in data and not isinstance(data["is_default"], bool):
+            validation_errors.append("'is_default' must be a boolean")
+        
+        if "connection_timeout" in data:
+            try:
+                timeout_val = int(data["connection_timeout"])
+                if timeout_val <= 0:
+                    validation_errors.append("'connection_timeout' must be a positive integer")
+            except (ValueError, TypeError):
+                validation_errors.append("'connection_timeout' must be a positive integer")
+        
+        if "max_tokens" in data:
+            try:
+                tokens_val = int(data["max_tokens"])
+                if tokens_val <= 0:
+                    validation_errors.append("'max_tokens' must be a positive integer")
+            except (ValueError, TypeError):
+                validation_errors.append("'max_tokens' must be a positive integer")
+        
+        if "temperature" in data:
+            try:
+                temp_val = float(data["temperature"])
+                if temp_val < 0 or temp_val > 2:
+                    validation_errors.append("'temperature' must be between 0 and 2")
+            except (ValueError, TypeError):
+                validation_errors.append("'temperature' must be a number between 0 and 2")
+        
+        if validation_errors:
+            logger.warning(f"Validation errors: {validation_errors}")
+            return error_response(f"Validation failed: {'; '.join(validation_errors)}", 400)
 
         # Check if name already exists
-        existing = LLMProviderConfig.query.filter_by(name=data["name"]).first()
+        existing = LLMProviderConfig.query.filter_by(name=data["name"].strip()).first()
         if existing:
+            logger.warning(f"Provider name already exists: {data['name']}")
             return error_response(f"Provider with name '{data['name']}' already exists", 400)
 
-        # Create new provider config
+        # Create new provider config with sanitized data
         provider_config = LLMProviderConfig(
-            provider=data["provider"],
-            name=data["name"],
-            base_url=data["base_url"],
-            api_key=data.get("api_key"),
-            model=data["model"],
+            provider=data["provider"].strip(),
+            name=data["name"].strip(),
+            base_url=data["base_url"].strip(),
+            api_key=data.get("api_key", "").strip() if data.get("api_key") else None,
+            model=data["model"].strip(),
             is_active=False,  # New providers start inactive
-            is_default=data.get("is_default", False),
-            connection_timeout=data.get("connection_timeout", 30),
-            max_tokens=data.get("max_tokens", 4000),
-            temperature=data.get("temperature", 0.7),
+            is_default=bool(data.get("is_default", False)),
+            connection_timeout=int(data.get("connection_timeout", 30)),
+            max_tokens=int(data.get("max_tokens", 4000)),
+            temperature=float(data.get("temperature", 0.7)),
         )
 
         db.session.add(provider_config)
@@ -92,18 +191,27 @@ def create_llm_provider():
         db.session.add(audit_log)
         db.session.commit()
 
+        logger.info(f"Successfully created LLM provider: {provider_config.name} (ID: {provider_config.id})")
         return success_response(provider_config.to_dict(), 201)
 
     except Exception as e:
         db.session.rollback()
         logger.error(f"Failed to create LLM provider: {e}")
+        logger.error(f"Exception type: {type(e)}")
         
-        # Check if it's a Flask HTTP exception and return appropriate status
+        # Enhanced error handling to prevent 422 responses
         error_message = str(e)
-        if "400 Bad Request" in error_message or "JSON data" in error_message:
-            return error_response("Invalid JSON data provided", 400)
-        elif "415 Unsupported Media Type" in error_message or "Content-Type" in error_message:
+        
+        # Handle specific Flask exceptions
+        if "400 Bad Request" in error_message:
+            return error_response("Invalid request data", 400)
+        elif "415 Unsupported Media Type" in error_message:
             return error_response("Request must have Content-Type: application/json", 400)
+        elif "JSON" in error_message and "decode" in error_message:
+            return error_response("Invalid JSON format", 400)
+        elif "Unprocessable Entity" in error_message or "422" in error_message:
+            # Convert any 422 errors to 400 for consistency
+            return error_response("Invalid request data format", 400)
         else:
             return error_response(f"Failed to create LLM provider: {str(e)}", 500)
 
@@ -113,44 +221,122 @@ def create_llm_provider():
 def update_llm_provider(provider_id):
     """Update an LLM provider configuration"""
     try:
-        data = request.get_json()
+        # Enhanced request validation for CI environment compatibility
+        logger.debug(f"Updating provider {provider_id}, Content-Type: {request.content_type}")
+        
+        # Check Content-Type first to prevent 422 errors
+        if not request.is_json:
+            logger.warning(f"Invalid Content-Type for update: {request.content_type}")
+            return error_response("Request must have Content-Type: application/json", 400)
+        
+        # Safely parse JSON with comprehensive error handling
+        try:
+            data = request.get_json(force=False, silent=False)
+        except Exception as json_error:
+            logger.error(f"JSON parsing failed for update: {json_error}")
+            return error_response("Invalid JSON format in request body", 400)
+        
+        # Validate JSON data exists and is not empty
+        if data is None:
+            logger.warning("Update request JSON data is None")
+            return error_response("Request body must contain valid JSON data", 400)
+        
+        if not isinstance(data, dict):
+            logger.warning(f"Update request JSON is not a dict: {type(data)}")
+            return error_response("Request body must be a JSON object", 400)
+        
         if not data:
-            return error_response("Request must contain valid JSON data", 400)
+            logger.warning("Update request JSON data is empty")
+            return error_response("Request body cannot be empty", 400)
         
         user_id = get_jwt_identity()
+        logger.debug(f"Updating provider {provider_id} for user_id: {user_id}")
 
         provider_config = LLMProviderConfig.query.get_or_404(provider_id)
         
         # Store old values for audit
         old_values = provider_config.to_dict(include_sensitive=False)
 
-        # Update fields
+        # Validate field types if they are provided
+        validation_errors = []
+        
+        # Update fields with validation
         if "name" in data:
-            # Check if new name already exists (excluding current record)
-            existing = LLMProviderConfig.query.filter(
-                LLMProviderConfig.name == data["name"],
-                LLMProviderConfig.id != provider_id
-            ).first()
-            if existing:
-                return error_response(f"Provider with name '{data['name']}' already exists", 400)
-            provider_config.name = data["name"]
+            if not isinstance(data["name"], str) or len(data["name"].strip()) == 0:
+                validation_errors.append("'name' must be a non-empty string")
+            else:
+                # Check if new name already exists (excluding current record)
+                existing = LLMProviderConfig.query.filter(
+                    LLMProviderConfig.name == data["name"].strip(),
+                    LLMProviderConfig.id != provider_id
+                ).first()
+                if existing:
+                    return error_response(f"Provider with name '{data['name']}' already exists", 400)
+                provider_config.name = data["name"].strip()
 
         if "provider" in data:
-            provider_config.provider = data["provider"]
+            if not isinstance(data["provider"], str) or len(data["provider"].strip()) == 0:
+                validation_errors.append("'provider' must be a non-empty string")
+            else:
+                provider_config.provider = data["provider"].strip()
+        
         if "base_url" in data:
-            provider_config.base_url = data["base_url"]
+            if not isinstance(data["base_url"], str) or len(data["base_url"].strip()) == 0:
+                validation_errors.append("'base_url' must be a non-empty string")
+            else:
+                provider_config.base_url = data["base_url"].strip()
+        
         if "api_key" in data:
-            provider_config.api_key = data["api_key"]
+            if data["api_key"] is not None and not isinstance(data["api_key"], str):
+                validation_errors.append("'api_key' must be a string or null")
+            else:
+                provider_config.api_key = data["api_key"].strip() if data["api_key"] else None
+        
         if "model" in data:
-            provider_config.model = data["model"]
+            if not isinstance(data["model"], str) or len(data["model"].strip()) == 0:
+                validation_errors.append("'model' must be a non-empty string")
+            else:
+                provider_config.model = data["model"].strip()
+        
         if "is_default" in data:
-            provider_config.is_default = data["is_default"]
+            if not isinstance(data["is_default"], bool):
+                validation_errors.append("'is_default' must be a boolean")
+            else:
+                provider_config.is_default = data["is_default"]
+        
         if "connection_timeout" in data:
-            provider_config.connection_timeout = data["connection_timeout"]
+            try:
+                timeout_val = int(data["connection_timeout"])
+                if timeout_val <= 0:
+                    validation_errors.append("'connection_timeout' must be a positive integer")
+                else:
+                    provider_config.connection_timeout = timeout_val
+            except (ValueError, TypeError):
+                validation_errors.append("'connection_timeout' must be a positive integer")
+        
         if "max_tokens" in data:
-            provider_config.max_tokens = data["max_tokens"]
+            try:
+                tokens_val = int(data["max_tokens"])
+                if tokens_val <= 0:
+                    validation_errors.append("'max_tokens' must be a positive integer")
+                else:
+                    provider_config.max_tokens = tokens_val
+            except (ValueError, TypeError):
+                validation_errors.append("'max_tokens' must be a positive integer")
+        
         if "temperature" in data:
-            provider_config.temperature = data["temperature"]
+            try:
+                temp_val = float(data["temperature"])
+                if temp_val < 0 or temp_val > 2:
+                    validation_errors.append("'temperature' must be between 0 and 2")
+                else:
+                    provider_config.temperature = temp_val
+            except (ValueError, TypeError):
+                validation_errors.append("'temperature' must be a number between 0 and 2")
+
+        if validation_errors:
+            logger.warning(f"Update validation errors: {validation_errors}")
+            return error_response(f"Validation failed: {'; '.join(validation_errors)}", 400)
 
         # Create audit log
         new_values = provider_config.to_dict(include_sensitive=False)
@@ -164,18 +350,27 @@ def update_llm_provider(provider_id):
         db.session.add(audit_log)
         db.session.commit()
 
+        logger.info(f"Successfully updated LLM provider: {provider_config.name} (ID: {provider_config.id})")
         return success_response(provider_config.to_dict())
 
     except Exception as e:
         db.session.rollback()
         logger.error(f"Failed to update LLM provider: {e}")
+        logger.error(f"Exception type: {type(e)}")
         
-        # Check if it's a Flask HTTP exception and return appropriate status
+        # Enhanced error handling to prevent 422 responses
         error_message = str(e)
-        if "400 Bad Request" in error_message or "JSON data" in error_message:
-            return error_response("Invalid JSON data provided", 400)
-        elif "415 Unsupported Media Type" in error_message or "Content-Type" in error_message:
+        
+        # Handle specific Flask exceptions
+        if "400 Bad Request" in error_message:
+            return error_response("Invalid request data", 400)
+        elif "415 Unsupported Media Type" in error_message:
             return error_response("Request must have Content-Type: application/json", 400)
+        elif "JSON" in error_message and "decode" in error_message:
+            return error_response("Invalid JSON format", 400)
+        elif "Unprocessable Entity" in error_message or "422" in error_message:
+            # Convert any 422 errors to 400 for consistency
+            return error_response("Invalid request data format", 400)
         else:
             return error_response(f"Failed to update LLM provider: {str(e)}", 500)
 
