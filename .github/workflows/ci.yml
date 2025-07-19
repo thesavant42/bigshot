@@ -284,6 +284,8 @@ jobs:
         npm run test:e2e
       env:
         CI: true
+        TEST_USERNAME: ${{ env.TEST_USERNAME }}
+        TEST_PASSWORD: ${{ env.TEST_PASSWORD }}
     
     - name: Upload test results
       uses: actions/upload-artifact@v4

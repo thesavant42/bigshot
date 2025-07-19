@@ -14,6 +14,8 @@ const TEST_CREDENTIALS = {
   password: process.env.TEST_PASSWORD
 };
 
+const APPLICATION_NAME = 'BigShot';
+
 // Screenshot size threshold in bytes - screenshots smaller than this are considered unhealthy
 const SCREENSHOT_SIZE_THRESHOLD = 30000; // 30KB minimum for a real screenshot
 
