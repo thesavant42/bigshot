@@ -130,7 +130,7 @@ async function handlePostAuthVerification(page: Page) {
     console.log('➡️ Clicked continue to application');
     
     // Wait for navigation to dashboard
-    await page.waitForTimeout(5000);
+    await page.waitForSelector('text=BigShot', { timeout: 10000 });
     
   } catch {
     console.log('ℹ️ No post-auth verification screen found, proceeding...');
