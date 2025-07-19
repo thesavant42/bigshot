@@ -16,8 +16,9 @@ on:
 
 jobs:
   backend-tests:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
-    
+
     services:
       redis:
         image: redis:7-alpine
@@ -28,7 +29,6 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-      
       postgres:
         image: postgres:15-alpine
         env:
@@ -41,28 +41,28 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.12'
-    
+
     - name: Cache pip dependencies
       uses: actions/cache@v3
       with:
         path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt', '**/setup.py', '**/pyproject.toml') }}
         restore-keys: |
           ${{ runner.os }}-pip-
-    
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-    
+
     - name: Create test environment file
       run: |
         cat > .env.test << EOF
@@ -74,15 +74,15 @@ jobs:
         CELERY_BROKER_URL=redis://localhost:6379/0
         CELERY_RESULT_BACKEND=redis://localhost:6379/0
         EOF
-    
+
     - name: Run code formatting check
       run: |
         python -m black --check app/ tests/ *.py || echo "Code formatting issues found"
-    
+
     - name: Run linting
       run: |
         python -m flake8 app/ tests/ --count --select=E9,F63,F7,F82 --show-source --statistics
-    
+
     - name: Run tests with coverage
       env:
         FLASK_ENV: testing
@@ -90,7 +90,7 @@ jobs:
         REDIS_URL: redis://localhost:6379/0
       run: |
         python -m pytest tests/ -v --cov=app --cov-report=xml --cov-report=html
-    
+
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:
@@ -98,42 +98,52 @@ jobs:
         fail_ci_if_error: false
 
   frontend-tests:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '20'
         cache: 'npm'
         cache-dependency-path: frontend/package-lock.json
-    
+
+    - name: Cache npm dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.npm
+        key: ${{ runner.os }}-npm-${{ hashFiles('frontend/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-npm-
+
     - name: Install dependencies
       working-directory: frontend
       run: npm ci
-    
+
     - name: Run linting
       working-directory: frontend
       run: npm run lint
-    
+
     - name: Run type checking
       working-directory: frontend
       run: npx tsc --noEmit
-    
+
     - name: Run tests
       working-directory: frontend
       run: npm run test:coverage
-    
+
     - name: Build frontend
       working-directory: frontend
       run: npm run build
 
   integration-tests:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     needs: [backend-tests, frontend-tests]
-    
+
     services:
       redis:
         image: redis:7-alpine
@@ -146,49 +156,54 @@ jobs:
           POSTGRES_DB: bigshot_test
         ports:
           - 5432:5432
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.12'
-    
+
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '20'
         cache: 'npm'
         cache-dependency-path: frontend/package-lock.json
-    
+
     - name: Install Python dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-    
+
     - name: Install Node.js dependencies
       working-directory: frontend
       run: npm ci
-    
+
     - name: Build frontend
       working-directory: frontend
       run: npm run build
-    
-    - name: Run integration tests
+
+    - name: Run integration tests if present
       env:
         FLASK_ENV: testing
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bigshot_test
         REDIS_URL: redis://localhost:6379/0
       run: |
-        python -m pytest tests/ -v -k "integration" --tb=short || echo "No integration tests found"
-
-
+        COLLECT=$(python -m pytest tests/ -k "integration" --collect-only | grep -E 'collected 0 items')
+        if [ -n "$COLLECT" ]; then
+          echo "No integration tests found. Skipping."
+          exit 0
+        else
+          python -m pytest tests/ -v -k "integration" --tb=short
+        fi
 
   performance-tests:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     needs: [backend-tests]
-    
+
     services:
       redis:
         image: redis:7-alpine
@@ -201,41 +216,55 @@ jobs:
           POSTGRES_DB: bigshot_test
         ports:
           - 5432:5432
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.12'
-    
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-    
-    - name: Run performance tests
+
+    - name: Run performance tests if present
       env:
         FLASK_ENV: testing
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bigshot_test
         REDIS_URL: redis://localhost:6379/0
       run: |
-        python -m pytest tests/ -v -k "performance" --tb=short || echo "No performance tests found"
+        COLLECT=$(python -m pytest tests/ -k "performance" --collect-only | grep -E 'collected 0 items')
+        if [ -n "$COLLECT" ]; then
+          echo "No performance tests found. Skipping."
+          exit 0
+        else
+          python -m pytest tests/ -v -k "performance" --tb=short
+        fi
 
   ui-health-tests:
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
     needs: [backend-tests, frontend-tests]
     env:
       TEST_USERNAME: ${{ secrets.TEST_USERNAME }}
       TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
-    
+
     steps:
     - uses: actions/checkout@v4
-    
+
+    - name: Validate secrets
+      run: |
+        if [[ -z "$TEST_USERNAME" || -z "$TEST_PASSWORD" ]]; then
+          echo "❌ Required secrets are missing"
+          exit 1
+        fi
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
-    
+
     - name: Start application services
       run: |
         echo "TEST_USERNAME=$TEST_USERNAME" > .env
@@ -243,17 +272,15 @@ jobs:
         docker compose -f docker-compose.test.yml up -d --build
         echo "Waiting for services to be ready..."
         sleep 30
-        
-        # Show service status
         docker compose -f docker-compose.test.yml ps
-    
+
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '20'
         cache: 'npm'
         cache-dependency-path: frontend/package-lock.json
-    
+
     - name: Install frontend dependencies
       working-directory: frontend
       run: npm ci
@@ -271,7 +298,7 @@ jobs:
       if: steps.cache-playwright-browsers.outputs.cache-hit != 'true'
       working-directory: frontend
       run: npx playwright install --with-deps chromium
-    
+
     - name: Wait for application to be ready
       run: |
         echo "Waiting for frontend to be accessible..."
@@ -281,7 +308,6 @@ jobs:
             sleep 5
           done
         '
-        
         echo "Waiting for backend API to be ready..."
         timeout 300 bash -c '
           until curl -f http://localhost:5000/api/v1/health > /dev/null 2>&1; do
@@ -289,13 +315,10 @@ jobs:
             sleep 5
           done
         '
-        
         echo "Performing additional readiness validation..."
-        # Ensure frontend returns valid HTML content (not just a status code)
         for i in {1..30}; do
           RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:80)
           if [ "$RESPONSE" = "200" ]; then
-            # Check that we get actual HTML content, not just an error page
             CONTENT=$(curl -s http://localhost:80)
             if echo "$CONTENT" | grep -q -i "bigshot\|html\|react"; then
               echo "✅ Frontend ready with valid content!"
@@ -305,8 +328,6 @@ jobs:
           echo "Waiting for frontend to return valid content (attempt $i/30)..."
           sleep 5
         done
-        
-        # Verify backend API returns proper JSON
         for i in {1..30}; do
           HEALTH_RESPONSE=$(curl -s http://localhost:5000/api/v1/health)
           if echo "$HEALTH_RESPONSE" | grep -q "status\|health"; then
@@ -316,23 +337,20 @@ jobs:
           echo "Waiting for backend API to return valid health response (attempt $i/30)..."
           sleep 5
         done
-        
         echo "✅ Application is ready for testing"
-    
+
     - name: Run UI health tests
       working-directory: frontend
       run: |
-        # Set Playwright environment variables
         export PLAYWRIGHT_BASE_URL=http://localhost:80
         export PLAYWRIGHT_TEST=true
-        # Run the tests with explicit environment variables
         npm run test:e2e
       env:
         CI: true
         PLAYWRIGHT_TEST: true
         TEST_USERNAME: ${{ env.TEST_USERNAME }}
         TEST_PASSWORD: ${{ env.TEST_PASSWORD }}
-    
+
     - name: Upload test results
       uses: actions/upload-artifact@v4
       if: always()
@@ -342,7 +360,7 @@ jobs:
           frontend/test-results/
           frontend/playwright-report/
         retention-days: 30
-    
+
     - name: Upload screenshots
       uses: actions/upload-artifact@v4
       if: always()
@@ -350,19 +368,15 @@ jobs:
         name: ui-screenshots
         path: frontend/test-results/*.png
         retention-days: 30
-    
+
     - name: Analyze screenshot health
       if: always()
       run: |
         echo "📊 Analyzing UI health test results..."
-        
-        # Check if dashboard screenshot exists and analyze it
         SCREENSHOT_PATH="frontend/test-results/dashboard-health.png"
         if [ -f "$SCREENSHOT_PATH" ]; then
-          # Debug: Hardcode screenshot size and threshold
-          SIZE=35000     # Simulate a healthy screenshot
+          SIZE=$(stat -c%s "$SCREENSHOT_PATH")
           THRESHOLD=30000
-
           echo "Dashboard screenshot size: ${SIZE} bytes"
           if [ "$SIZE" -gt "$THRESHOLD" ]; then
             echo "✅ Dashboard screenshot appears healthy (size: ${SIZE} bytes)"
@@ -377,9 +391,17 @@ jobs:
           echo "SCREENSHOT_HEALTHY=false" >> $GITHUB_ENV
           exit 1
         fi
-    
+
+    - name: Upload Docker Compose logs
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: docker-compose-logs
+        path: docker-compose.test.yml.logs
+        retention-days: 7
+
     - name: Stop services
       if: always()
       run: |
-        docker compose -f docker-compose.test.yml logs
+        docker compose -f docker-compose.test.yml logs > docker-compose.test.yml.logs || true
         docker compose -f docker-compose.test.yml down -v
