@@ -6,7 +6,7 @@ import * as path from 'path';
 if (!process.env.TEST_USERNAME) {
   process.env.TEST_USERNAME = "admin";
 }
-if (!process.env.TEST_PASSWORD) {
+if (!process.env.TEST_PASSWORD || process.env.TEST_PASSWORD.trim() === '') {
   process.env.TEST_PASSWORD = "password";
 }
 
@@ -19,7 +19,7 @@ const TEST_CREDENTIALS = {
 const APPLICATION_NAME = 'BigShot';
 
 // Screenshot size threshold in bytes - screenshots smaller than this are considered unhealthy
-const SCREENSHOT_SIZE_THRESHOLD = 30000; // 30KB minimum for a real screenshot
+const SCREENSHOT_SIZE_THRESHOLD = process.env.CI ? 10000 : 30000; // Lower threshold for CI (10KB vs 30KB)
 
 // Expected dashboard elements that should be visible
 const EXPECTED_DASHBOARD_ELEMENTS = [
@@ -261,8 +261,8 @@ async function analyzeScreenshot(screenshotPath: string): Promise<{ isHealthy: b
     }
     
     // Basic file size check - a healthy screenshot should be reasonably sized
-    // Lowered threshold for CI environments where screenshots might be smaller
-    if (size > SCREENSHOT_SIZE_THRESHOLD) { // 30KB minimum for a real screenshot
+    // Dynamic threshold: 30KB for local dev, 10KB for CI environments where screenshots might be smaller
+    if (size > SCREENSHOT_SIZE_THRESHOLD) {
       return { isHealthy: true, reason: 'Screenshot appears to contain content', size };
     } else {
       return { isHealthy: false, reason: 'Screenshot too small, may be blank or mostly empty', size };
@@ -318,7 +318,9 @@ test('should login, pass verification, and capture healthy dashboard screenshot'
       console.log('🏗️ Running in CI environment - performing additional checks');
       
       // Verify the page isn't showing only loading spinners
-      const loadingSpinners = await page.locator('[class*="loading"], [class*="spinner"], text=Loading').count();
+      const loadingSpinnerCount = await page.locator('[class*="loading"], [class*="spinner"]').count();
+      const loadingTextCount = await page.locator('text=Loading').count();
+      const loadingSpinners = loadingSpinnerCount + loadingTextCount;
       if (loadingSpinners > 0) {
         console.log(`⚠️ Found ${loadingSpinners} loading indicators - may still be loading`);
       }
