@@ -172,7 +172,11 @@ async function validateDashboard(page: Page) {
   console.log(`📊 Found ${foundElements}/${EXPECTED_DASHBOARD_ELEMENTS.length} primary elements and ${foundAlternatives}/${ALTERNATIVE_ELEMENTS.length} alternative elements`);
   
   // Check if the page shows error messages
-  const errorMessages = await page.locator('text=Error, text=Failed, text=error, text=failed').count();
+  const errorMessages = await page.locator('text=Error')
+    .or(page.locator('text=Failed'))
+    .or(page.locator('text=error'))
+    .or(page.locator('text=failed'))
+    .count();
   if (errorMessages > 0) {
     console.log(`⚠️ Found ${errorMessages} error messages on page`);
   }
