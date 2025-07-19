@@ -75,10 +75,12 @@ def send_message():
             logger.error(f"Runtime error in chat: {e}")
             return error_response(f"Failed to process message: {str(e)}", 500)
     except Exception as e:
-        # Check if this is a mock-related error or other LLM service issue
+        # Check if this is a session-related error or other LLM service issue
         error_message = str(e)
         if (
-            ("Mock" in error_message and "not subscriptable" in error_message)
+            "not bound to a Session" in error_message
+            or "attribute refresh operation cannot proceed" in error_message
+            or ("Mock" in error_message and "not subscriptable" in error_message)
             or ("not available" in error_message.lower())
             or ("client not available" in error_message.lower())
         ):
@@ -153,8 +155,19 @@ def get_status():
         return success_response(status)
 
     except Exception as e:
-        logger.error(f"Failed to get status: {e}")
-        return error_response(f"Failed to get status: {str(e)}", 500)
+        # Check if this is a session-related error or other LLM service issue
+        error_message = str(e)
+        if (
+            "not bound to a Session" in error_message
+            or "attribute refresh operation cannot proceed" in error_message
+            or ("not available" in error_message.lower())
+            or ("client not available" in error_message.lower())
+        ):
+            logger.warning(f"LLM service unavailable: {e}")
+            return error_response("LLM service is not available", 503)
+        else:
+            logger.error(f"Failed to get status: {e}")
+            return error_response(f"Failed to get status: {str(e)}", 500)
 
 
 @chat_bp.route("/chat/context", methods=["GET"])

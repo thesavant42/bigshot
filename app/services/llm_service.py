@@ -58,6 +58,8 @@ class LLMService:
             active_provider = LLMProviderConfig.query.filter_by(is_active=True).first()
             
             if active_provider:
+                # Ensure the provider is attached to the session
+                active_provider = db.session.merge(active_provider)
                 self._initialize_client_from_config(active_provider)
                 return True
             return False
@@ -68,6 +70,8 @@ class LLMService:
     def _initialize_client_from_config(self, provider_config):
         """Initialize client from a provider configuration"""
         try:
+            # Attach to session to prevent detached instance errors
+            provider_config = db.session.merge(provider_config)
             self.current_provider_config = provider_config
             self.provider = provider_config.provider.lower()
             
@@ -85,7 +89,12 @@ class LLMService:
             logger.info(f"LLM client initialized with provider: {provider_config.name}")
             
         except Exception as e:
-            logger.error(f"Failed to initialize client from config: {e}")
+            # Handle detached instance and other errors
+            import sqlalchemy
+            if isinstance(e, sqlalchemy.orm.exc.DetachedInstanceError):
+                logger.error(f"ProviderConfig is detached: {e}")
+            else:
+                logger.error(f"Failed to initialize client from config: {e}")
             self.client = None
             self.current_provider_config = None
 
@@ -139,8 +148,16 @@ class LLMService:
     def get_default_model(self) -> str:
         """Get the default model for the current provider"""
         if self.current_provider_config:
-            return self.current_provider_config.model
-        elif self.provider == "lmstudio":
+            try:
+                # Ensure the provider config is attached to session
+                provider_config = db.session.merge(self.current_provider_config)
+                return provider_config.model
+            except Exception as e:
+                logger.warning(f"Could not access provider config model: {e}")
+                # Fall back to config-based model
+                pass
+        
+        if self.provider == "lmstudio":
             return self.config.LMSTUDIO_MODEL
         else:
             return self.config.OPENAI_MODEL
@@ -148,22 +165,29 @@ class LLMService:
     def get_current_provider_info(self) -> dict:
         """Get information about the current provider"""
         if self.current_provider_config:
-            return {
-                "id": self.current_provider_config.id,
-                "name": self.current_provider_config.name,
-                "provider": self.current_provider_config.provider,
-                "base_url": self.current_provider_config.base_url,
-                "model": self.current_provider_config.model,
-                "source": "database"
-            }
-        else:
-            return {
-                "name": f"{self.provider.upper()} (Legacy)",
-                "provider": self.provider,
-                "base_url": self._get_legacy_base_url(),
-                "model": self.get_default_model(),
-                "source": "config"
-            }
+            try:
+                # Ensure the provider config is attached to session
+                provider_config = db.session.merge(self.current_provider_config)
+                return {
+                    "id": provider_config.id,
+                    "name": provider_config.name,
+                    "provider": provider_config.provider,
+                    "base_url": provider_config.base_url,
+                    "model": provider_config.model,
+                    "source": "database"
+                }
+            except Exception as e:
+                logger.warning(f"Could not access provider config info: {e}")
+                # Fall back to legacy info
+                pass
+        
+        return {
+            "name": f"{self.provider.upper()} (Legacy)",
+            "provider": self.provider,
+            "base_url": self._get_legacy_base_url(),
+            "model": self.get_default_model(),
+            "source": "config"
+        }
 
     def _get_legacy_base_url(self) -> str:
         """Get base URL for legacy configuration"""
