@@ -32,13 +32,20 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       description: 'Focus search',
     });
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Only run once on mount to register shortcuts
+  }, []);
+
+  // Separate effect for sidebar toggle to avoid render loop
+  React.useEffect(() => {
     addShortcut({
       key: 'b',
       ctrlKey: true,
-      callback: () => setSidebarOpen(!sidebarOpen),
+      callback: () => setSidebarOpen(prev => !prev), // Use functional update to avoid stale closure
       description: 'Toggle sidebar',
     });
-  }, [addShortcut, sidebarOpen]);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Only run once on mount to register shortcuts  
+  }, []);
 
   const handleResize = (e: React.MouseEvent) => {
     const startX = e.clientX;

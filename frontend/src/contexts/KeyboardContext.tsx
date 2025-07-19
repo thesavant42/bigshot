@@ -72,7 +72,7 @@ export const KeyboardProvider: React.FC<KeyboardProviderProps> = ({ children }) 
     ];
 
     defaultShortcuts.forEach(addShortcut);
-  }, []);
+  }, []); // Only run once on mount to set default shortcuts
 
   return (
     <KeyboardContext.Provider value={{
