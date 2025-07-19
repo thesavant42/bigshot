@@ -204,7 +204,7 @@ def _ensure_default_llm_providers_exist():
                     "name": "OpenAI GPT-4",
                     "base_url": "https://api.openai.com/v1",
                     "model": "gpt-4",
-                    "is_default": True,
+                    "is_default": False,  # No longer default
                     "is_active": False,  # Will be activated if API key is available
                 },
                 {
@@ -218,18 +218,18 @@ def _ensure_default_llm_providers_exist():
                 {
                     "provider": "lmstudio",
                     "name": "LMStudio Local",
-                    "base_url": "http://localhost:1234/v1",
+                    "base_url": "http://192.168.1.98:1234/v1",
                     "model": "model-identifier",
-                    "is_default": False,
-                    "is_active": False,
+                    "is_default": True,  # Make LMStudio the default
+                    "is_active": True,   # Make LMStudio active by default
                 },
             ]
             
             # Get configuration from environment
             openai_key = current_app.config.get('OPENAI_API_KEY')
-            lmstudio_base = current_app.config.get('LMSTUDIO_API_BASE', 'http://localhost:1234/v1')
+            lmstudio_base = current_app.config.get('LMSTUDIO_API_BASE', 'http://192.168.1.98:1234/v1')
             lmstudio_model = current_app.config.get('LMSTUDIO_MODEL', 'model-identifier')
-            current_provider = current_app.config.get('LLM_PROVIDER', 'openai').lower()
+            current_provider = current_app.config.get('LLM_PROVIDER', 'lmstudio').lower()  # Default to lmstudio
             
             # Update LMStudio config from environment
             for provider in default_providers:
