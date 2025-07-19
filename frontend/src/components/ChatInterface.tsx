@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { PaperAirplaneIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { chatService, type ChatMessage, type ChatContext } from '../services/chatService';
-import { convertContextDataToChatContext } from '../utils/contextConversion';
 
 interface ChatInterfaceProps {
   className?: string;
@@ -13,7 +12,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [context, setContext] = useState<ChatContext>({});
+  const [context] = useState<ChatContext>({});
   const [isServiceAvailable, setIsServiceAvailable] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
