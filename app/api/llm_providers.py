@@ -210,8 +210,8 @@ def create_llm_provider():
         elif "JSON" in error_message and "decode" in error_message:
             return error_response("Invalid JSON format", 400)
         elif "Unprocessable Entity" in error_message or "422" in error_message:
-            # Convert any 422 errors to 400 for consistency
-            return error_response("Invalid request data format", 400)
+            # Preserve 422 error semantics for validation failures
+            return error_response("Unprocessable Entity: Invalid request data format", 422)
         else:
             return error_response(f"Failed to create LLM provider: {str(e)}", 500)
 
