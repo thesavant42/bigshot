@@ -7,6 +7,9 @@ const TEST_CREDENTIALS = {
   password: process.env.TEST_PASSWORD || (() => { throw new Error('Environment variable TEST_PASSWORD is not set'); })()
 };
 
+// Screenshot size threshold in bytes - screenshots smaller than this are considered unhealthy
+const SCREENSHOT_SIZE_THRESHOLD = 30000; // 30KB minimum for a real screenshot
+
 // Expected dashboard elements that should be visible
 const EXPECTED_DASHBOARD_ELEMENTS = [
   'BigShot', // App title  
