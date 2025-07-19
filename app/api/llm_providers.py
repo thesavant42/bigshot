@@ -169,7 +169,7 @@ def create_llm_provider():
             provider=data["provider"].strip(),
             name=data["name"].strip(),
             base_url=data["base_url"].strip(),
-            api_key=data.get("api_key", "").strip() if data.get("api_key") else None,
+            api_key=data.get("api_key", "").strip() if data.get("api_key", "").strip() else None,
             model=data["model"].strip(),
             is_active=False,  # New providers start inactive
             is_default=bool(data.get("is_default", False)),
