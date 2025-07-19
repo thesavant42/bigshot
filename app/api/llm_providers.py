@@ -175,7 +175,7 @@ def create_llm_provider():
             is_default=bool(data.get("is_default", False)),
             connection_timeout=validated_connection_timeout,
             max_tokens=int(data.get("max_tokens", 4000)),
-            temperature=validated_temperature,
+            temperature=validated_temperature,  # Use the validated or default temperature
         )
 
         db.session.add(provider_config)
