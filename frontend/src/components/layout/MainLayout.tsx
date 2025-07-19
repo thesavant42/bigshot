@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Bars3Icon, XMarkIcon, MagnifyingGlassIcon, ChartBarIcon, CogIcon } from '@heroicons/react/24/outline';
+import { Bars3Icon, XMarkIcon, MagnifyingGlassIcon, ChartBarIcon, CogIcon, HeartIcon } from '@heroicons/react/24/outline';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { useKeyboard } from '../../hooks/useKeyboard';
 import ThemeToggle from '../ThemeToggle';
 import StatusBadge from '../StatusBadge';
 import ChatInterface from '../chat/ChatInterface';
 import SystemMonitoringDashboard from '../monitoring/SystemMonitoringDashboard';
+import PostAuthProof from '../auth/PostAuthProof';
 import ConfigurationManagement from '../monitoring/ConfigurationManagement';
 
 interface MainLayoutProps {
@@ -16,7 +17,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [leftPanelWidth, setLeftPanelWidth] = useState(40); // Percentage
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeView, setActiveView] = useState<'dashboard' | 'monitoring' | 'config'>('dashboard');
+  const [activeView, setActiveView] = useState<'dashboard' | 'monitoring' | 'config' | 'health'>('dashboard');
   const { isConnected } = useWebSocket();
   const { addShortcut } = useKeyboard();
 
@@ -69,23 +70,23 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-dark-950">
+    <div className="flex h-screen bg-neutral-50 dark:bg-dark-950">
       {/* Sidebar */}
       <div
         className={`${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-dark-800 border-r border-gray-200 dark:border-gray-700 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 shadow-medium lg:shadow-none`}
+        } fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-dark-800 border-r border-neutral-200 dark:border-dark-700 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 shadow-medium lg:shadow-none`}
       >
-        <div className="flex items-center justify-between h-16 px-4 bg-gray-50 dark:bg-dark-900 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between h-16 px-4 bg-neutral-50 dark:bg-dark-900 border-b border-neutral-200 dark:border-dark-700">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <h1 className="text-xl font-bold text-gray-900 dark:text-white">BigShot</h1>
+              <h1 className="text-xl font-bold text-neutral-900 dark:text-white">BigShot</h1>
             </div>
           </div>
           <div className="flex items-center space-x-2">
             <ThemeToggle />
             <button
-              className="lg:hidden p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              className="lg:hidden p-2 rounded-lg text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
               onClick={() => setSidebarOpen(false)}
               aria-label="Close sidebar"
             >
@@ -100,8 +101,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               onClick={() => setActiveView('dashboard')}
               className={`w-full group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                 activeView === 'dashboard'
-                  ? 'bg-primary-100 dark:bg-primary-900/20 text-primary-900 dark:text-primary-100'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-700 hover:text-gray-900 dark:hover:text-white'
+                  ? 'bg-accent-100 dark:bg-accent-900/20 text-accent-900 dark:text-accent-100'
+                  : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-dark-700 hover:text-neutral-900 dark:hover:text-white'
               }`}
             >
               Dashboard
@@ -110,19 +111,30 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               onClick={() => setActiveView('monitoring')}
               className={`w-full group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                 activeView === 'monitoring'
-                  ? 'bg-primary-100 dark:bg-primary-900/20 text-primary-900 dark:text-primary-100'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-700 hover:text-gray-900 dark:hover:text-white'
+                  ? 'bg-accent-100 dark:bg-accent-900/20 text-accent-900 dark:text-accent-100'
+                  : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-dark-700 hover:text-neutral-900 dark:hover:text-white'
               }`}
             >
               <ChartBarIcon className="h-5 w-5 mr-3" />
               Monitoring
             </button>
             <button
+              onClick={() => setActiveView('health')}
+              className={`w-full group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                activeView === 'health'
+                  ? 'bg-accent-100 dark:bg-accent-900/20 text-accent-900 dark:text-accent-100'
+                  : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-dark-700 hover:text-neutral-900 dark:hover:text-white'
+              }`}
+            >
+              <HeartIcon className="h-5 w-5 mr-3" />
+              Health Status
+            </button>
+            <button
               onClick={() => setActiveView('config')}
               className={`w-full group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                 activeView === 'config'
-                  ? 'bg-primary-100 dark:bg-primary-900/20 text-primary-900 dark:text-primary-100'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-700 hover:text-gray-900 dark:hover:text-white'
+                  ? 'bg-accent-100 dark:bg-accent-900/20 text-accent-900 dark:text-accent-100'
+                  : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-dark-700 hover:text-neutral-900 dark:hover:text-white'
               }`}
             >
               <CogIcon className="h-5 w-5 mr-3" />
@@ -132,14 +144,14 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         </nav>
 
         {/* Connection Status */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-neutral-200 dark:border-dark-700">
           <div className="flex items-center justify-between">
             <StatusBadge 
               status={isConnected ? 'success' : 'error'} 
               label={isConnected ? 'Connected' : 'Disconnected'}
               size="sm"
             />
-            <kbd className="hidden sm:inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-dark-700 text-gray-600 dark:text-gray-400 text-xs rounded">
+            <kbd className="hidden sm:inline-flex items-center px-2 py-1 bg-neutral-100 dark:bg-dark-700 text-neutral-600 dark:text-neutral-400 text-xs rounded">
               Ctrl+B
             </kbd>
           </div>
@@ -149,12 +161,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="bg-white dark:bg-dark-800 border-b border-gray-200 dark:border-gray-700 shadow-soft">
+        <header className="bg-white dark:bg-dark-800 border-b border-neutral-200 dark:border-dark-700 shadow-soft">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center">
                 <button
-                  className="lg:hidden p-2 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  className="lg:hidden p-2 rounded-lg text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
                   onClick={() => setSidebarOpen(true)}
                   aria-label="Open sidebar"
                 >
@@ -168,13 +180,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                       placeholder="Search domains..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-64 pl-10 pr-4 py-2 bg-gray-100 dark:bg-dark-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 placeholder-gray-500 dark:placeholder-gray-400"
+                      className="w-64 pl-10 pr-4 py-2 bg-neutral-100 dark:bg-dark-700 border border-neutral-300 dark:border-dark-600 text-neutral-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-accent-500 placeholder-neutral-500 dark:placeholder-neutral-400 transition-colors"
                     />
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+                      <MagnifyingGlassIcon className="h-5 w-5 text-neutral-400" />
                     </div>
                     <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                      <kbd className="hidden sm:inline-flex items-center px-2 py-1 bg-gray-200 dark:bg-dark-600 text-gray-600 dark:text-gray-400 text-xs rounded">
+                      <kbd className="hidden sm:inline-flex items-center px-2 py-1 bg-neutral-200 dark:bg-dark-600 text-neutral-600 dark:text-neutral-400 text-xs rounded">
                         Ctrl+K
                       </kbd>
                     </div>
@@ -182,7 +194,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 </div>
               </div>
               <div className="flex items-center space-x-4">
-                <span className="text-gray-600 dark:text-gray-400 text-sm">
+                <span className="text-neutral-600 dark:text-neutral-400 text-sm">
                   Ready for reconnaissance
                 </span>
                 <div className="hidden lg:block">
@@ -199,12 +211,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
             <>
               {/* Left panel - Chat */}
               <div
-                className="bg-white dark:bg-dark-800 border-r border-gray-200 dark:border-gray-700 overflow-hidden"
+                className="bg-white dark:bg-dark-800 border-r border-neutral-200 dark:border-dark-700 overflow-hidden"
                 style={{ width: `${leftPanelWidth}%` }}
               >
                 <div className="h-full flex flex-col">
-                  <div className="flex-shrink-0 px-4 py-3 bg-gray-50 dark:bg-dark-900 border-b border-gray-200 dark:border-gray-700">
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">AI Assistant</h2>
+                  <div className="flex-shrink-0 px-4 py-3 bg-neutral-50 dark:bg-dark-900 border-b border-neutral-200 dark:border-dark-700">
+                    <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">AI Assistant</h2>
                   </div>
                   <div className="flex-1 overflow-hidden">
                     <ChatInterface className="h-full" />
@@ -214,7 +226,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
               {/* Resize handle */}
               <div
-                className="w-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 cursor-col-resize transition-colors"
+                className="w-1 bg-neutral-200 dark:bg-dark-700 hover:bg-neutral-300 dark:hover:bg-dark-600 cursor-col-resize transition-colors"
                 onMouseDown={handleResize}
                 role="separator"
                 aria-orientation="vertical"
@@ -222,10 +234,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               />
 
               {/* Right panel - Domain Dashboard */}
-              <div className="flex-1 bg-gray-50 dark:bg-dark-950 overflow-hidden">
+              <div className="flex-1 bg-neutral-50 dark:bg-dark-950 overflow-hidden">
                 <div className="h-full flex flex-col">
-                  <div className="flex-shrink-0 px-4 py-3 bg-white dark:bg-dark-800 border-b border-gray-200 dark:border-gray-700">
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Domain Reconnaissance</h2>
+                  <div className="flex-shrink-0 px-4 py-3 bg-white dark:bg-dark-800 border-b border-neutral-200 dark:border-dark-700">
+                    <h2 className="text-lg font-semibold text-neutral-900 dark:text-white">Domain Reconnaissance</h2>
                   </div>
                   <div className="flex-1 overflow-hidden">
                     {children}
@@ -234,9 +246,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               </div>
             </>
           ) : (
-            /* Full-width panels for monitoring and config */
-            <div className="flex-1 bg-gray-50 dark:bg-dark-950 overflow-hidden">
+            /* Full-width panels for monitoring, health, and config */
+            <div className="flex-1 bg-neutral-50 dark:bg-dark-950 overflow-hidden">
               {activeView === 'monitoring' && <SystemMonitoringDashboard />}
+              {activeView === 'health' && <PostAuthProof onContinue={() => setActiveView('dashboard')} />}
               {activeView === 'config' && <ConfigurationManagement />}
             </div>
           )}

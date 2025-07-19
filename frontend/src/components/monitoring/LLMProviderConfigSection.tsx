@@ -41,7 +41,7 @@ const LLMProviderConfigSection: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingProvider, setEditingProvider] = useState<LLMProviderConfig | null>(null);
   const [formData, setFormData] = useState<ProviderFormData>({
-    provider: 'openai',
+    provider: 'lmstudio',
     name: '',
     base_url: '',
     api_key: '',
@@ -80,7 +80,7 @@ const LLMProviderConfigSection: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['llm-providers'] });
       setShowForm(false);
       setFormData({
-        provider: 'openai',
+        provider: 'lmstudio',
         name: '',
         base_url: '',
         api_key: '',
@@ -160,7 +160,7 @@ const LLMProviderConfigSection: React.FC = () => {
     setShowForm(false);
     setEditingProvider(null);
     setFormData({
-      provider: 'openai',
+      provider: 'lmstudio',
       name: '',
       base_url: '',
       api_key: '',
@@ -304,8 +304,8 @@ const LLMProviderConfigSection: React.FC = () => {
                   onChange={(e) => setFormData({ ...formData, provider: e.target.value as 'openai' | 'lmstudio' | 'custom' })}
                   className="w-full px-3 py-2 bg-white dark:bg-dark-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                 >
-                  <option value="openai">OpenAI</option>
                   <option value="lmstudio">LMStudio</option>
+                  <option value="openai">OpenAI</option>
                   <option value="custom">Custom</option>
                 </select>
               </div>
