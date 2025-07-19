@@ -1,3 +1,4 @@
+
 // UI Health Tests - Environment Variable Usage Example
 // This file demonstrates proper environment variable handling for UI health tests
 

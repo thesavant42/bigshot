@@ -65,7 +65,36 @@ def create_llm_provider():
         if existing:
             return error_response(f"Provider with name '{data['name']}' already exists", 400)
 
-        # Create new provider config
+        # Validate and assign numeric fields with proper error handling
+        # This prevents the undefined variable issue described in #123
+        validated_connection_timeout = 30  # Default value
+        if "connection_timeout" in data:
+            try:
+                validated_connection_timeout = int(data["connection_timeout"])
+                if validated_connection_timeout <= 0:
+                    return error_response("connection_timeout must be a positive integer", 400)
+            except (ValueError, TypeError):
+                return error_response("connection_timeout must be a valid integer", 400)
+
+        validated_max_tokens = 4000  # Default value  
+        if "max_tokens" in data:
+            try:
+                validated_max_tokens = int(data["max_tokens"])
+                if validated_max_tokens <= 0:
+                    return error_response("max_tokens must be a positive integer", 400)
+            except (ValueError, TypeError):
+                return error_response("max_tokens must be a valid integer", 400)
+
+        validated_temperature = 0.7  # Default value
+        if "temperature" in data:
+            try:
+                validated_temperature = float(data["temperature"])
+                if validated_temperature < 0 or validated_temperature > 2:
+                    return error_response("temperature must be between 0 and 2", 400)
+            except (ValueError, TypeError):
+                return error_response("temperature must be a valid number", 400)
+
+        # Create new provider config using validated values
         provider_config = LLMProviderConfig(
             provider=data["provider"],
             name=data["name"],
@@ -74,9 +103,9 @@ def create_llm_provider():
             model=data["model"],
             is_active=False,  # New providers start inactive
             is_default=data.get("is_default", False),
-            connection_timeout=data.get("connection_timeout", 30),
-            max_tokens=data.get("max_tokens", 4000),
-            temperature=data.get("temperature", 0.7),
+            connection_timeout=validated_connection_timeout,
+            max_tokens=validated_max_tokens,
+            temperature=validated_temperature,
         )
 
         db.session.add(provider_config)
@@ -124,7 +153,7 @@ def update_llm_provider(provider_id):
         # Store old values for audit
         old_values = provider_config.to_dict(include_sensitive=False)
 
-        # Update fields
+        # Update fields with validation
         if "name" in data:
             # Check if new name already exists (excluding current record)
             existing = LLMProviderConfig.query.filter(
@@ -145,12 +174,34 @@ def update_llm_provider(provider_id):
             provider_config.model = data["model"]
         if "is_default" in data:
             provider_config.is_default = data["is_default"]
+        
+        # Validate numeric fields to prevent undefined variable issues
         if "connection_timeout" in data:
-            provider_config.connection_timeout = data["connection_timeout"]
+            try:
+                validated_connection_timeout = int(data["connection_timeout"])
+                if validated_connection_timeout <= 0:
+                    return error_response("connection_timeout must be a positive integer", 400)
+                provider_config.connection_timeout = validated_connection_timeout
+            except (ValueError, TypeError):
+                return error_response("connection_timeout must be a valid integer", 400)
+                
         if "max_tokens" in data:
-            provider_config.max_tokens = data["max_tokens"]
+            try:
+                validated_max_tokens = int(data["max_tokens"])
+                if validated_max_tokens <= 0:
+                    return error_response("max_tokens must be a positive integer", 400)
+                provider_config.max_tokens = validated_max_tokens
+            except (ValueError, TypeError):
+                return error_response("max_tokens must be a valid integer", 400)
+                
         if "temperature" in data:
-            provider_config.temperature = data["temperature"]
+            try:
+                validated_temperature = float(data["temperature"])
+                if validated_temperature < 0 or validated_temperature > 2:
+                    return error_response("temperature must be between 0 and 2", 400)
+                provider_config.temperature = validated_temperature
+            except (ValueError, TypeError):
+                return error_response("temperature must be a valid number", 400)
 
         # Create audit log
         new_values = provider_config.to_dict(include_sensitive=False)

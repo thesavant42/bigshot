@@ -13,6 +13,12 @@ dist-ssr
 *.local
 coverage
 
+# Playwright test artifacts
+test-results/
+playwright-report/
+playwright/.cache/
+results.xml
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
