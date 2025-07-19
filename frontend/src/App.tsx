@@ -127,7 +127,8 @@ const AppContent: React.FC = () => {
         sessionStorage.removeItem('just_logged_in');
       }
     }
-  }, [isAuthenticated, showPostAuthProof]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Only check on auth change to prevent render loops
+  }, [isAuthenticated]);
 
   if (isLoading) {
     return (

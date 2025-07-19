@@ -101,7 +101,7 @@ def create_app(config_class=Config):
 def _register_error_handlers(app):
     """Register error handlers to ensure proper HTTP status codes"""
     from flask import jsonify
-    from werkzeug.exceptions import BadRequest, UnprocessableEntity
+    from werkzeug.exceptions import BadRequest, UnprocessableEntity, UnsupportedMediaType
     from app.utils.responses import error_response
     
     @app.errorhandler(BadRequest)
@@ -112,20 +112,38 @@ def _register_error_handlers(app):
     @app.errorhandler(UnprocessableEntity)
     def handle_unprocessable_entity(err):
         """Handle 422 Unprocessable Entity errors and convert to 400"""
-        return error_response(str(err.description), 400)
+        app.logger.warning(f"Converting 422 to 400: {err.description}")
+        return error_response(f"Invalid request data: {str(err.description)}", 400)
+    
+    @app.errorhandler(UnsupportedMediaType)
+    def handle_unsupported_media_type(err):
+        """Handle 415 Unsupported Media Type errors and convert to 400"""
+        app.logger.warning(f"Converting 415 to 400: {err.description}")
+        return error_response("Request must have Content-Type: application/json", 400)
     
     @app.errorhandler(ValueError)
     def handle_value_error(err):
         """Handle ValueError exceptions and return as 400"""
         return error_response(f"Invalid request: {str(err)}", 400)
     
-    # Handle JSON decode errors
+    # Handle JSON decode errors more specifically
     @app.errorhandler(400)
     def handle_json_error(err):
         """Handle JSON parsing errors"""
-        if "Failed to decode JSON object" in str(err.description):
+        error_desc = str(err.description) if hasattr(err, 'description') else str(err)
+        if "Failed to decode JSON object" in error_desc:
             return error_response("Invalid JSON format", 400)
-        return error_response(str(err.description), 400)
+        elif "JSON" in error_desc and ("decode" in error_desc or "parse" in error_desc):
+            return error_response("Invalid JSON format", 400)
+        return error_response(error_desc, 400)
+    
+    # Global exception handler to catch any 422 errors that slip through
+    @app.errorhandler(422)
+    def handle_all_422_errors(err):
+        """Convert any remaining 422 errors to 400 for consistency"""
+        app.logger.error(f"Caught 422 error, converting to 400: {err}")
+        error_desc = str(err.description) if hasattr(err, 'description') else "Invalid request data"
+        return error_response(f"Request validation failed: {error_desc}", 400)
 
 
 def _ensure_default_user_exists():

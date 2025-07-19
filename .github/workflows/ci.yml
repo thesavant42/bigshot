@@ -280,6 +280,33 @@ jobs:
           done
         '
         
+        echo "Performing additional readiness validation..."
+        # Ensure frontend returns valid HTML content (not just a status code)
+        for i in {1..20}; do
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:80)
+          if [ "$RESPONSE" = "200" ]; then
+            # Check that we get actual HTML content, not just an error page
+            CONTENT=$(curl -s http://localhost:80)
+            if echo "$CONTENT" | grep -q -i "bigshot\|html\|react"; then
+              echo "✅ Frontend ready with valid content!"
+              break
+            fi
+          fi
+          echo "Waiting for frontend to return valid content (attempt $i/20)..."
+          sleep 5
+        done
+        
+        # Verify backend API returns proper JSON
+        for i in {1..20}; do
+          HEALTH_RESPONSE=$(curl -s http://localhost:5000/api/v1/health)
+          if echo "$HEALTH_RESPONSE" | grep -q "status\|health"; then
+            echo "✅ Backend API ready with valid response!"
+            break
+          fi
+          echo "Waiting for backend API to return valid health response (attempt $i/20)..."
+          sleep 5
+        done
+        
         echo "✅ Application is ready for testing"
     
     - name: Run UI health tests

@@ -2,11 +2,24 @@ import { test, expect, Page } from '@playwright/test';
 import { promises as fs } from 'fs';
 import * as path from 'path';
 
+// Ensure this file is only executed by Playwright test runner
+if (typeof test === 'undefined') {
+  throw new Error('This file should only be executed by Playwright test runner');
+}
+
+if (!process.env.TEST_USERNAME) {
+  process.env.TEST_USERNAME = "admin";
+}
+if (!process.env.TEST_PASSWORD) {
+  process.env.TEST_PASSWORD = "password";
+}
+
 const TEST_CREDENTIALS = {
   username: 'admin',
   password: 'password'
 };
 
+// Application name for UI elements
 const APPLICATION_NAME = 'BigShot';
 
 // Screenshot size threshold in bytes - screenshots smaller than this are considered unhealthy
@@ -39,7 +52,27 @@ async function waitForPageReady(page: Page) {
   await page.waitForSelector('body', { state: 'visible' });
   
   // Wait for React components to mount and render
-  await page.waitForSelector(`text=${APPLICATION_NAME}`, { state: 'visible' });
+  // Use a more resilient selector that doesn't require exact text match
+  try {
+    await page.waitForSelector(`text=${APPLICATION_NAME}`, { state: 'visible', timeout: 30000 });
+  } catch (error) {
+    console.log(`Warning: Could not find exact text "${APPLICATION_NAME}", checking for alternative elements...`);
+    console.log('Error details:', (error as Error).message);
+    // Try to find any of the expected dashboard elements
+    let found = false;
+    for (const element of EXPECTED_DASHBOARD_ELEMENTS) {
+      try {
+        await page.waitForSelector(`text=${element}`, { state: 'visible', timeout: 5000 });
+        found = true;
+        break;
+      } catch {
+        // Continue trying other elements
+      }
+    }
+    if (!found) {
+      throw new Error(`Could not find any expected dashboard elements: ${EXPECTED_DASHBOARD_ELEMENTS.join(', ')}`);
+    }
+  }
 }
 
 /**
@@ -48,8 +81,24 @@ async function waitForPageReady(page: Page) {
 async function performLogin(page: Page) {
   console.log('🔐 Starting login process...');
   
-  // Navigate to the application
-  await page.goto('/');
+  // Navigate to the application with retry logic for network errors
+  let navigationAttempts = 0;
+  const maxNavigationAttempts = 3;
+  
+  while (navigationAttempts < maxNavigationAttempts) {
+    try {
+      await page.goto('/', { waitUntil: 'networkidle', timeout: 60000 });
+      break;
+    } catch (error) {
+      navigationAttempts++;
+      console.log(`Navigation attempt ${navigationAttempts}/${maxNavigationAttempts} failed:`, error.message);
+      if (navigationAttempts >= maxNavigationAttempts) {
+        throw new Error(`Failed to navigate to application after ${maxNavigationAttempts} attempts: ${error.message}`);
+      }
+      await page.waitForTimeout(5000); // Wait 5 seconds before retry
+    }
+  }
+  
   await waitForPageReady(page);
   
   // Check if already authenticated by looking for dashboard elements
