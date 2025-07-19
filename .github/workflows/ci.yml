@@ -122,6 +122,8 @@ jobs:
       working-directory: frontend
       env:
         NODE_ENV: test
+        TEST_USERNAME: ${{ secrets.TEST_USERNAME }}
+        TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
       run: npm test -- --run --coverage
     
     - name: Build frontend
