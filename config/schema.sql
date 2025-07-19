@@ -15,7 +15,9 @@ CREATE TABLE IF NOT EXISTS jobs (
     status TEXT CHECK(status IN ('pending', 'running', 'completed', 'failed', 'cancelled')),
     progress INTEGER,
     result TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    error_message TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS import_status (

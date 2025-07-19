@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS jobs (
     status TEXT,
     progress INTEGER,
     result TEXT,
+    error_message TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
