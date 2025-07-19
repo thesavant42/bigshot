@@ -124,7 +124,7 @@ jobs:
     
     - name: Run tests
       working-directory: frontend
-      run: npm test -- --run --coverage
+      run: npm run test:coverage
     
     - name: Build frontend
       working-directory: frontend
