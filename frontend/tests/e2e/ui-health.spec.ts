@@ -2,13 +2,8 @@ import { test, expect, Page } from '@playwright/test';
 import { promises as fs } from 'fs';
 import * as path from 'path';
 
-if (!process.env.TEST_USERNAME) {
-  process.env.USERNAME;
-}
-if (!process.env.TEST_PASSWORD) {
-  process.env.TEST_PASSWORD = 'password';
-}
-
+const TEST_USERNAME = 'admin';
+const TEST_PASSWORD = 'password';
 const TEST_CREDENTIALS = {
   username: admin,
   password: password
