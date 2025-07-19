@@ -3,8 +3,8 @@ import { promises as fs } from 'fs';
 import * as path from 'path';
 
 const TEST_CREDENTIALS = {
-  username: 'admin',
-  password: 'password'
+  username: process.env.TEST_USERNAME || (() => { throw new Error('Environment variable TEST_USERNAME is not set'); })(),
+  password: process.env.TEST_PASSWORD || (() => { throw new Error('Environment variable TEST_PASSWORD is not set'); })()
 };
 
 // Expected dashboard elements that should be visible
