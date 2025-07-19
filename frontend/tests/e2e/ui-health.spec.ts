@@ -90,7 +90,10 @@ async function handlePostAuthVerification(page: Page) {
   console.log('🔍 Checking for post-auth verification screen...');
   
   // Look for post-auth proof elements with more flexible selectors
-  const postAuthTitle = page.locator('text=Post-Authentication Verification, text=Verification, text=Authentication').first();
+  const postAuthTitle = page.locator('text=Post-Authentication Verification')
+    .or(page.locator('text=Verification'))
+    .or(page.locator('text=Authentication'))
+    .first();
   const continueButton = page.locator('button:has-text("Continue to Application"), button:has-text("Continue"), button:has-text("Proceed")').first();
   
   try {
