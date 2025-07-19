@@ -549,6 +549,121 @@ def get_audit_logs():
         return error_response(f"Failed to fetch audit logs: {str(e)}", 500)
 
 
+@llm_providers_bp.route("/llm-providers/models", methods=["GET"])
+@jwt_required()
+def get_available_models():
+    """Get list of available models from the active LLM provider"""
+    try:
+        if not llm_service.is_available():
+            return error_response("No LLM provider is currently available", 503)
+        
+        detailed = request.args.get("detailed", "false").lower() == "true"
+        
+        if detailed:
+            models = llm_service.get_detailed_models()
+        else:
+            models = llm_service.get_available_models()
+        
+        return success_response({
+            "models": models,
+            "provider": llm_service.get_current_provider_info()
+        })
+    
+    except Exception as e:
+        logger.error(f"Failed to get available models: {e}")
+        return error_response(f"Failed to get available models: {str(e)}", 500)
+
+
+@llm_providers_bp.route("/llm-providers/completions", methods=["POST"])
+@jwt_required()
+def create_text_completion():
+    """Create text completion using /v1/completions endpoint"""
+    try:
+        if not request.is_json:
+            return error_response("Request must have Content-Type: application/json", 400)
+
+        data = request.get_json()
+        if not data:
+            return error_response("Request body cannot be empty", 400)
+
+        # Validate required fields
+        if "prompt" not in data:
+            return error_response("Missing required field: prompt", 400)
+
+        prompt = data["prompt"]
+        model = data.get("model")
+        max_tokens = data.get("max_tokens", 100)
+        temperature = data.get("temperature", 0.7)
+        stream = data.get("stream", False)
+        stop = data.get("stop")
+
+        # Validate parameter types
+        if not isinstance(prompt, str):
+            return error_response("'prompt' must be a string", 400)
+        if max_tokens is not None and not isinstance(max_tokens, int):
+            return error_response("'max_tokens' must be an integer", 400)
+        if temperature is not None and not isinstance(temperature, (int, float)):
+            return error_response("'temperature' must be a number", 400)
+
+        if not llm_service.is_available():
+            return error_response("No LLM provider is currently available", 503)
+
+        result = llm_service.create_text_completion(
+            prompt=prompt,
+            model=model,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            stream=stream,
+            stop=stop
+        )
+
+        return success_response(result)
+
+    except Exception as e:
+        logger.error(f"Failed to create text completion: {e}")
+        return error_response(f"Failed to create text completion: {str(e)}", 500)
+
+
+@llm_providers_bp.route("/llm-providers/embeddings", methods=["POST"])
+@jwt_required()
+def create_embeddings():
+    """Create embeddings using /v1/embeddings endpoint"""
+    try:
+        if not request.is_json:
+            return error_response("Request must have Content-Type: application/json", 400)
+
+        data = request.get_json()
+        if not data:
+            return error_response("Request body cannot be empty", 400)
+
+        # Validate required fields
+        if "input" not in data:
+            return error_response("Missing required field: input", 400)
+
+        input_text = data["input"]
+        model = data.get("model")
+
+        # Validate parameter types
+        if not isinstance(input_text, (str, list)):
+            return error_response("'input' must be a string or array of strings", 400)
+        if isinstance(input_text, list) and not all(isinstance(item, str) for item in input_text):
+            return error_response("All items in 'input' array must be strings", 400)
+
+        if not llm_service.is_available():
+            return error_response("No LLM provider is currently available", 503)
+
+        result = llm_service.create_embeddings(
+            input_text=input_text,
+            model=model
+        )
+
+        return success_response(result)
+
+    except Exception as e:
+        logger.error(f"Failed to create embeddings: {e}")
+        return error_response(f"Failed to create embeddings: {str(e)}", 500)
+
+
 @llm_providers_bp.route("/llm-providers/presets", methods=["GET"])
 @jwt_required()
 def get_provider_presets():

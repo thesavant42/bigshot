@@ -264,3 +264,44 @@ export interface LLMProviderPreset {
   requires_api_key: boolean;
   description: string;
 }
+
+// LM Studio Model types
+export interface LMStudioModel {
+  id: string;
+  object: string;
+  type?: 'llm' | 'vlm' | 'embeddings';
+  arch?: string;
+  state?: 'loaded' | 'not-loaded';
+  max_context_length?: number;
+  displayName?: string;
+  created?: number;
+  owned_by?: string;
+  publisher?: string;
+  compatibility_type?: string;
+  quantization?: string;
+}
+
+export interface AvailableModelsResponse {
+  models: string[] | LMStudioModel[];
+  provider: {
+    name: string;
+    provider: string;
+    base_url: string;
+    model: string;
+    source: string;
+  };
+}
+
+export interface TextCompletionRequest {
+  prompt: string;
+  model?: string;
+  max_tokens?: number;
+  temperature?: number;
+  stream?: boolean;
+  stop?: string | string[];
+}
+
+export interface EmbeddingsRequest {
+  input: string | string[];
+  model?: string;
+}

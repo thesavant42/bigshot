@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { PaperAirplaneIcon, UserIcon, BeakerIcon } from '@heroicons/react/24/outline';
-import { useChat } from '../../hooks/useApi';
+import { PaperAirplaneIcon, UserIcon, BeakerIcon, CogIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
+import { useChat, useAvailableModels, useLLMProviders } from '../../hooks/useApi';
 import { useChatUpdates } from '../../hooks/useWebSocket';
-import type { ChatMessage } from '../../types';
+import type { ChatMessage, LMStudioModel } from '../../types';
 
 interface ChatInterfaceProps {
   className?: string;
@@ -11,8 +11,14 @@ interface ChatInterfaceProps {
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
   const [message, setMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [selectedModel, setSelectedModel] = useState<string>('');
+  const [temperature, setTemperature] = useState(0.7);
+  const [maxTokens, setMaxTokens] = useState(1000);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { sendMessage, conversation, isLoading } = useChat();
+  const { activeProvider } = useLLMProviders();
+  const { data: modelsData } = useAvailableModels(!!activeProvider);
   const chatUpdates = useChatUpdates();
 
   const scrollToBottom = () => {
@@ -22,6 +28,20 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
   useEffect(() => {
     scrollToBottom();
   }, [conversation, chatUpdates]);
+
+  // Set default model when models are loaded
+  useEffect(() => {
+    if (modelsData?.models && Array.isArray(modelsData.models) && modelsData.models.length > 0 && !selectedModel) {
+      // If models is an array of objects (detailed), get the first model's ID
+      if (typeof modelsData.models[0] === 'object' && (modelsData.models[0] as LMStudioModel).id) {
+        setSelectedModel((modelsData.models[0] as LMStudioModel).id);
+      } 
+      // If models is an array of strings (simple), get the first model
+      else if (typeof modelsData.models[0] === 'string') {
+        setSelectedModel(modelsData.models[0]);
+      }
+    }
+  }, [modelsData, selectedModel]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,6 +74,114 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
 
   return (
     <div className={`flex flex-col h-full ${className}`}>
+      {/* Model Selection and Settings Header */}
+      <div className="border-b border-gray-700 p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            {/* Model Selection */}
+            <div className="flex items-center space-x-2">
+              <label className="text-sm text-gray-400">Model:</label>
+              <select
+                value={selectedModel}
+                onChange={(e) => setSelectedModel(e.target.value)}
+                className="px-3 py-1 bg-gray-700 text-white rounded border border-gray-600 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={!modelsData?.models || modelsData.models.length === 0}
+              >
+                {!modelsData?.models ? (
+                  <option>Loading models...</option>
+                ) : modelsData.models.length === 0 ? (
+                  <option>No models available</option>
+                ) : (
+                  modelsData.models.map((model: string | LMStudioModel) => {
+                    const modelId = typeof model === 'string' ? model : model.id;
+                    const modelName = typeof model === 'string' ? model : (model.displayName || model.id);
+                    return (
+                      <option key={modelId} value={modelId}>
+                        {modelName}
+                      </option>
+                    );
+                  })
+                )}
+              </select>
+            </div>
+
+            {/* Provider Info */}
+            {activeProvider && (
+              <div className="text-xs text-gray-500">
+                Provider: {activeProvider.name}
+              </div>
+            )}
+          </div>
+
+          {/* Settings Toggle */}
+          <button
+            onClick={() => setShowSettings(!showSettings)}
+            className="flex items-center space-x-1 px-3 py-1 text-gray-400 hover:text-white transition-colors"
+          >
+            <CogIcon className="h-4 w-4" />
+            <span className="text-sm">Settings</span>
+            <ChevronDownIcon className={`h-4 w-4 transition-transform ${showSettings ? 'rotate-180' : ''}`} />
+          </button>
+        </div>
+
+        {/* Settings Panel */}
+        {showSettings && (
+          <div className="mt-4 p-4 bg-gray-800 rounded-lg space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              {/* Temperature */}
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">
+                  Temperature: {temperature}
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="2"
+                  step="0.1"
+                  value={temperature}
+                  onChange={(e) => setTemperature(parseFloat(e.target.value))}
+                  className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                />
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>Conservative</span>
+                  <span>Creative</span>
+                </div>
+              </div>
+
+              {/* Max Tokens */}
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">
+                  Max Tokens: {maxTokens}
+                </label>
+                <input
+                  type="range"
+                  min="100"
+                  max="4000"
+                  step="100"
+                  value={maxTokens}
+                  onChange={(e) => setMaxTokens(parseInt(e.target.value))}
+                  className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+                />
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>100</span>
+                  <span>4000</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Model Info */}
+            {modelsData?.models && selectedModel && (
+              <div className="text-xs text-gray-500">
+                <div>Selected Model: {selectedModel}</div>
+                {modelsData.provider && (
+                  <div>Provider: {modelsData.provider.name || 'Unknown'}</div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Chat Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 ? (

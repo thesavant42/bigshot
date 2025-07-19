@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiService } from '../services/api';
-import type { Domain, FilterOptions } from '../types';
+import type { Domain, FilterOptions, TextCompletionRequest, EmbeddingsRequest } from '../types';
 import type { ChatContext } from '../services/chatService';
 
 // Additional types for API operations
@@ -174,4 +174,55 @@ export const useChat = () => {
     isLoading: getConversation.isLoading,
     error: getConversation.error,
   };
+};
+
+// New LLM-specific hooks
+export const useLLMProviders = () => {
+  const queryClient = useQueryClient();
+
+  const providers = useQuery({
+    queryKey: ['llm-providers'],
+    queryFn: () => apiService.getLLMProviders(),
+  });
+
+  const activeProvider = useQuery({
+    queryKey: ['llm-providers', 'active'],
+    queryFn: () => apiService.getActiveLLMProvider(),
+  });
+
+  const activateProvider = useMutation({
+    mutationFn: (id: number) => apiService.activateLLMProvider(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['llm-providers'] });
+    },
+  });
+
+  return {
+    providers: providers.data,
+    activeProvider: activeProvider.data,
+    isLoading: providers.isLoading || activeProvider.isLoading,
+    activateProvider,
+  };
+};
+
+export const useAvailableModels = (enabled: boolean = true) => {
+  return useQuery({
+    queryKey: ['available-models'],
+    queryFn: () => apiService.getAvailableModels(true),
+    enabled,
+    refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+export const useTextCompletion = () => {
+  return useMutation({
+    mutationFn: (data: TextCompletionRequest) => apiService.createTextCompletion(data),
+  });
+};
+
+export const useEmbeddings = () => {
+  return useMutation({
+    mutationFn: (data: EmbeddingsRequest) => apiService.createEmbeddings(data),
+  });
 };
