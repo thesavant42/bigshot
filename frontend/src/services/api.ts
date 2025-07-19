@@ -18,7 +18,10 @@ import type {
   LLMProviderConfigInput,
   LLMProviderTestResult,
   LLMProviderAuditLog,
-  LLMProviderPreset
+  LLMProviderPreset,
+  AvailableModelsResponse,
+  TextCompletionRequest,
+  EmbeddingsRequest
 } from '../types';
 import type { ChatContext } from './chatService';
 
@@ -247,6 +250,22 @@ class ApiService {
 
   async getLLMProviderPresets(): Promise<LLMProviderPreset[]> {
     const response = await this.api.get('/llm-providers/presets');
+    return response.data.data;
+  }
+
+  // New LM Studio specific endpoints
+  async getAvailableModels(detailed: boolean = false): Promise<AvailableModelsResponse> {
+    const response = await this.api.get('/llm-providers/models', { params: { detailed: detailed.toString() } });
+    return response.data.data;
+  }
+
+  async createTextCompletion(data: TextCompletionRequest): Promise<object> {
+    const response = await this.api.post('/llm-providers/completions', data);
+    return response.data.data;
+  }
+
+  async createEmbeddings(data: EmbeddingsRequest): Promise<object> {
+    const response = await this.api.post('/llm-providers/embeddings', data);
     return response.data.data;
   }
 

@@ -294,6 +294,39 @@ class LLMService:
             logger.error(f"Failed to get available models: {e}")
             return []
 
+    def get_detailed_models(self) -> List[Dict[str, Any]]:
+        """Get detailed list of available models with metadata"""
+        if not self.client:
+            return []
+
+        try:
+            models = self.client.models.list()
+            detailed_models = []
+            for model in models.data:
+                model_info = {
+                    "id": model.id,
+                    "object": model.object,
+                    "created": getattr(model, 'created', None),
+                    "owned_by": getattr(model, 'owned_by', 'lmstudio'),
+                }
+                
+                # Add LM Studio specific fields if available
+                if hasattr(model, 'type'):
+                    model_info['type'] = model.type
+                if hasattr(model, 'arch'):
+                    model_info['arch'] = model.arch
+                if hasattr(model, 'state'):
+                    model_info['state'] = model.state
+                if hasattr(model, 'max_context_length'):
+                    model_info['max_context_length'] = model.max_context_length
+                
+                detailed_models.append(model_info)
+            
+            return detailed_models
+        except Exception as e:
+            logger.error(f"Failed to get detailed models: {e}")
+            return []
+
     def generate_response(
         self,
         messages: List[ChatCompletionMessageParam],
@@ -315,6 +348,84 @@ class LLMService:
             return response
         except Exception as e:
             logger.error(f"Failed to generate LLM response: {e}")
+            raise
+
+    def create_text_completion(
+        self,
+        prompt: str,
+        model: Optional[str] = None,
+        max_tokens: int = 100,
+        temperature: float = 0.7,
+        stream: bool = False,
+        stop: Optional[Union[str, List[str]]] = None,
+        **kwargs,
+    ) -> Union[Dict[str, Any], Iterator[Dict[str, Any]]]:
+        """Create text completion using /v1/completions endpoint"""
+        if not self.client:
+            raise RuntimeError("LLM client not available")
+
+        model = model or self.get_default_model()
+
+        try:
+            # Use the completions endpoint instead of chat completions
+            response = self.client.completions.create(
+                model=model,
+                prompt=prompt,
+                max_tokens=max_tokens,
+                temperature=temperature,
+                stream=stream,
+                stop=stop,
+                **kwargs
+            )
+
+            if stream:
+                return self._process_streaming_completion_response(response)
+            else:
+                return self._process_completion_response(response)
+        except Exception as e:
+            logger.error(f"Failed to create text completion: {e}")
+            raise
+
+    def create_embeddings(
+        self,
+        input_text: Union[str, List[str]],
+        model: Optional[str] = None,
+        **kwargs,
+    ) -> Dict[str, Any]:
+        """Create embeddings using /v1/embeddings endpoint"""
+        if not self.client:
+            raise RuntimeError("LLM client not available")
+
+        # Use embedding model if available, otherwise use default
+        if not model:
+            if self.current_provider_config:
+                # Look for embedding model in provider config
+                model = getattr(self.current_provider_config, 'embedding_model', None)
+            if not model:
+                model = self.get_default_model()
+
+        try:
+            response = self.client.embeddings.create(
+                input=input_text,
+                model=model,
+                **kwargs
+            )
+            
+            return {
+                "object": response.object,
+                "data": [
+                    {
+                        "object": embedding.object,
+                        "embedding": embedding.embedding,
+                        "index": embedding.index
+                    }
+                    for embedding in response.data
+                ],
+                "model": response.model,
+                "usage": response.usage.model_dump() if response.usage else None
+            }
+        except Exception as e:
+            logger.error(f"Failed to create embeddings: {e}")
             raise
 
     def create_chat_completion(
@@ -485,8 +596,42 @@ class LLMService:
 
         return tools
 
+    def _process_completion_response(self, response) -> Dict[str, Any]:
+        """Process non-streaming completion response"""
+        choice = response.choices[0]
+        
+        result = {
+            "id": response.id,
+            "object": response.object,
+            "created": response.created,
+            "model": response.model,
+            "content": choice.text,
+            "finish_reason": choice.finish_reason,
+            "usage": response.usage.model_dump() if response.usage else None,
+        }
+        
+        # Add LM Studio specific stats if available
+        if hasattr(response, 'stats'):
+            result['stats'] = response.stats
+        if hasattr(response, 'model_info'):
+            result['model_info'] = response.model_info
+            
+        return result
+
+    def _process_streaming_completion_response(
+        self, response
+    ) -> Iterator[Dict[str, Any]]:
+        """Process streaming completion response"""
+        for chunk in response:
+            if chunk.choices and chunk.choices[0].text:
+                yield {
+                    "content": chunk.choices[0].text,
+                    "finish_reason": chunk.choices[0].finish_reason,
+                    "usage": chunk.usage.model_dump() if chunk.usage else None,
+                }
+
     def _process_response(self, response: ChatCompletion) -> Dict[str, Any]:
-        """Process non-streaming response"""
+        """Process non-streaming chat response"""
         message = response.choices[0].message
 
         result = {
