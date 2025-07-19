@@ -4,58 +4,11 @@ Integration tests for LLM Provider configuration management
 
 import json
 import pytest
-from app import create_app, db
-from app.models.models import User, LLMProviderConfig, LLMProviderAuditLog
-from werkzeug.security import generate_password_hash
-from flask_jwt_extended import create_access_token
+from app import db
+from app.models.models import LLMProviderConfig
 
 
-@pytest.fixture
-def app():
-    """Create and configure test app"""
-    app = create_app()
-    app.config.update({
-        "TESTING": True,
-        "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
-        "WTF_CSRF_ENABLED": False,
-        "JWT_SECRET_KEY": "test-secret",
-    })
-    
-    with app.app_context():
-        db.create_all()
-        
-        # Create test user
-        user = User(
-            username="testuser",
-            password_hash=generate_password_hash("testpass"),
-            is_active=True
-        )
-        db.session.add(user)
-        db.session.commit()
-        
-        # Clear any default providers that might have been created
-        LLMProviderConfig.query.delete()
-        db.session.commit()
-        
-        yield app
-        
-        db.session.remove()
-        db.drop_all()
-
-
-@pytest.fixture
-def client(app):
-    """Create test client"""
-    return app.test_client()
-
-
-@pytest.fixture
-def auth_headers(app):
-    """Create authorization headers for test requests"""
-    with app.app_context():
-        user = User.query.filter_by(username="testuser").first()
-        token = create_access_token(identity=user.id)
-        return {"Authorization": f"Bearer {token}"}
+# Using fixtures from conftest.py - no duplicate fixtures needed
 
 
 class TestLLMProviderAPI:
@@ -67,7 +20,7 @@ class TestLLMProviderAPI:
         with app.app_context():
             LLMProviderConfig.query.delete()
             db.session.commit()
-            
+
         response = client.get("/api/v1/llm-providers", headers=auth_headers)
         assert response.status_code == 200
         data = json.loads(response.data)
@@ -83,13 +36,11 @@ class TestLLMProviderAPI:
             "api_key": "sk-test123",
             "model": "gpt-4",
         }
-        
+
         response = client.post(
-            "/api/v1/llm-providers",
-            json=provider_data,
-            headers=auth_headers
+            "/api/v1/llm-providers", json=provider_data, headers=auth_headers
         )
-        
+
         assert response.status_code == 201
         data = json.loads(response.data)
         assert data["success"] is True
@@ -105,13 +56,11 @@ class TestLLMProviderAPI:
             "name": "Incomplete Provider",
             # Missing base_url and model
         }
-        
+
         response = client.post(
-            "/api/v1/llm-providers",
-            json=provider_data,
-            headers=auth_headers
+            "/api/v1/llm-providers", json=provider_data, headers=auth_headers
         )
-        
+
         assert response.status_code == 400
         data = json.loads(response.data)
         assert data["success"] is False
@@ -123,27 +72,23 @@ class TestLLMProviderAPI:
         with app.app_context():
             LLMProviderConfig.query.delete()
             db.session.commit()
-            
+
         provider_data = {
             "provider": "openai",
             "name": "Duplicate Name",
             "base_url": "https://api.openai.com/v1",
             "model": "gpt-4",
         }
-        
+
         # Create first provider
         response1 = client.post(
-            "/api/v1/llm-providers",
-            json=provider_data,
-            headers=auth_headers
+            "/api/v1/llm-providers", json=provider_data, headers=auth_headers
         )
         assert response1.status_code == 201
-        
+
         # Try to create duplicate
         response2 = client.post(
-            "/api/v1/llm-providers",
-            json=provider_data,
-            headers=auth_headers
+            "/api/v1/llm-providers", json=provider_data, headers=auth_headers
         )
         assert response2.status_code == 400
         data = json.loads(response2.data)
@@ -155,7 +100,7 @@ class TestLLMProviderAPI:
         with app.app_context():
             LLMProviderConfig.query.delete()
             db.session.commit()
-            
+
         # Create a provider first
         provider_data = {
             "provider": "lmstudio",
@@ -163,13 +108,11 @@ class TestLLMProviderAPI:
             "base_url": "http://localhost:1234/v1",
             "model": "llama-2-7b",
         }
-        
+
         client.post(
-            "/api/v1/llm-providers",
-            json=provider_data,
-            headers=auth_headers
+            "/api/v1/llm-providers", json=provider_data, headers=auth_headers
         )
-        
+
         # Get all providers
         response = client.get("/api/v1/llm-providers", headers=auth_headers)
         assert response.status_code == 200
@@ -186,26 +129,24 @@ class TestLLMProviderAPI:
             "base_url": "http://localhost:8080/v1",
             "model": "custom-model",
         }
-        
+
         response = client.post(
-            "/api/v1/llm-providers",
-            json=provider_data,
-            headers=auth_headers
+            "/api/v1/llm-providers", json=provider_data, headers=auth_headers
         )
         provider_id = json.loads(response.data)["data"]["id"]
-        
+
         # Update the provider
         update_data = {
             "name": "Updated Custom Provider",
             "model": "updated-model",
         }
-        
+
         response = client.put(
             f"/api/v1/llm-providers/{provider_id}",
             json=update_data,
-            headers=auth_headers
+            headers=auth_headers,
         )
-        
+
         assert response.status_code == 200
         data = json.loads(response.data)
         assert data["data"]["name"] == "Updated Custom Provider"
@@ -220,20 +161,18 @@ class TestLLMProviderAPI:
             "base_url": "https://api.openai.com/v1",
             "model": "gpt-3.5-turbo",
         }
-        
+
         response = client.post(
-            "/api/v1/llm-providers",
-            json=provider_data,
-            headers=auth_headers
+            "/api/v1/llm-providers", json=provider_data, headers=auth_headers
         )
         provider_id = json.loads(response.data)["data"]["id"]
-        
+
         # Activate the provider
         response = client.post(
             f"/api/v1/llm-providers/{provider_id}/activate",
-            headers=auth_headers
+            headers=auth_headers,
         )
-        
+
         assert response.status_code == 200
         data = json.loads(response.data)
         assert "activated successfully" in data["data"]["message"]
@@ -248,22 +187,22 @@ class TestLLMProviderAPI:
             "base_url": "http://localhost:1234/v1",
             "model": "test-model",
         }
-        
+
         response = client.post(
-            "/api/v1/llm-providers",
-            json=provider_data,
-            headers=auth_headers
+            "/api/v1/llm-providers", json=provider_data, headers=auth_headers
         )
         provider_id = json.loads(response.data)["data"]["id"]
-        
+
         # Activate it
         client.post(
             f"/api/v1/llm-providers/{provider_id}/activate",
-            headers=auth_headers
+            headers=auth_headers,
         )
-        
+
         # Get active provider
-        response = client.get("/api/v1/llm-providers/active", headers=auth_headers)
+        response = client.get(
+            "/api/v1/llm-providers/active", headers=auth_headers
+        )
         assert response.status_code == 200
         data = json.loads(response.data)
         assert data["data"]["name"] == "Active Provider"
@@ -278,20 +217,17 @@ class TestLLMProviderAPI:
             "base_url": "http://example.com/v1",
             "model": "delete-me",
         }
-        
+
         response = client.post(
-            "/api/v1/llm-providers",
-            json=provider_data,
-            headers=auth_headers
+            "/api/v1/llm-providers", json=provider_data, headers=auth_headers
         )
         provider_id = json.loads(response.data)["data"]["id"]
-        
+
         # Delete the provider
         response = client.delete(
-            f"/api/v1/llm-providers/{provider_id}",
-            headers=auth_headers
+            f"/api/v1/llm-providers/{provider_id}", headers=auth_headers
         )
-        
+
         assert response.status_code == 200
         data = json.loads(response.data)
         assert "deleted successfully" in data["data"]["message"]
@@ -302,7 +238,7 @@ class TestLLMProviderAPI:
         with app.app_context():
             LLMProviderConfig.query.delete()
             db.session.commit()
-            
+
         # Create and activate provider
         provider_data = {
             "provider": "openai",
@@ -310,37 +246,38 @@ class TestLLMProviderAPI:
             "base_url": "https://api.openai.com/v1",
             "model": "gpt-4",
         }
-        
+
         response = client.post(
-            "/api/v1/llm-providers",
-            json=provider_data,
-            headers=auth_headers
+            "/api/v1/llm-providers", json=provider_data, headers=auth_headers
         )
         provider_id = json.loads(response.data)["data"]["id"]
-        
+
         # Activate it
         client.post(
             f"/api/v1/llm-providers/{provider_id}/activate",
-            headers=auth_headers
+            headers=auth_headers,
         )
-        
+
         # Try to delete active provider
         response = client.delete(
-            f"/api/v1/llm-providers/{provider_id}",
-            headers=auth_headers
+            f"/api/v1/llm-providers/{provider_id}", headers=auth_headers
         )
-        
+
         assert response.status_code == 400
         data = json.loads(response.data)
-        assert "Cannot delete the active provider" in data.get("error", {}).get("message", "")
+        assert "Cannot delete the active provider" in data.get(
+            "error", {}
+        ).get("message", "")
 
     def test_get_provider_presets(self, client, auth_headers):
         """Test getting provider presets"""
-        response = client.get("/api/v1/llm-providers/presets", headers=auth_headers)
+        response = client.get(
+            "/api/v1/llm-providers/presets", headers=auth_headers
+        )
         assert response.status_code == 200
         data = json.loads(response.data)
         assert len(data["data"]) > 0
-        
+
         # Check that presets have required fields
         preset = data["data"][0]
         assert "provider" in preset
@@ -359,28 +296,28 @@ class TestLLMProviderAPI:
             "base_url": "https://api.openai.com/v1",
             "model": "gpt-4",
         }
-        
+
         response = client.post(
-            "/api/v1/llm-providers",
-            json=provider_data,
-            headers=auth_headers
+            "/api/v1/llm-providers", json=provider_data, headers=auth_headers
         )
         provider_id = json.loads(response.data)["data"]["id"]
-        
+
         # Activate provider (should create another audit log)
         client.post(
             f"/api/v1/llm-providers/{provider_id}/activate",
-            headers=auth_headers
+            headers=auth_headers,
         )
-        
+
         # Check audit logs
-        response = client.get("/api/v1/llm-providers/audit-logs", headers=auth_headers)
+        response = client.get(
+            "/api/v1/llm-providers/audit-logs", headers=auth_headers
+        )
         assert response.status_code == 200
         data = json.loads(response.data)
-        
+
         # Should have at least 2 log entries (created, activated)
         assert len(data["data"]) >= 2
-        
+
         actions = [log["action"] for log in data["data"]]
         assert "created" in actions
         assert "activated" in actions
@@ -391,7 +328,7 @@ class TestLLMProviderAPI:
         assert response.status_code == 401
 
     def test_provider_test_endpoint_structure(self, client, auth_headers):
-        """Test that test endpoint exists and returns proper structure (even if it fails)"""
+        """Test that test endpoint exists and returns proper structure."""
         # Create provider first
         provider_data = {
             "provider": "lmstudio",
@@ -399,25 +336,22 @@ class TestLLMProviderAPI:
             "base_url": "http://invalid:1234/v1",  # Invalid URL
             "model": "test-model",
         }
-        
+
         response = client.post(
-            "/api/v1/llm-providers",
-            json=provider_data,
-            headers=auth_headers
+            "/api/v1/llm-providers", json=provider_data, headers=auth_headers
         )
         provider_id = json.loads(response.data)["data"]["id"]
-        
+
         # Test the provider (should fail but return proper structure)
         response = client.post(
-            f"/api/v1/llm-providers/{provider_id}/test",
-            headers=auth_headers
+            f"/api/v1/llm-providers/{provider_id}/test", headers=auth_headers
         )
-        
+
         assert response.status_code == 200
         data = json.loads(response.data)
         assert "provider_id" in data["data"]
         assert "test_result" in data["data"]
-        
+
         test_result = data["data"]["test_result"]
         assert "success" in test_result
         assert "provider_info" in test_result
