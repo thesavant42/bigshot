@@ -80,6 +80,8 @@ fi
 echo "🎭 Running Playwright UI tests..."
 export PLAYWRIGHT_BASE_URL=http://localhost:80
 export CI=true
+export TEST_USERNAME=admin
+export TEST_PASSWORD=password
 
 if npm run test:e2e; then
     echo "✅ UI tests passed!"
