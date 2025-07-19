@@ -71,7 +71,7 @@ if [ ! -d "node_modules" ]; then
 fi
 
 # Install Playwright browsers if needed
-if [ ! -d "~/.cache/ms-playwright" ]; then
+if [ ! -d "$HOME/.cache/ms-playwright" ]; then
     echo "📥 Installing Playwright browsers..."
     npx playwright install chromium
 fi
