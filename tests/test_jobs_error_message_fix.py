@@ -25,7 +25,7 @@ class TestJobsErrorMessageFix:
 
     def test_job_error_message_column_in_sqlite_schema(self):
         """Test that the SQLite schema file includes error_message column"""
-        schema_path = '/home/runner/work/bigshot/bigshot/config/schema.sql'
+        schema_path = os.path.join(os.path.dirname(__file__), '../config/schema.sql')
         with open(schema_path, 'r') as f:
             schema_content = f.read()
         
