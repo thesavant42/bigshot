@@ -18,6 +18,17 @@ vi.mock('../../hooks/useApi', () => ({
     isLoading: false,
     error: null,
   }),
+  useLLMProviders: () => ({
+    providers: [],
+    activeProvider: null,
+    isLoading: false,
+    activateProvider: { mutateAsync: vi.fn() },
+  }),
+  useAvailableModels: () => ({
+    data: null,
+    isLoading: false,
+    error: null,
+  }),
 }));
 
 vi.mock('../../hooks/useWebSocket', () => ({
