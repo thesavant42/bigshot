@@ -3,10 +3,10 @@ import { promises as fs } from 'fs';
 import * as path from 'path';
 
 if (!process.env.TEST_USERNAME) {
-  throw new Error('Environment variable TEST_USERNAME is not set');
+  process.env.TEST_USERNAME = "admin";
 }
 if (!process.env.TEST_PASSWORD) {
-  throw new Error('Environment variable TEST_PASSWORD is not set');
+  process.env.TEST_PASSWORD = "password";
 }
 
 const TEST_CREDENTIALS = {
