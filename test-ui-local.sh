@@ -43,6 +43,12 @@ docker-compose -f docker-compose.test.yml ps
 # Test the endpoints manually
 echo "🔍 Testing application endpoints..."
 
+# Ensure BACKEND_HEALTH_URL is defined
+if [ -z "$BACKEND_HEALTH_URL" ]; then
+    echo "❌ BACKEND_HEALTH_URL is not defined"
+    docker-compose -f docker-compose.test.yml down -v
+    exit 1
+fi
 # Test backend health
 if curl -f "$BACKEND_HEALTH_URL" > /dev/null 2>&1; then
     echo "✅ Backend health endpoint is responding"
