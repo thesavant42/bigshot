@@ -164,7 +164,8 @@ export const useChat = () => {
   const getConversation = useQuery({
     queryKey: ['conversation'],
     queryFn: () => apiService.getConversation('default'),
-    refetchInterval: 5000, // Refetch every 5 seconds
+    refetchInterval: 30000, // Fixed: Reduced from 5 seconds to 30 seconds to prevent excessive re-renders
+    refetchOnWindowFocus: false, // Fixed: Prevent refetch on window focus
   });
 
   return {

@@ -25,7 +25,7 @@ export const useWebSocket = () => {
       setIsConnected(webSocketService.isConnected());
     };
 
-    const interval = setInterval(checkConnection, 1000);
+    const interval = setInterval(checkConnection, 10000); // Fixed: Reduced from 1 second to 10 seconds
     checkConnection();
 
     return () => {
@@ -77,7 +77,8 @@ export const useJobUpdates = () => {
     });
 
     return unsubscribe;
-  }, [subscribe]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Intentionally omitting 'subscribe' to prevent infinite re-renders
+  }, []); 
 
   return jobUpdates;
 };
@@ -92,7 +93,8 @@ export const useDomainUpdates = () => {
     });
 
     return unsubscribe;
-  }, [subscribe]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Intentionally omitting 'subscribe' to prevent infinite re-renders
+  }, []); 
 
   return domainUpdates;
 };
@@ -107,7 +109,8 @@ export const useChatUpdates = () => {
     });
 
     return unsubscribe;
-  }, [subscribe]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Intentionally omitting 'subscribe' to prevent infinite re-renders
+  }, []); 
 
   return chatUpdates;
 };
