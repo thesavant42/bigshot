@@ -2,9 +2,16 @@ import { test, expect, Page } from '@playwright/test';
 import { promises as fs } from 'fs';
 import * as path from 'path';
 
+if (!process.env.TEST_USERNAME) {
+  throw new Error('Environment variable TEST_USERNAME is not set');
+}
+if (!process.env.TEST_PASSWORD) {
+  throw new Error('Environment variable TEST_PASSWORD is not set');
+}
+
 const TEST_CREDENTIALS = {
-  username: process.env.TEST_USERNAME || (() => { throw new Error('Environment variable TEST_USERNAME is not set'); })(),
-  password: process.env.TEST_PASSWORD || (() => { throw new Error('Environment variable TEST_PASSWORD is not set'); })()
+  username: process.env.TEST_USERNAME,
+  password: process.env.TEST_PASSWORD
 };
 
 // Screenshot size threshold in bytes - screenshots smaller than this are considered unhealthy
