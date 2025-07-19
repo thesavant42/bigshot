@@ -294,6 +294,17 @@ redis-server
 - Implement proper authentication
 - Use HTTPS in production
 
+### File Management Best Practices
+
+- **Never commit database files**: The `instance/` directory is gitignored for a reason
+- **Check .gitignore coverage**: Before committing, ensure sensitive files are properly ignored
+- **Remove tracked files**: If you accidentally commit a file that should be ignored:
+  ```bash
+  git rm --cached path/to/file
+  git commit -m "Remove accidentally tracked file"
+  ```
+- **Verify git status**: Always run `git status` before committing to catch unintended files
+
 ### Backend Security
 
 - Validate and sanitize all inputs
