@@ -289,8 +289,10 @@ def update_llm_provider(provider_id):
         if "api_key" in data:
             if data["api_key"] is not None and not isinstance(data["api_key"], str):
                 validation_errors.append("'api_key' must be a string or null")
+            elif isinstance(data["api_key"], str):
+                provider_config.api_key = data["api_key"].strip()
             else:
-                provider_config.api_key = data["api_key"].strip() if data["api_key"] else None
+                provider_config.api_key = None
         
         if "model" in data:
             if not isinstance(data["model"], str) or len(data["model"].strip()) == 0:
