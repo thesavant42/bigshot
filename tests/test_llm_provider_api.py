@@ -4,12 +4,57 @@ Integration tests for LLM Provider configuration management
 
 import json
 import pytest
-from app import db
-from app.models.models import LLMProviderConfig
+
+from app import create_app, db
+from app.models.models import LLMProviderConfig, LLMProviderAuditLog
 
 
-# Using fixtures from conftest.py - no duplicate fixtures needed
+@pytest.fixture
+def app():
+    """Create and configure test app"""
+    import tempfile
+    import os
+    from config.config import TestingConfig
+    
+    # Create a temporary file for the test database
+    db_fd, db_path = tempfile.mkstemp()
+    
+    # Create test configuration
+    test_config = TestingConfig()
+    test_config.SQLALCHEMY_DATABASE_URI = f"sqlite:///{db_path}"
+    test_config.TESTING = True
+    test_config.WTF_CSRF_ENABLED = False
+    test_config.JWT_SECRET_KEY = "test-secret"
+    
+    # Create app with test config - this will automatically create admin user and default providers
+    app = create_app(test_config)
+    
+    yield app
+    
+    # Clean up
+    os.close(db_fd)
+    os.unlink(db_path)
 
+
+@pytest.fixture
+def client(app):
+    """Create test client"""
+    return app.test_client()
+
+
+@pytest.fixture
+def auth_headers(app, client):
+    """Create authorization headers for test requests using default admin user"""
+    # Use the default admin user created by the app
+    response = client.post(
+        "/api/v1/auth/login", 
+        json={"username": "admin", "password": "password"}
+    )
+    assert response.status_code == 200, f"Login failed: {response.get_json()}"
+    
+    data = response.get_json()
+    token = data["data"]["access_token"]
+    return {"Authorization": f"Bearer {token}"}
 
 class TestLLMProviderAPI:
     """Test LLM Provider API endpoints"""

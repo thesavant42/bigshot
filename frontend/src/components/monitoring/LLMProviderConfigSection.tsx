@@ -15,6 +15,24 @@ import LoadingSpinner from '../LoadingSpinner';
 import StatusBadge from '../StatusBadge';
 import type { LLMProviderConfig, LLMProviderConfigInput, LLMProviderPreset } from '../../types';
 
+/**
+ * LLM Provider Configuration Section
+ * 
+ * This component allows users to manage LLM provider configurations for runtime switching.
+ * 
+ * Previous Issue (Fixed):
+ * Users reported that LMStudio config edits were not saving/reflecting in the UI.
+ * This was caused by React infinite render loops in WebSocket hooks and chat polling,
+ * which interfered with form state management and UI updates.
+ * 
+ * Resolution:
+ * - Fixed useWebSocket hooks to prevent infinite re-renders by removing unstable dependencies
+ * - Reduced aggressive polling intervals (chat refetch from 5s to 30s, WebSocket check from 1s to 10s)  
+ * - Added refetchOnWindowFocus: false to prevent unwanted refetches
+ * 
+ * The backend API functionality was never broken - only the frontend UI state management.
+ */
+
 interface ProviderFormData extends LLMProviderConfigInput {
   id?: number;
 }
