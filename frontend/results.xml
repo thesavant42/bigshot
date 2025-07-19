@@ -1,12 +1,1 @@
-<testsuites id="" name="" tests="1" failures="0" skipped="0" errors="0" time="0.645854">
-<testsuite name="ui-health.spec.ts" timestamp="2025-07-19T00:58:52.398Z" hostname="chromium" tests="1" failures="0" skipped="0" time="0.011" errors="0">
-<testcase name="should detect and fail on blank/corrupted screenshots" classname="ui-health.spec.ts" time="0.011">
-<system-out>
-<![CDATA[🧪 Testing screenshot validation...
-📊 Screenshot size: 0KB
-✅ Screenshot validation test passed
-]]>
-</system-out>
-</testcase>
-</testsuite>
-</testsuites>
+<file removed from version control>
