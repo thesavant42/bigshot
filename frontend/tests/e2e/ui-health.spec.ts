@@ -11,8 +11,8 @@ if (!process.env.TEST_PASSWORD) {
 }
 
 const TEST_CREDENTIALS = {
-  username: 'admin',
-  password: 'password'
+  username: process.env.TEST_USERNAME || 'admin',
+  password: process.env.TEST_PASSWORD || 'password'
 };
 
 // Application name for UI elements
