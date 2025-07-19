@@ -3,9 +3,11 @@ name: CI/CD Pipeline
 permissions:
   contents: read
   security-events: write
+
 env:
   TEST_USERNAME: ${{ secrets.TEST_USERNAME }}
   TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+
 on:
   push:
     branches: [ main, develop ]
