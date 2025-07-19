@@ -3,15 +3,15 @@ import { promises as fs } from 'fs';
 import * as path from 'path';
 
 if (!process.env.TEST_USERNAME) {
-  throw new Error('Environment variable TEST_USERNAME is not set');
+  process.env.USERNAME;
 }
 if (!process.env.TEST_PASSWORD) {
-  throw new Error('Environment variable TEST_PASSWORD is not set');
+  process.env.TEST_PASSWORD = 'password';
 }
 
 const TEST_CREDENTIALS = {
-  username: process.env.TEST_USERNAME,
-  password: process.env.TEST_PASSWORD
+  username: admin,
+  password: password
 };
 
 const APPLICATION_NAME = 'BigShot';
