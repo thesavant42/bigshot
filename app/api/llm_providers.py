@@ -555,6 +555,14 @@ def get_provider_presets():
     """Get common LLM provider presets/templates"""
     presets = [
         {
+            "provider": "lmstudio",
+            "name": "LMStudio Local",
+            "base_url": "http://192.168.1.98:1234/v1",
+            "model": "model-identifier",
+            "requires_api_key": False,
+            "description": "Local LMStudio server",
+        },
+        {
             "provider": "openai",
             "name": "OpenAI GPT-4",
             "base_url": "https://api.openai.com/v1",
@@ -569,14 +577,6 @@ def get_provider_presets():
             "model": "gpt-3.5-turbo",
             "requires_api_key": True,
             "description": "Fast and cost-effective OpenAI model",
-        },
-        {
-            "provider": "lmstudio",
-            "name": "LMStudio Local",
-            "base_url": "http://localhost:1234/v1",
-            "model": "model-identifier",
-            "requires_api_key": False,
-            "description": "Local LMStudio server",
         },
         {
             "provider": "custom",

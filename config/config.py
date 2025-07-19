@@ -37,7 +37,7 @@ class Config:
     RATE_LIMIT_STORAGE_URL = REDIS_URL
 
     # LLM and MCP settings
-    LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "openai")  # 'openai' or 'lmstudio'
+    LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "lmstudio")  # 'openai' or 'lmstudio'
 
     # OpenAI settings
     OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
@@ -45,7 +45,7 @@ class Config:
     OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-3.5-turbo")
 
     # LMStudio settings
-    LMSTUDIO_API_BASE = os.environ.get("LMSTUDIO_API_BASE", "http://localhost:1234/v1")
+    LMSTUDIO_API_BASE = os.environ.get("LMSTUDIO_API_BASE", "http://192.168.1.98:1234/v1")
     LMSTUDIO_API_KEY = os.environ.get(
         "LMSTUDIO_API_KEY", "lm-studio"
     )  # Default API key for LMStudio
