@@ -44,7 +44,7 @@ docker-compose -f docker-compose.test.yml ps
 echo "🔍 Testing application endpoints..."
 
 # Test backend health
-if curl -f http://localhost:5000/api/v1/health > /dev/null 2>&1; then
+if curl -f "$BACKEND_HEALTH_URL" > /dev/null 2>&1; then
     echo "✅ Backend health endpoint is responding"
 else
     echo "❌ Backend health endpoint is not responding"
