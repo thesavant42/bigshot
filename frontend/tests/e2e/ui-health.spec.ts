@@ -2,11 +2,7 @@ import { test, expect, Page } from '@playwright/test';
 import { promises as fs } from 'fs';
 import * as path from 'path';
 
-// Ensure this file is only executed by Playwright test runner
-if (typeof test === 'undefined') {
-  throw new Error('This file should only be executed by Playwright test runner');
-}
-
+// Set default test credentials if not provided
 if (!process.env.TEST_USERNAME) {
   process.env.TEST_USERNAME = "admin";
 }

@@ -265,7 +265,7 @@ jobs:
     - name: Wait for application to be ready
       run: |
         echo "Waiting for frontend to be accessible..."
-        timeout 180 bash -c '
+        timeout 300 bash -c '
           until curl -f http://localhost:80 > /dev/null 2>&1; do
             echo "Waiting for frontend..."
             sleep 5
@@ -273,7 +273,7 @@ jobs:
         '
         
         echo "Waiting for backend API to be ready..."
-        timeout 180 bash -c '
+        timeout 300 bash -c '
           until curl -f http://localhost:5000/api/v1/health > /dev/null 2>&1; do
             echo "Waiting for backend API..."
             sleep 5
@@ -282,7 +282,7 @@ jobs:
         
         echo "Performing additional readiness validation..."
         # Ensure frontend returns valid HTML content (not just a status code)
-        for i in {1..20}; do
+        for i in {1..30}; do
           RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:80)
           if [ "$RESPONSE" = "200" ]; then
             # Check that we get actual HTML content, not just an error page
@@ -292,18 +292,18 @@ jobs:
               break
             fi
           fi
-          echo "Waiting for frontend to return valid content (attempt $i/20)..."
+          echo "Waiting for frontend to return valid content (attempt $i/30)..."
           sleep 5
         done
         
         # Verify backend API returns proper JSON
-        for i in {1..20}; do
+        for i in {1..30}; do
           HEALTH_RESPONSE=$(curl -s http://localhost:5000/api/v1/health)
           if echo "$HEALTH_RESPONSE" | grep -q "status\|health"; then
             echo "✅ Backend API ready with valid response!"
             break
           fi
-          echo "Waiting for backend API to return valid health response (attempt $i/20)..."
+          echo "Waiting for backend API to return valid health response (attempt $i/30)..."
           sleep 5
         done
         
@@ -312,11 +312,14 @@ jobs:
     - name: Run UI health tests
       working-directory: frontend
       run: |
-        # Update Playwright config for CI environment
+        # Set Playwright environment variables
         export PLAYWRIGHT_BASE_URL=http://localhost:80
+        export PLAYWRIGHT_TEST=true
+        # Run the tests with explicit environment variables
         npm run test:e2e
       env:
         CI: true
+        PLAYWRIGHT_TEST: true
         TEST_USERNAME: ${{ env.TEST_USERNAME }}
         TEST_PASSWORD: ${{ env.TEST_PASSWORD }}
     
