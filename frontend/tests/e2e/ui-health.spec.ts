@@ -103,7 +103,7 @@ async function handlePostAuthVerification(page: Page) {
     
     // Look for success indicators with timeout
     try {
-      const authSuccess = page.locator('text=successful, text=SUCCESS, text=authenticated').first();
+      const authSuccess = page.locator('text=successful').or(page.locator('text=SUCCESS')).or(page.locator('text=authenticated')).first();
       await authSuccess.waitFor({ timeout: 5000 });
       console.log('✅ Authentication status confirmed');
     } catch {
