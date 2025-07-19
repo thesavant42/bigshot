@@ -223,8 +223,13 @@ class TestLLMProviderAPI:
         assert "activated successfully" in data["data"]["message"]
         assert data["data"]["provider"]["is_active"] is True
 
-    def test_get_active_provider(self, client, auth_headers):
+    def test_get_active_provider(self, client, auth_headers, app):
         """Test getting the active provider"""
+        # Clear existing providers first
+        with app.app_context():
+            LLMProviderConfig.query.delete()
+            db.session.commit()
+
         # Create and activate a provider
         provider_data = {
             "provider": "lmstudio",
