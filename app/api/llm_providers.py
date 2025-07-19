@@ -164,6 +164,10 @@ def create_llm_provider():
             logger.warning(f"Provider name already exists: {data['name']}")
             return error_response(f"Provider with name '{data['name']}' already exists", 400)
 
+        # Set validated values with defaults
+        validated_connection_timeout = int(data.get('connection_timeout', 30))
+        validated_temperature = float(data.get('temperature', 0.7))
+
         # Create new provider config with sanitized data
         provider_config = LLMProviderConfig(
             provider=data["provider"].strip(),
