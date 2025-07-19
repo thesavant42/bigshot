@@ -44,7 +44,7 @@ async function waitForPageReady(page: Page) {
   await page.waitForSelector('body', { state: 'visible' });
   
   // Wait for React components to mount and render
-  await page.waitForSelector('text=BigShot', { state: 'visible' });
+  await page.waitForSelector(`text=${APPLICATION_NAME}`, { state: 'visible' });
 }
 
 /**
