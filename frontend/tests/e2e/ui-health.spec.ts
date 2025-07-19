@@ -7,10 +7,10 @@ if (typeof test === 'undefined') {
   throw new Error('This file should only be executed by Playwright test runner');
 }
 
-if (!process.env.TEST_USERNAME) {
+if (!process.env.TEST_USERNAME || process.env.TEST_USERNAME.trim() === '') {
   process.env.TEST_USERNAME = "admin";
 }
-if (!process.env.TEST_PASSWORD) {
+if (!process.env.TEST_PASSWORD || process.env.TEST_PASSWORD.trim() === '') {
   process.env.TEST_PASSWORD = "password";
 }
 
@@ -322,7 +322,9 @@ test('should login, pass verification, and capture healthy dashboard screenshot'
       console.log('🏗️ Running in CI environment - performing additional checks');
       
       // Verify the page isn't showing only loading spinners
-      const loadingSpinners = await page.locator('[class*="loading"], [class*="spinner"], text=Loading').count();
+      const loadingSpinnerCount = await page.locator('[class*="loading"], [class*="spinner"]').count();
+      const loadingTextCount = await page.locator('text=Loading').count();
+      const loadingSpinners = loadingSpinnerCount + loadingTextCount;
       if (loadingSpinners > 0) {
         console.log(`⚠️ Found ${loadingSpinners} loading indicators - may still be loading`);
       }
