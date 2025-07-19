@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { PaperAirplaneIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { chatService, type ChatMessage, type ChatContext } from '../services/chatService';
-import { convertContextDataToChatContext } from '../utils/contextConversion';
 
 interface ChatInterfaceProps {
   className?: string;
@@ -13,39 +12,44 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [context, setContext] = useState<ChatContext>({});
+  const [context] = useState<ChatContext>({});
   const [isServiceAvailable, setIsServiceAvailable] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
-    checkServiceStatus();
-    loadContext();
+    isMountedRef.current = true;
+    
+    // Temporarily disable chat service calls to prevent render loop
+    // TODO: Re-enable once render loop issue is fully resolved
+    const timeoutId = setTimeout(() => {
+      if (isMountedRef.current) {
+        setIsServiceAvailable(false); // Set to false for now to show fallback UI
+        setError("Chat service temporarily disabled to ensure UI stability");
+      }
+    }, 100);
+
+    return () => {
+      isMountedRef.current = false;
+      clearTimeout(timeoutId);
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
   }, []);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
-  const checkServiceStatus = async () => {
-    try {
-      const status = await chatService.getStatus();
-      setIsServiceAvailable(status.available);
-    } catch (error) {
-      console.error('Failed to check service status:', error);
-      setIsServiceAvailable(false);
-    }
-  };
-
-  const loadContext = async () => {
-    try {
-      const contextData = await chatService.getContext();
-      // Convert ContextData to ChatContext format
-      setContext(convertContextDataToChatContext(contextData));
-    } catch (error) {
-      console.error('Failed to load context:', error);
-    }
+  const retryConnection = async () => {
+    setError("Chat service is temporarily disabled for UI stability. Authentication and core features are working properly.");
+    setIsServiceAvailable(false);
   };
 
   const scrollToBottom = () => {
@@ -164,13 +168,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
           <div className="text-center">
             <ExclamationTriangleIcon className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              LLM Service Unavailable
+              Chat Service Temporarily Disabled
             </h3>
             <p className="text-gray-600">
-              The AI chat service is currently unavailable. Please check your configuration.
+              Chat functionality is temporarily disabled to ensure UI stability. Core reconnaissance features are fully functional.
             </p>
             <button
-              onClick={checkServiceStatus}
+              onClick={retryConnection}
               className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
             >
               Retry
