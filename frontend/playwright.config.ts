@@ -42,6 +42,13 @@ export default defineConfig({
     navigationTimeout: 30000,
   },
 
+  /* Environment variables for tests */
+  env: {
+    PLAYWRIGHT_TEST: 'true',
+    TEST_USERNAME: process.env.TEST_USERNAME || 'admin',
+    TEST_PASSWORD: process.env.TEST_PASSWORD || 'password',
+  },
+
   /* Configure projects for major browsers */
   projects: [
     {
