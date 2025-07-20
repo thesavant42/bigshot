@@ -40,6 +40,7 @@ services:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - JWT_SECRET_KEY=test-jwt-secret-key
+      - SECRET_KEY=${SECRET_KEY:-test-jwt-secret-key}
       - POSTGRES_HOST=database
       - POSTGRES_PORT=5432
       - POSTGRES_USER=postgres

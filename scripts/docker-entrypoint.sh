@@ -239,7 +239,11 @@ main() {
     # Only run database checks for backend/celery services
     if is_database_service "$*"; then
         log_info "This is a database service, checking database status..."
-        
+         # ── Fallback SECRET_KEY from JWT_SECRET_KEY ──
+        if [ -z "$SECRET_KEY" ] && [ -n "$JWT_SECRET_KEY" ]; then
+            log_warn "SECRET_KEY not set; falling back to JWT_SECRET_KEY"
+            export SECRET_KEY="$JWT_SECRET_KEY"
+        fi
         # Wait for database to be available
         wait_for_database
         
