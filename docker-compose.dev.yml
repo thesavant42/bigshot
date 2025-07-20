@@ -101,6 +101,8 @@ services:
     environment:
       - NODE_ENV=development
       - VITE_API_URL=http://backend:5000
+      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_INTERVAL=500
     depends_on:
       - backend
 

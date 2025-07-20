@@ -29,7 +29,37 @@ docker compose -f docker-compose.dev.yml up --build
 - **Redis:** localhost:6380
 
 ### Hot Reload
-- Backend and frontend use code bind-mounts for instant updates.
+- **Backend**: Uses code bind-mounts for instant updates when files change.
+- **Frontend**: Hot reload is enabled with file polling for Docker volumes. Changes to React components should appear automatically in the browser without manual refresh.
+
+#### Troubleshooting Frontend Hot Reload
+If frontend changes aren't reflected:
+
+1. **Ensure you're using the development compose file**:
+   ```bash
+   docker compose -f docker-compose.dev.yml up --build
+   ```
+
+2. **Clear Docker cache and rebuild**:
+   ```bash
+   docker compose -f docker-compose.dev.yml down -v
+   docker compose -f docker-compose.dev.yml up --build
+   ```
+
+3. **Verify file mounting**: Check that your changes are visible inside the container:
+   ```bash
+   docker exec bigshot_dev_frontend ls -la /app/src/
+   ```
+
+4. **Test hot reload manually**: Use the provided test script:
+   ```bash
+   ./scripts/test_frontend_hotreload.sh
+   ```
+
+The frontend development setup uses:
+- Vite dev server with file polling enabled (`usePolling: true`)
+- Environment variables `CHOKIDAR_USEPOLLING=true` for better Docker volume compatibility
+- Volume mounts: `./frontend:/app` (source code) and `/app/node_modules` (dependencies)
 
 ### Stopping Services
 ```bash
