@@ -18,9 +18,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { sendMessage, conversation, isLoading } = useChat();
   const { activeProvider } = useLLMProviders();
-  // Temporarily disable models loading to fix render loop
-  // const { data: modelsData } = useAvailableModels(!!activeProvider);
-  const modelsData = null;
+  const { data: modelsData } = useAvailableModels(!!activeProvider);
   const chatUpdates = useChatUpdates();
 
   const scrollToBottom = () => {
@@ -34,16 +32,22 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
   // Set default model when models are loaded
   useEffect(() => {
     if (modelsData?.models && Array.isArray(modelsData.models) && modelsData.models.length > 0 && !selectedModel) {
+      let defaultModel = '';
+      
       // If models is an array of objects (detailed), get the first model's ID
       if (typeof modelsData.models[0] === 'object' && (modelsData.models[0] as LMStudioModel).id) {
-        setSelectedModel((modelsData.models[0] as LMStudioModel).id);
+        defaultModel = (modelsData.models[0] as LMStudioModel).id;
       } 
       // If models is an array of strings (simple), get the first model
       else if (typeof modelsData.models[0] === 'string') {
-        setSelectedModel(modelsData.models[0]);
+        defaultModel = modelsData.models[0];
+      }
+      
+      if (defaultModel && !selectedModel) {
+        setSelectedModel(defaultModel);
       }
     }
-  }, [modelsData]); // Removed selectedModel from dependencies to prevent infinite loop
+  }, [modelsData?.models]); // Only depend on the models array, not the whole object or selectedModel
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
