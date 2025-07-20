@@ -103,7 +103,7 @@ try:
     
     # Check if jobs table exists
     if 'jobs' not in inspector.get_table_names():
-        print('Jobs table does not exist yet - will be created by schema')
+        print('Jobs table does not exist yet - migration not needed, will be created with schema')
         sys.exit(0)  # No migration needed, table will be created with schema
     
     # Check if error_message column exists
@@ -114,13 +114,13 @@ try:
         print('error_message column already exists')
         sys.exit(0)  # No migration needed
     else:
-        print('error_message column is missing')
+        print('error_message column is missing - migration needed')
         sys.exit(1)  # Migration needed
         
 except Exception as e:
     print(f'Error checking migration status: {e}')
-    # If we can't check, assume migration might be needed
-    sys.exit(1)
+    # If we can't check, assume no migration needed to avoid breaking startup
+    sys.exit(0)
     "
     
     return $?
@@ -141,14 +141,24 @@ run_migration() {
 
 # Function to check if this is a database service command
 is_database_service() {
-    case "$1" in
+    # Check all arguments for patterns that indicate database usage
+    local args="$*"
+    case "$args" in
         *celery*)
             return 0
             ;;
         *run.py*|*server.py*)
             return 0
             ;;
-        python*run.py*|python*server.py*)
+        *python*run.py*|*python*server.py*)
+            return 0
+            ;;
+        *flask*)
+            return 0
+            ;;
+        # Check if it's a python command that might import our Flask app
+        *python*-c*)
+            # For now, assume python -c commands might need database
             return 0
             ;;
         *)
@@ -170,14 +180,17 @@ main() {
         wait_for_database
         
         # Check if migration is needed and run it
-        if needs_migration; then
+        needs_migration
+        migration_result=$?
+        
+        if [ $migration_result -eq 0 ]; then
+            log_info "No migration needed, database schema is up to date"
+        else
             log_warn "Database migration needed"
             if ! run_migration; then
                 log_error "Failed to run migration, exiting"
                 exit 1
             fi
-        else
-            log_info "No migration needed, database schema is up to date"
         fi
     else
         log_info "Non-database service detected, skipping database checks"
