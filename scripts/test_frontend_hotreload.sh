@@ -25,7 +25,18 @@ docker run -d -p 3000:3000 \
   bigshot-frontend:dev
 
 echo "⏳ Waiting for Vite dev server to start..."
-sleep 10
+timeout=30
+interval=2
+elapsed=0
+while ! curl -s http://localhost:3000 > /dev/null; do
+  if [ "$elapsed" -ge "$timeout" ]; then
+    echo "❌ Vite dev server did not start within $timeout seconds."
+    docker stop bigshot-frontend-test && docker rm bigshot-frontend-test
+    exit 1
+  fi
+  sleep "$interval"
+  elapsed=$((elapsed + interval))
+done
 
 echo "🌐 Frontend dev server should be running at http://localhost:3000"
 echo "📝 To test hot reload:"
