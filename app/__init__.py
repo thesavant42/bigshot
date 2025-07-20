@@ -22,9 +22,16 @@ def create_app(config_class=Config):
     app.config.from_object(config_class)
 
     # Initialize centralized logging first
-    from app.utils.logging_config import setup_logging, log_service_startup, log_service_connectivity
+    from app.utils.logging_config import (
+        setup_logging, log_service_startup, log_service_connectivity,
+        log_environment_validation, log_docker_context
+    )
     
     loggers = setup_logging(app, 'flask-backend')
+    
+    # Perform environment validation and logging
+    log_environment_validation()
+    log_docker_context()
     
     # Log service startup with debugging info
     startup_details = {
