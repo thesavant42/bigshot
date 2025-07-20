@@ -60,6 +60,7 @@ services:
       - .:/app
       - ./instance:/app/instance
       - ./logs:/app/logs
+    entrypoint: ["./scripts/docker-entrypoint.sh"]
     command: python run.py
 
   # Celery Worker (Development)
@@ -68,6 +69,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: bigshot_dev_celery
+    entrypoint: ["./scripts/docker-entrypoint.sh"]
     command: python -m celery -A celery_app.celery_app worker --loglevel=debug --concurrency=2
     environment:
       - FLASK_ENV=development
