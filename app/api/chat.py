@@ -35,6 +35,7 @@ def send_message():
         conversation_history = data.get("conversation_history", [])
         context = data.get("context", {})
         stream = data.get("stream", False)
+        model = data.get("model")  # Get model from request
 
         # Add current session context
         context.update(
@@ -62,6 +63,7 @@ def send_message():
                 conversation_history=conversation_history,
                 context=context,
                 stream=False,
+                model=model,  # Pass model to LLM service
             )
 
             return success_response(response)
@@ -99,6 +101,7 @@ def stream_chat_response(message: str, conversation_history: list, context: dict
             conversation_history=conversation_history,
             context=context,
             stream=True,
+            model=model,  # Pass model to LLM service
         )
 
         for chunk in response_stream:

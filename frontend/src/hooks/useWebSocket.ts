@@ -25,7 +25,7 @@ export const useWebSocket = () => {
       setIsConnected(webSocketService.isConnected());
     };
 
-    const interval = setInterval(checkConnection, 10000); // Fixed: Reduced from 1 second to 10 seconds
+    const interval = setInterval(checkConnection, 30000); // Check every 30 seconds instead of 10
     checkConnection();
 
     return () => {

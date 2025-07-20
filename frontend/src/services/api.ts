@@ -176,9 +176,20 @@ class ApiService {
 
   // Chat endpoints
   async sendMessage(message: string, context?: ChatContext): Promise<ChatMessage> {
+    // Get the current active model for the chat request
+    let model: string | undefined;
+    try {
+      const activeProvider = await this.getActiveLLMProvider();
+      model = activeProvider?.model;
+    } catch (error) {
+      console.warn('Could not get active provider model for chat request:', error);
+      // Continue without model, let backend handle it
+    }
+
     const response = await this.api.post('/chat/messages', {
       message,
       context,
+      model, // Include model field if available
     });
     return response.data.data;
   }

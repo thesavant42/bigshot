@@ -29,19 +29,28 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
     scrollToBottom();
   }, [conversation, chatUpdates]);
 
-  // Set default model when models are loaded
+  // Set default model when models are loaded (using useRef to prevent infinite loops)
+  const hasSetDefaultModel = useRef(false);
+  
   useEffect(() => {
-    if (modelsData?.models && Array.isArray(modelsData.models) && modelsData.models.length > 0 && !selectedModel) {
+    if (modelsData?.models && Array.isArray(modelsData.models) && modelsData.models.length > 0 && !selectedModel && !hasSetDefaultModel.current) {
+      let defaultModel = '';
+      
       // If models is an array of objects (detailed), get the first model's ID
       if (typeof modelsData.models[0] === 'object' && (modelsData.models[0] as LMStudioModel).id) {
-        setSelectedModel((modelsData.models[0] as LMStudioModel).id);
+        defaultModel = (modelsData.models[0] as LMStudioModel).id;
       } 
       // If models is an array of strings (simple), get the first model
       else if (typeof modelsData.models[0] === 'string') {
-        setSelectedModel(modelsData.models[0]);
+        defaultModel = modelsData.models[0];
+      }
+      
+      if (defaultModel) {
+        setSelectedModel(defaultModel);
+        hasSetDefaultModel.current = true;
       }
     }
-  }, [modelsData, selectedModel]);
+  }, [modelsData?.models, selectedModel]); // Include selectedModel to avoid stale closure issues
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

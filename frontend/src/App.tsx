@@ -4,7 +4,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { KeyboardProvider } from './contexts/KeyboardContext';
 import MainLayout from './components/layout/MainLayout';
 import DomainDashboard from './components/domain/DomainDashboard';
-import ChatInterface from './components/ChatInterface';
+import ChatInterface from './components/chat/ChatInterface';
 import SplitLayout from './components/SplitLayout';
 import KeyboardShortcutsHelp from './components/KeyboardShortcutsHelp';
 import LoadingSpinner from './components/LoadingSpinner';

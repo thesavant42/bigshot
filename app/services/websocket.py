@@ -400,6 +400,10 @@ class WebSocketService:
             ],
         }
 
+    def get_stats(self):
+        """Alias for get_connection_stats for backward compatibility"""
+        return self.get_connection_stats()
+
 
 # Global WebSocket service instance
 websocket_service = WebSocketService()

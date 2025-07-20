@@ -33,6 +33,9 @@ const getWebSocketUrl = () => {
 export class WebSocketService {
   private socket: Socket | null = null;
   private eventHandlers: Map<string, Set<(data: unknown) => void>> = new Map();
+  private reconnectAttempts = 0;
+  private maxReconnectAttempts = 5;
+  private reconnectDelay = 1000; // Start with 1 second
 
   connect(url?: string): void {
     if (this.socket?.connected) return;
@@ -45,14 +48,22 @@ export class WebSocketService {
       auth: {
         token,
       },
+      timeout: 10000, // 10 second timeout
+      forceNew: true, // Force new connection
     });
 
     this.socket.on('connect', () => {
       console.log('WebSocket connected');
+      this.reconnectAttempts = 0; // Reset on successful connection
     });
 
-    this.socket.on('disconnect', () => {
-      console.log('WebSocket disconnected');
+    this.socket.on('disconnect', (reason: string) => {
+      console.log('WebSocket disconnected:', reason);
+    });
+
+    this.socket.on('connect_error', (error: Error) => {
+      console.warn('WebSocket connection error:', error.message);
+      this.handleReconnect();
     });
 
     this.socket.on('message', (message: WebSocketMessage) => {
@@ -71,6 +82,25 @@ export class WebSocketService {
     this.socket.on('chat_message', (data: ChatMessageData) => {
       this.emit('chat_message', data);
     });
+  }
+
+  private handleReconnect(): void {
+    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+      console.error('Max WebSocket reconnection attempts reached');
+      return;
+    }
+
+    this.reconnectAttempts++;
+    const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1); // Exponential backoff
+    
+    console.log(`Attempting WebSocket reconnection ${this.reconnectAttempts}/${this.maxReconnectAttempts} in ${delay}ms`);
+    
+    setTimeout(() => {
+      if (!this.socket?.connected) {
+        this.disconnect();
+        this.connect();
+      }
+    }, delay);
   }
 
   disconnect(): void {
