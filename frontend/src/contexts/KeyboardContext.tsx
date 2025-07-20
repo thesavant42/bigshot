@@ -71,7 +71,14 @@ export const KeyboardProvider: React.FC<KeyboardProviderProps> = ({ children }) 
       },
     ];
 
-    defaultShortcuts.forEach(addShortcut);
+    // Use a separate function to avoid recreating the function reference
+    const initializeShortcuts = () => {
+      defaultShortcuts.forEach((shortcut) => {
+        setShortcuts(prev => [...prev.filter(s => s.key !== shortcut.key), shortcut]);
+      });
+    };
+
+    initializeShortcuts();
   }, []); // Only run once on mount to set default shortcuts
 
   return (
