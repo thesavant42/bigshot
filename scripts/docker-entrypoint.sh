@@ -130,7 +130,71 @@ except Exception as e:
 run_migration() {
     log_info "Running error_message column migration..."
     
-    if python3 scripts/add_error_message_column.py; then
+    python3 -c "
+import os
+import sys
+from sqlalchemy import create_engine, text, inspect
+from sqlalchemy.exc import ProgrammingError
+
+try:
+    # Get database URL
+    database_url = os.getenv('DATABASE_URL', 'sqlite:///instance/bigshot.db')
+    engine = create_engine(database_url)
+    
+    # Test connection
+    with engine.connect() as conn:
+        conn.execute(text('SELECT 1'))
+    print('Database connection successful for migration')
+    
+    # Add the error_message column
+    table_name = 'jobs'
+    column_name = 'error_message'
+    
+    # Determine database dialect and build appropriate SQL
+    dialect = engine.dialect.name
+    if dialect == 'postgresql':
+        sql = f'ALTER TABLE {table_name} ADD COLUMN {column_name} TEXT'
+    elif dialect == 'sqlite':
+        sql = f'ALTER TABLE {table_name} ADD COLUMN {column_name} TEXT'
+    elif dialect == 'mysql':
+        sql = f'ALTER TABLE {table_name} ADD COLUMN {column_name} TEXT'
+    else:
+        sql = f'ALTER TABLE {table_name} ADD COLUMN {column_name} TEXT'
+    
+    print(f'Executing SQL: {sql}')
+    
+    with engine.connect() as conn:
+        with conn.begin():
+            conn.execute(text(sql))
+            print(f'Successfully added {column_name} column to {table_name} table')
+    
+    # Verify the column was added
+    inspector = inspect(engine)
+    columns = inspector.get_columns(table_name)
+    column_names = [col['name'] for col in columns]
+    
+    if column_name in column_names:
+        print('✓ Verification successful: error_message column exists')
+        sys.exit(0)
+    else:
+        print('✗ Verification failed: error_message column not found')
+        sys.exit(1)
+        
+except ProgrammingError as e:
+    if 'already exists' in str(e).lower():
+        print('Column error_message already exists (caught exception)')
+        sys.exit(0)
+    else:
+        print(f'Database error adding column: {e}')
+        sys.exit(1)
+except Exception as e:
+    print(f'Migration failed with error: {e}')
+    sys.exit(1)
+    "
+    
+    migration_result=$?
+    
+    if [ $migration_result -eq 0 ]; then
         log_info "Migration completed successfully"
         return 0
     else
@@ -180,8 +244,10 @@ main() {
         wait_for_database
         
         # Check if migration is needed and run it
+        set +e  # Temporarily disable exit on error for migration check
         needs_migration
         migration_result=$?
+        set -e  # Re-enable exit on error
         
         if [ $migration_result -eq 0 ]; then
             log_info "No migration needed, database schema is up to date"
