@@ -18,7 +18,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { sendMessage, conversation, isLoading } = useChat();
   const { activeProvider } = useLLMProviders();
-  const { data: modelsData } = useAvailableModels(!!activeProvider);
+  // Temporarily disable models loading to fix render loop
+  // const { data: modelsData } = useAvailableModels(!!activeProvider);
+  const modelsData = null;
   const chatUpdates = useChatUpdates();
 
   const scrollToBottom = () => {
@@ -41,7 +43,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
         setSelectedModel(modelsData.models[0]);
       }
     }
-  }, [modelsData, selectedModel]);
+  }, [modelsData]); // Removed selectedModel from dependencies to prevent infinite loop
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
