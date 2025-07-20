@@ -76,6 +76,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: bigshot_celery
+    entrypoint: ["./scripts/docker-entrypoint.sh"]
     command: python -m celery -A celery_app.celery_app worker --loglevel=info --concurrency=4
     environment:
       - FLASK_ENV=production

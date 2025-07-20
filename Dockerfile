@@ -24,6 +24,9 @@ COPY . .
 # Create directory for instance files and logs
 RUN mkdir -p instance logs
 
+# Make entrypoint script executable
+RUN chmod +x scripts/docker-entrypoint.sh
+
 # Expose port
 EXPOSE 5000
 
@@ -35,6 +38,9 @@ ENV PYTHONPATH=/app
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import requests; requests.get('http://localhost:5000/api/v1/health', timeout=5)"
+
+# Set entrypoint to handle database migrations
+ENTRYPOINT ["./scripts/docker-entrypoint.sh"]
 
 # Default command
 CMD ["python", "run.py"]
