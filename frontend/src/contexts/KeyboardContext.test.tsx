@@ -28,9 +28,9 @@ describe('KeyboardContext - Fixed infinite loop bug', () => {
       );
     });
 
-    // In the fixed version, this should render only a reasonable number of times
-    // If the bug were still present, renderCount would be very high
-    expect(renderCount).toBeLessThan(10);
+    // In the fixed version, the TestComponent should render only once
+    // This ensures that the infinite loop bug has been fixed
+    expect(renderCount).toBe(1);
   });
 
   it('should initialize without throwing errors', () => {
