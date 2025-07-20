@@ -5,7 +5,7 @@ import { KeyboardProvider } from './KeyboardContext';
 // Mock the KeyboardContextDefinition to avoid circular dependencies  
 vi.mock('./KeyboardContextDefinition', () => ({
   KeyboardContext: {
-    Provider: ({ children, value }: any) => children
+    Provider: ({ children }: { children: React.ReactNode }) => children
   }
 }));
 

@@ -1,9 +1,15 @@
 import { describe, it, expect } from 'vitest';
 
+// Define a type for the job object to help TypeScript understand the shape
+type JobWithArrays = {
+  target_domains?: string[] | null | undefined;
+  sources?: string[] | null | undefined;
+};
+
 // Test the specific logic we fixed for handling undefined/null arrays
 describe('JobStatusPanel - Array handling fix', () => {
   it('should handle undefined arrays safely', () => {
-    const job = {
+    const job: JobWithArrays = {
       target_domains: undefined,
       sources: undefined
     };
@@ -22,7 +28,7 @@ describe('JobStatusPanel - Array handling fix', () => {
   });
 
   it('should handle null arrays safely', () => {
-    const job = {
+    const job: JobWithArrays = {
       target_domains: null,
       sources: null
     };
@@ -40,7 +46,7 @@ describe('JobStatusPanel - Array handling fix', () => {
   });
 
   it('should handle empty arrays correctly', () => {
-    const job = {
+    const job: JobWithArrays = {
       target_domains: [],
       sources: []
     };
@@ -58,7 +64,7 @@ describe('JobStatusPanel - Array handling fix', () => {
   });
 
   it('should handle normal arrays correctly', () => {
-    const job = {
+    const job: JobWithArrays = {
       target_domains: ['example.com', 'test.com'],
       sources: ['crt.sh', 'virustotal']
     };
@@ -76,7 +82,7 @@ describe('JobStatusPanel - Array handling fix', () => {
   });
 
   it('should handle non-array values safely', () => {
-    const job = {
+    const job: Record<string, unknown> = {
       target_domains: 'not-an-array',
       sources: 123
     };

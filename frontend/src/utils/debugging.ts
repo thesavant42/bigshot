@@ -18,35 +18,35 @@ export class FrontendDebugger {
     console.log(`%c${this.PREFIX} ${message}`, this.STYLES.header);
   }
 
-  static success(message: string, data?: any): void {
+  static success(message: string, data?: unknown): void {
     console.log(`%c${this.PREFIX} ✓ ${message}`, this.STYLES.success);
     if (data !== undefined) {
       console.log(data);
     }
   }
 
-  static warning(message: string, data?: any): void {
+  static warning(message: string, data?: unknown): void {
     console.warn(`%c${this.PREFIX} ⚠ ${message}`, this.STYLES.warning);
     if (data !== undefined) {
       console.warn(data);
     }
   }
 
-  static error(message: string, error?: any): void {
+  static error(message: string, error?: unknown): void {
     console.error(`%c${this.PREFIX} ✗ ${message}`, this.STYLES.error);
     if (error !== undefined) {
       console.error(error);
     }
   }
 
-  static info(message: string, data?: any): void {
+  static info(message: string, data?: unknown): void {
     console.log(`%c${this.PREFIX} ${message}`, this.STYLES.info);
     if (data !== undefined) {
       console.log(data);
     }
   }
 
-  static debug(message: string, data?: any): void {
+  static debug(message: string, data?: unknown): void {
     if (this.isDebugMode()) {
       console.log(`%c${this.PREFIX} ${message}`, this.STYLES.debug);
       if (data !== undefined) {
@@ -67,7 +67,7 @@ export class FrontendDebugger {
     console.groupEnd();
   }
 
-  static table(data: any, title?: string): void {
+  static table(data: unknown, title?: string): void {
     if (title) {
       this.info(title);
     }
@@ -113,6 +113,7 @@ export interface EnvironmentInfo {
 }
 
 export function getEnvironmentInfo(): EnvironmentInfo {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const nav = navigator as any; // Type assertion for experimental APIs
   
   return {
@@ -148,7 +149,7 @@ export interface ConfigValidationResult {
   isValid: boolean;
   errors: string[];
   warnings: string[];
-  config: Record<string, any>;
+  config: Record<string, unknown>;
 }
 
 export function validateFrontendConfig(): ConfigValidationResult {
@@ -254,16 +255,20 @@ export class PerformanceMonitor {
 }
 
 // Debug package creation for frontend
-export async function createFrontendDebugInfo(): Promise<Record<string, any>> {
+export async function createFrontendDebugInfo(): Promise<Record<string, unknown>> {
   const debugInfo = {
     timestamp: new Date().toISOString(),
     environment: getEnvironmentInfo(),
     config: validateFrontendConfig(),
     performance: {
       navigation: PerformanceMonitor.getNavigationTiming(),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       memory: (performance as any).memory ? {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         usedJSHeapSize: (performance as any).memory.usedJSHeapSize,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         totalJSHeapSize: (performance as any).memory.totalJSHeapSize,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         jsHeapSizeLimit: (performance as any).memory.jsHeapSizeLimit
       } : undefined
     },
@@ -293,13 +298,13 @@ export async function createFrontendDebugInfo(): Promise<Record<string, any>> {
 }
 
 // Error storage for debugging
-let storedErrors: Array<{timestamp: string, error: any, stack?: string}> = [];
+let storedErrors: Array<{timestamp: string, error: unknown, stack?: string}> = [];
 
-export function storeError(error: any, context?: string): void {
+export function storeError(error: unknown, context?: string): void {
   const errorInfo = {
     timestamp: new Date().toISOString(),
-    error: error.toString(),
-    stack: error.stack,
+    error: error instanceof Error ? error.toString() : String(error),
+    stack: error instanceof Error ? error.stack : undefined,
     context,
     url: window.location.href
   };
@@ -311,10 +316,10 @@ export function storeError(error: any, context?: string): void {
     storedErrors = storedErrors.slice(-50);
   }
   
-  FrontendDebugger.error(`Error stored: ${error.toString()}`, errorInfo);
+  FrontendDebugger.error(`Error stored: ${error instanceof Error ? error.toString() : String(error)}`, errorInfo);
 }
 
-export function getStoredErrors(): Array<{timestamp: string, error: any, stack?: string}> {
+export function getStoredErrors(): Array<{timestamp: string, error: unknown, stack?: string}> {
   return [...storedErrors];
 }
 
@@ -336,7 +341,8 @@ const originalConsole = {
 
 if (import.meta.env.MODE === 'development') {
   ['log', 'warn', 'error', 'info'].forEach(level => {
-    (console as any)[level] = function(...args: any[]) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (console as any)[level] = function(...args: unknown[]) {
       // Store in history
       consoleHistory.push({
         timestamp: new Date().toISOString(),
@@ -352,6 +358,7 @@ if (import.meta.env.MODE === 'development') {
       }
       
       // Call original
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (originalConsole as any)[level].apply(console, args);
     };
   });
