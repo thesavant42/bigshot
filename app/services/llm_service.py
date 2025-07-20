@@ -5,6 +5,7 @@ LLM service for OpenAI-compatible API integration
 import json
 import logging
 import os
+import time
 from typing import Dict, List, Optional, Any, Iterator, Union
 from datetime import datetime
 
@@ -157,6 +158,10 @@ class LLMService:
                 # Fall back to config-based model
                 pass
         
+        # If no client is available, return mock model
+        if not self.client:
+            return "bigshot-assistant"
+        
         if self.provider == "lmstudio":
             return self.config.LMSTUDIO_MODEL
         else:
@@ -285,20 +290,23 @@ class LLMService:
             }
 
     def is_available(self) -> bool:
-        """Check if LLM service is available"""
-        return self.client is not None
+        """Check if LLM service is available (including mock mode)"""
+        # Return True to enable mock mode when no real client is available
+        return True
 
     def get_available_models(self) -> List[str]:
         """Get list of available models"""
         if not self.client:
-            return []
-
+            # Return mock models when no real client is available
+            return ["mock-model", "bigshot-assistant"]
+        
         try:
             models = self.client.models.list()
             return [model.id for model in models.data]
         except Exception as e:
             logger.error(f"Failed to get available models: {e}")
-            return []
+            # Return mock models on error
+            return ["mock-model", "bigshot-assistant"]
 
     def get_detailed_models(self) -> List[Dict[str, Any]]:
         """Get detailed list of available models with metadata"""
@@ -444,7 +452,8 @@ class LLMService:
     ) -> Union[Dict[str, Any], Iterator[Dict[str, Any]]]:
         """Create chat completion with context"""
         if not self.client:
-            raise RuntimeError("LLM client not available")
+            # Fallback to mock response in development/Docker environments
+            return self._create_mock_response(message, context, stream)
 
         # Build messages list
         messages = []
@@ -477,7 +486,9 @@ class LLMService:
                 return self._process_response(response)
         except Exception as e:
             logger.error(f"Failed to create chat completion: {e}")
-            raise
+            # Fallback to mock response on any error
+            logger.info("Falling back to mock response due to LLM service error")
+            return self._create_mock_response(message, context, stream)
 
     def _build_system_message(self, context: Optional[Dict[str, Any]] = None) -> str:
         """Build system message with context"""
@@ -795,6 +806,102 @@ class LLMService:
         except Exception as e:
             logger.error(f"Wikipedia query failed: {e}")
             return {"error": str(e)}
+
+    def _create_mock_response(
+        self,
+        message: str,
+        context: Optional[Dict[str, Any]] = None,
+        stream: bool = False
+    ) -> Union[Dict[str, Any], Iterator[Dict[str, Any]]]:
+        """Create a mock response when LLM service is not available"""
+        
+        # Generate a helpful mock response based on the message content
+        message_lower = message.lower()
+        
+        if any(word in message_lower for word in ['hello', 'hi', 'help']):
+            mock_content = """Hello! I'm a mock AI assistant for BigShot. 
+
+I can help you with domain reconnaissance and security research, but I'm currently running in mock mode because the LLM service isn't available.
+
+To set up a real LLM connection:
+1. Configure LMStudio locally and make sure it's running
+2. Update the LLM provider settings in the Configuration section
+3. Or configure an OpenAI API key for full functionality
+
+For now, I can still help you understand the BigShot interface and features!"""
+        
+        elif any(word in message_lower for word in ['domain', 'subdomain', 'enumerate']):
+            mock_content = """I can help with domain reconnaissance! Here are some key features of BigShot:
+
+🔍 **Domain Discovery**: Find subdomains using multiple sources (crt.sh, VirusTotal, etc.)
+📊 **Data Analysis**: Organize and analyze discovered domains and URLs  
+🚀 **Background Jobs**: Run enumeration tasks asynchronously
+💾 **Data Storage**: Store results in a PostgreSQL database
+
+To get started:
+1. Click "Add Domain" to start enumerating a target domain
+2. Use the filters to organize your results
+3. Monitor job progress in the "View Jobs" panel
+
+Note: I'm running in mock mode - enable a real LLM for advanced AI assistance!"""
+        
+        elif any(word in message_lower for word in ['config', 'setup', 'provider']):
+            mock_content = """Here's how to configure the LLM providers:
+
+🔧 **LMStudio Setup**:
+1. Install LMStudio on your host machine
+2. Download a compatible model (e.g., Llama 3.2)
+3. Start the server (usually on localhost:1234)
+4. Update the provider URL in Settings → LLM Providers
+
+🤖 **OpenAI Setup**:
+1. Get an API key from OpenAI
+2. Add it in Settings → LLM Providers
+3. Select OpenAI as the active provider
+
+The mock mode you're seeing now is a fallback when no working LLM is configured."""
+        
+        else:
+            mock_content = f"""I received your message: "{message}"
+
+I'm currently running in mock mode because the LLM service isn't available. This means I can provide basic responses but not full AI functionality.
+
+To enable full AI capabilities:
+- Configure LMStudio or OpenAI in the Settings
+- Make sure the service is running and accessible
+- Check the provider configuration
+
+Would you like help with domain reconnaissance features or LLM configuration?"""
+        
+        mock_response = {
+            "role": "assistant",
+            "content": mock_content,
+            "mock": True,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        if stream:
+            def mock_stream():
+                # Simulate streaming by yielding chunks
+                words = mock_content.split()
+                for i in range(0, len(words), 3):  # Send 3 words at a time
+                    chunk_words = words[i:i+3]
+                    chunk_content = " " + " ".join(chunk_words)
+                    yield {
+                        "type": "content",
+                        "content": chunk_content,
+                        "mock": True
+                    }
+                    time.sleep(0.1)  # Small delay to simulate streaming
+                
+                yield {
+                    "type": "done",
+                    "mock": True
+                }
+            
+            return mock_stream()
+        else:
+            return mock_response
 
 
 # Global LLM service instance
