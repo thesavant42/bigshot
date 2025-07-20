@@ -34,7 +34,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
             setError(null);
           }
         }
-      } catch (error) {
+      } catch (err) {
+        console.error('Failed to check chat service availability:', err);
         if (isMountedRef.current) {
           setIsServiceAvailable(false);
           setError("Failed to connect to chat service");
@@ -69,7 +70,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
       if (!status.available) {
         setError("Chat service is not available");
       }
-    } catch (error) {
+    } catch (err) {
+      console.error('Failed to retry chat service connection:', err);
       setIsServiceAvailable(false);
       setError("Failed to connect to chat service");
     }
