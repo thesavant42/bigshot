@@ -73,7 +73,7 @@ export const KeyboardProvider: React.FC<KeyboardProviderProps> = ({ children }) 
 
     // Directly set shortcuts without using addShortcut to avoid state change cycle
     setShortcuts(defaultShortcuts);
-  }, [showHelp, hideHelp]); // Include memoized functions
+  }, []); // Empty dependency array - only run once on mount
 
   return (
     <KeyboardContext.Provider value={{

@@ -83,10 +83,10 @@ const JobStatusPanel: React.FC<JobStatusPanelProps> = ({ onClose }) => {
                         {getStatusIcon(job.status)}
                         <div>
                           <div className="font-medium text-white">
-                            {job.type} - {job.target_domains?.join(', ') || 'No domains'}
+                            {job.type} - {Array.isArray(job.target_domains) ? job.target_domains.join(', ') : 'No domains'}
                           </div>
                           <div className="text-sm text-gray-400">
-                            Sources: {job.sources?.join(', ') || 'No sources'}
+                            Sources: {Array.isArray(job.sources) ? job.sources.join(', ') : 'No sources'}
                           </div>
                         </div>
                       </div>
