@@ -62,6 +62,17 @@ class ChatService {
       // Note: EventSource doesn't support custom headers, so we'll use fetch with SSE
       const eventSource = new EventSource(`${this.baseURL}/chat/messages?stream=true`);
       
+      // Get active model from provider
+      let model: string | undefined;
+      try {
+        const response = await axios.get(`${this.baseURL}/llm-providers/active`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        model = response.data?.data?.model;
+      } catch (error) {
+        console.warn('Could not get active model for streaming chat:', error);
+      }
+
       // Send the message via POST first
       await axios.post(
         `${this.baseURL}/chat/messages`,
@@ -70,6 +81,7 @@ class ChatService {
           conversation_history: conversationHistory,
           context,
           stream: true,
+          model, // Include model field
         },
         {
           headers: {
@@ -81,6 +93,17 @@ class ChatService {
       
       return eventSource;
     } else {
+      // Get active model from provider for non-streaming requests
+      let model: string | undefined;
+      try {
+        const modelResponse = await axios.get(`${this.baseURL}/llm-providers/active`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        model = modelResponse.data?.data?.model;
+      } catch (error) {
+        console.warn('Could not get active model for chat:', error);
+      }
+
       const response = await axios.post(
         `${this.baseURL}/chat/messages`,
         {
@@ -88,6 +111,7 @@ class ChatService {
           conversation_history: conversationHistory,
           context,
           stream: false,
+          model, // Include model field
         },
         {
           headers: {
@@ -206,6 +230,20 @@ class ChatService {
     const token = localStorage.getItem('auth_token');
     
     try {
+      // Get active model from provider for streaming requests
+      let model: string | undefined;
+      try {
+        const modelResponse = await fetch(`${this.baseURL}/llm-providers/active`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (modelResponse.ok) {
+          const modelData = await modelResponse.json();
+          model = modelData?.data?.model;
+        }
+      } catch (error) {
+        console.warn('Could not get active model for streaming chat:', error);
+      }
+
       const response = await fetch(`${this.baseURL}/chat/messages`, {
         method: 'POST',
         headers: {
@@ -217,6 +255,7 @@ class ChatService {
           conversation_history: conversationHistory,
           context,
           stream: true,
+          model, // Include model field
         }),
       });
 

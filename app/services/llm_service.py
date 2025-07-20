@@ -249,11 +249,17 @@ class LLMService:
             end_time = datetime.now()
             response_time = (end_time - start_time).total_seconds()
 
+            # Safely extract response content
+            test_content = "No response"
+            if test_response and test_response.choices and len(test_response.choices) > 0:
+                if test_response.choices[0].message and test_response.choices[0].message.content:
+                    test_content = test_response.choices[0].message.content.strip()
+
             result = {
                 "success": True,
                 "response_time": response_time,
                 "models_available": model_list,
-                "test_response": test_response.choices[0].message.content.strip(),
+                "test_response": test_content,
                 "provider_info": {
                     "name": provider_config.name,
                     "provider": provider_config.provider,
@@ -434,6 +440,7 @@ class LLMService:
         conversation_history: List[Dict[str, str]] = None,
         context: Optional[Dict[str, Any]] = None,
         stream: bool = False,
+        model: Optional[str] = None,  # Add model parameter
     ) -> Union[Dict[str, Any], Iterator[Dict[str, Any]]]:
         """Create chat completion with context"""
         if not self.client:
@@ -461,7 +468,7 @@ class LLMService:
 
         try:
             response = self.generate_response(
-                messages=messages, tools=tools, stream=stream
+                messages=messages, tools=tools, stream=stream, model=model  # Pass model parameter
             )
 
             if stream:

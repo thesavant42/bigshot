@@ -22,18 +22,30 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
   useEffect(() => {
     isMountedRef.current = true;
     
-    // Temporarily disable chat service calls to prevent render loop
-    // TODO: Re-enable once render loop issue is fully resolved
-    const timeoutId = setTimeout(() => {
-      if (isMountedRef.current) {
-        setIsServiceAvailable(false); // Set to false for now to show fallback UI
-        setError("Chat service temporarily disabled to ensure UI stability");
+    // Check chat service availability
+    const checkServiceAvailability = async () => {
+      try {
+        if (isMountedRef.current) {
+          const status = await chatService.getStatus();
+          setIsServiceAvailable(status.available);
+          if (!status.available) {
+            setError("Chat service is not available");
+          } else {
+            setError(null);
+          }
+        }
+      } catch (error) {
+        if (isMountedRef.current) {
+          setIsServiceAvailable(false);
+          setError("Failed to connect to chat service");
+        }
       }
-    }, 100);
+    };
+
+    checkServiceAvailability();
 
     return () => {
       isMountedRef.current = false;
-      clearTimeout(timeoutId);
     };
   }, []);
 
@@ -48,8 +60,19 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
   }, [messages]);
 
   const retryConnection = async () => {
-    setError("Chat service is temporarily disabled for UI stability. Authentication and core features are working properly.");
+    setError(null);
     setIsServiceAvailable(false);
+    
+    try {
+      const status = await chatService.getStatus();
+      setIsServiceAvailable(status.available);
+      if (!status.available) {
+        setError("Chat service is not available");
+      }
+    } catch (error) {
+      setIsServiceAvailable(false);
+      setError("Failed to connect to chat service");
+    }
   };
 
   const scrollToBottom = () => {
@@ -171,7 +194,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ className = '' }) => {
               Chat Service Temporarily Disabled
             </h3>
             <p className="text-gray-600">
-              Chat functionality is temporarily disabled to ensure UI stability. Core reconnaissance features are fully functional.
+              Chat functionality is currently unavailable. Please check your LLM provider configuration.
             </p>
             <button
               onClick={retryConnection}

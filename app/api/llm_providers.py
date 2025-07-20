@@ -4,6 +4,7 @@ LLM Provider configuration management endpoints
 
 import json
 import logging
+from datetime import datetime
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app import db
@@ -508,6 +509,20 @@ def test_llm_provider(provider_id):
 
         # Test the provider connection
         test_result = llm_service.test_provider_connection(provider_config)
+        
+        # Ensure test_result is not None and has the expected structure
+        if test_result is None:
+            test_result = {
+                "success": False,
+                "error": "Test returned no result",
+                "provider_info": {
+                    "name": provider_config.name,
+                    "provider": provider_config.provider,
+                    "base_url": provider_config.base_url,
+                    "model": provider_config.model
+                },
+                "timestamp": datetime.now().isoformat()
+            }
 
         # Create audit log
         audit_log = LLMProviderAuditLog(
