@@ -292,8 +292,8 @@ class TestEnvironmentValidation:
     def test_log_environment_validation_basic(self):
         """Test basic environment validation"""
         with patch.dict(os.environ, {
-            'SECRET_KEY': 'test-secret',
-            'JWT_SECRET_KEY': 'test-jwt-secret'
+            'SECRET_KEY': 'this-is-a-very-long-secret-key',  # Updated to meet 16+ char requirement
+            'JWT_SECRET_KEY': 'this-is-a-very-long-jwt-secret'  # Updated to meet 16+ char requirement
         }, clear=True):
             # Should not raise an exception
             result = log_environment_validation()
