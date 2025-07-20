@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import type { KeyboardShortcut } from '../hooks/useKeyboard';
 import { KeyboardContext } from './KeyboardContextDefinition';
 
@@ -10,16 +10,16 @@ export const KeyboardProvider: React.FC<KeyboardProviderProps> = ({ children }) 
   const [shortcuts, setShortcuts] = useState<KeyboardShortcut[]>([]);
   const [isHelpVisible, setIsHelpVisible] = useState(false);
 
-  const addShortcut = (shortcut: KeyboardShortcut) => {
+  const addShortcut = useCallback((shortcut: KeyboardShortcut) => {
     setShortcuts(prev => [...prev.filter(s => s.key !== shortcut.key), shortcut]);
-  };
+  }, []);
 
-  const removeShortcut = (key: string) => {
+  const removeShortcut = useCallback((key: string) => {
     setShortcuts(prev => prev.filter(s => s.key !== key));
-  };
+  }, []);
 
-  const showHelp = () => setIsHelpVisible(true);
-  const hideHelp = () => setIsHelpVisible(false);
+  const showHelp = useCallback(() => setIsHelpVisible(true), []);
+  const hideHelp = useCallback(() => setIsHelpVisible(false), []);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -53,9 +53,9 @@ export const KeyboardProvider: React.FC<KeyboardProviderProps> = ({ children }) 
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [shortcuts, isHelpVisible]);
+  }, [shortcuts, isHelpVisible, showHelp, hideHelp]);
 
-  // Add default shortcuts
+  // Add default shortcuts - only once on mount
   useEffect(() => {
     const defaultShortcuts: KeyboardShortcut[] = [
       {
@@ -71,15 +71,9 @@ export const KeyboardProvider: React.FC<KeyboardProviderProps> = ({ children }) 
       },
     ];
 
-    // Use a separate function to avoid recreating the function reference
-    const initializeShortcuts = () => {
-      defaultShortcuts.forEach((shortcut) => {
-        setShortcuts(prev => [...prev.filter(s => s.key !== shortcut.key), shortcut]);
-      });
-    };
-
-    initializeShortcuts();
-  }, []); // Only run once on mount to set default shortcuts
+    // Directly set shortcuts without using addShortcut to avoid state change cycle
+    setShortcuts(defaultShortcuts);
+  }, [showHelp, hideHelp]); // Include memoized functions
 
   return (
     <KeyboardContext.Provider value={{
