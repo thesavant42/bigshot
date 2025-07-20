@@ -158,10 +158,7 @@ class LLMService:
                 # Fall back to config-based model
                 pass
         
-        # If no client is available, return mock model
-        if not self.client:
-            return "bigshot-assistant"
-        
+        # Return provider-specific default model regardless of client state (supports testing scenarios)
         if self.provider == "lmstudio":
             return self.config.LMSTUDIO_MODEL
         else:
