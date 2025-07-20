@@ -158,7 +158,7 @@ class LLMService:
                 # Fall back to config-based model
                 pass
         
-        # Check provider configuration even when no client is available
+        # Return provider-specific default model regardless of client state (supports testing scenarios)
         if self.provider == "lmstudio":
             return self.config.LMSTUDIO_MODEL
         else:
