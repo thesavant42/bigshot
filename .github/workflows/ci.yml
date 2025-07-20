@@ -179,12 +179,28 @@ jobs:
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bigshot_test
         REDIS_URL: redis://localhost:6379/0
       run: |
-        COLLECT=$(python -m pytest tests/ -k "integration" --collect-only | grep -E 'collected 0 items')
-        if [ -n "$COLLECT" ]; then
-          echo "No integration tests found. Skipping."
+        echo "🔍 Checking for integration tests..."
+        set +e  # Allow commands to fail without exiting
+        COLLECT_OUTPUT=$(python -m pytest tests/ -k "integration" --collect-only 2>&1)
+        COLLECT_EXIT_CODE=$?
+        set -e  # Re-enable exit on error
+        
+        echo "📊 Test collection output:"
+        echo "$COLLECT_OUTPUT"
+        
+        if echo "$COLLECT_OUTPUT" | grep -q -E '(collected 0 items|no tests collected)'; then
+          echo "✅ No integration tests found. Skipping integration test execution."
           exit 0
+        elif [ $COLLECT_EXIT_CODE -eq 5 ]; then
+          echo "✅ No integration tests found (pytest exit code 5). Skipping integration test execution."
+          exit 0
+        elif [ $COLLECT_EXIT_CODE -ne 0 ]; then
+          echo "❌ Failed to collect integration tests (exit code: $COLLECT_EXIT_CODE)"
+          echo "$COLLECT_OUTPUT"
+          exit 1
         else
-          python -m pytest tests/ -v -k "integration" --tb=short
+          echo "🚀 Running integration tests..."
+          python -m pytest tests/ -v -k "integration" --tb=short || (echo "❌ Integration tests failed"; exit 1)
         fi
 
   performance-tests:
@@ -218,18 +234,46 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
+    - name: Create test environment file
+      run: |
+        cat > .env.test << EOF
+        FLASK_ENV=testing
+        DATABASE_URL=postgresql://postgres:postgres@localhost:5432/bigshot_test
+        REDIS_URL=redis://localhost:6379/0
+        SECRET_KEY=test-secret-key
+        JWT_SECRET_KEY=test-jwt-secret
+        CELERY_BROKER_URL=redis://localhost:6379/0
+        CELERY_RESULT_BACKEND=redis://localhost:6379/0
+        EOF
+
     - name: Run performance tests if present
       env:
         FLASK_ENV: testing
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/bigshot_test
         REDIS_URL: redis://localhost:6379/0
       run: |
-        COLLECT=$(python -m pytest tests/ -k "performance" --collect-only | grep -E 'collected 0 items')
-        if [ -n "$COLLECT" ]; then
-          echo "No performance tests found. Skipping."
+        echo "🔍 Checking for performance tests..."
+        set +e  # Allow commands to fail without exiting
+        COLLECT_OUTPUT=$(python -m pytest tests/ -k "performance" --collect-only 2>&1)
+        COLLECT_EXIT_CODE=$?
+        set -e  # Re-enable exit on error
+        
+        echo "📊 Test collection output:"
+        echo "$COLLECT_OUTPUT"
+        
+        if echo "$COLLECT_OUTPUT" | grep -q -E '(collected 0 items|no tests collected)'; then
+          echo "✅ No performance tests found. Skipping performance test execution."
           exit 0
+        elif [ $COLLECT_EXIT_CODE -eq 5 ]; then
+          echo "✅ No performance tests found (pytest exit code 5). Skipping performance test execution."
+          exit 0
+        elif [ $COLLECT_EXIT_CODE -ne 0 ]; then
+          echo "❌ Failed to collect performance tests (exit code: $COLLECT_EXIT_CODE)"
+          echo "$COLLECT_OUTPUT"
+          exit 1
         else
-          python -m pytest tests/ -v -k "performance" --tb=short
+          echo "🚀 Running performance tests..."
+          python -m pytest tests/ -v -k "performance" --tb=short || (echo "❌ Performance tests failed"; exit 1)
         fi
 
   ui-health-tests:
