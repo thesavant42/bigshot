@@ -18,6 +18,131 @@ from pathlib import Path
 from typing import Dict, List, Set, Optional, Any
 
 
+class ConsoleColors:
+    """ANSI color codes for enhanced console output"""
+    RESET = '\033[0m'
+    BOLD = '\033[1m'
+    
+    # Standard colors
+    BLACK = '\033[30m'
+    RED = '\033[31m'
+    GREEN = '\033[32m'
+    YELLOW = '\033[33m'
+    BLUE = '\033[34m'
+    MAGENTA = '\033[35m'
+    CYAN = '\033[36m'
+    WHITE = '\033[37m'
+    
+    # Bright colors
+    BRIGHT_RED = '\033[91m'
+    BRIGHT_GREEN = '\033[92m'
+    BRIGHT_YELLOW = '\033[93m'
+    BRIGHT_BLUE = '\033[94m'
+    BRIGHT_MAGENTA = '\033[95m'
+    BRIGHT_CYAN = '\033[96m'
+    
+    @classmethod
+    def colorize(cls, text: str, color: str, bold: bool = False) -> str:
+        """Colorize text for console output"""
+        if not sys.stdout.isatty():
+            return text  # No colors if not a terminal
+        
+        prefix = cls.BOLD if bold else ''
+        return f"{prefix}{color}{text}{cls.RESET}"
+    
+    @classmethod
+    def success(cls, text: str) -> str:
+        return cls.colorize(text, cls.BRIGHT_GREEN, bold=True)
+    
+    @classmethod
+    def error(cls, text: str) -> str:
+        return cls.colorize(text, cls.BRIGHT_RED, bold=True)
+    
+    @classmethod
+    def warning(cls, text: str) -> str:
+        return cls.colorize(text, cls.BRIGHT_YELLOW, bold=True)
+    
+    @classmethod
+    def info(cls, text: str) -> str:
+        return cls.colorize(text, cls.BRIGHT_CYAN)
+    
+    @classmethod
+    def debug(cls, text: str) -> str:
+        return cls.colorize(text, cls.CYAN)
+
+
+def print_debug_header(title: str, char: str = "=", width: int = 60):
+    """Print a formatted debug section header"""
+    header = f" {title} ".center(width, char)
+    print(ConsoleColors.info(header))
+
+
+def print_debug_status(label: str, status: str, success: bool = True, details: str = None):
+    """Print a formatted status line with color coding"""
+    if success:
+        symbol = "✓"
+        status_colored = ConsoleColors.success(status)
+    else:
+        symbol = "✗"
+        status_colored = ConsoleColors.error(status)
+    
+    print(f"{symbol} {label}: {status_colored}")
+    if details:
+        print(f"   {ConsoleColors.debug(details)}")
+
+
+def print_debug_warning(message: str, details: str = None):
+    """Print a formatted warning message"""
+    print(f"⚠  {ConsoleColors.warning(message)}")
+    if details:
+        print(f"   {ConsoleColors.debug(details)}")
+
+
+def print_debug_section(section_name: str):
+    """Print a formatted section separator"""
+    print(f"\n{ConsoleColors.info('===')} {ConsoleColors.colorize(section_name, ConsoleColors.BRIGHT_BLUE, bold=True)} {ConsoleColors.info('===')}")
+
+
+def defensive_env_check(var_name: str, required: bool = True, validation_func=None) -> tuple[bool, str, any]:
+    """
+    Defensive environment variable validation with detailed feedback
+    
+    Args:
+        var_name: Environment variable name
+        required: Whether the variable is required
+        validation_func: Optional function to validate the value
+        
+    Returns:
+        Tuple of (is_valid, message, value)
+    """
+    value = os.getenv(var_name)
+    
+    # Check if variable exists
+    if value is None:
+        if required:
+            return False, f"Required environment variable {var_name} is not set", None
+        else:
+            return True, f"Optional environment variable {var_name} is not set", None
+    
+    # Check if variable is empty
+    if value.strip() == '':
+        if required:
+            return False, f"Required environment variable {var_name} is empty", value
+        else:
+            return True, f"Optional environment variable {var_name} is empty", value
+    
+    # Custom validation if provided
+    if validation_func:
+        try:
+            is_valid = validation_func(value)
+            if not is_valid:
+                return False, f"Environment variable {var_name} failed validation", value
+        except Exception as e:
+            return False, f"Environment variable {var_name} validation error: {e}", value
+    
+    return True, f"Environment variable {var_name} is valid", value
+
+
 class EnhancedDebugFormatter(logging.Formatter):
     """Enhanced formatter for debug logging with additional context"""
     
@@ -223,6 +348,7 @@ def log_environment_validation():
     env_logger = logging.getLogger('bigshot.env')
     
     env_logger.info("=== ENVIRONMENT VARIABLE VALIDATION ===", extra={'debug_zone': 'env'})
+    print_debug_header("ENVIRONMENT VARIABLE VALIDATION")
     
     # Required environment variables for different deployment modes
     required_vars = {
@@ -240,70 +366,241 @@ def log_environment_validation():
     }
     
     validation_results = {}
+    critical_issues = []
     
-    # Check basic required variables
-    for category, vars_list in required_vars.items():
-        validation_results[category] = {}
-        for var in vars_list:
-            value = os.getenv(var)
-            is_set = value is not None and value.strip() != ''
-            
-            # Log with appropriate redaction
-            if var in sensitive_keys:
-                display_value = '***SET***' if is_set else 'NOT SET'
-            else:
-                display_value = value if is_set else 'NOT SET'
-            
-            validation_results[category][var] = is_set
-            status = "✓" if is_set else "✗"
-            env_logger.info(f"{status} {var}: {display_value}", extra={'debug_zone': 'env'})
+    # Check basic required variables with defensive validation
+    print_debug_section("BASIC CONFIGURATION")
     
-    # Check current LLM provider configuration
+    # SECRET_KEY validation
+    is_valid, message, value = defensive_env_check('SECRET_KEY', required=True, 
+                                                   validation_func=lambda x: len(x) >= 16)
+    validation_results.setdefault('basic', {})['SECRET_KEY'] = is_valid
+    if is_valid:
+        print_debug_status("SECRET_KEY", "SET (length OK)", True)
+        env_logger.info("✓ SECRET_KEY: ***SET*** (adequate length)", extra={'debug_zone': 'env'})
+    else:
+        print_debug_status("SECRET_KEY", message, False)
+        env_logger.error(f"✗ SECRET_KEY: {message}", extra={'debug_zone': 'env'})
+        if not value:
+            critical_issues.append("SECRET_KEY not set - security risk!")
+        elif len(value) < 16:
+            critical_issues.append("SECRET_KEY too short - use at least 16 characters!")
+    
+    # JWT_SECRET_KEY validation  
+    is_valid, message, value = defensive_env_check('JWT_SECRET_KEY', required=True,
+                                                   validation_func=lambda x: len(x) >= 16)
+    validation_results['basic']['JWT_SECRET_KEY'] = is_valid
+    if is_valid:
+        print_debug_status("JWT_SECRET_KEY", "SET (length OK)", True)
+        env_logger.info("✓ JWT_SECRET_KEY: ***SET*** (adequate length)", extra={'debug_zone': 'env'})
+    else:
+        print_debug_status("JWT_SECRET_KEY", message, False)
+        env_logger.error(f"✗ JWT_SECRET_KEY: {message}", extra={'debug_zone': 'env'})
+        if not value:
+            critical_issues.append("JWT_SECRET_KEY not set - authentication will fail!")
+        elif len(value) < 16:
+            critical_issues.append("JWT_SECRET_KEY too short - use at least 16 characters!")
+    
+    # Database configuration validation
+    print_debug_section("DATABASE CONFIGURATION")
+    
+    is_valid, message, db_url = defensive_env_check('DATABASE_URL', required=False)
+    validation_results.setdefault('database', {})['DATABASE_URL'] = is_valid
+    if is_valid and db_url:
+        # Validate database URL format
+        if db_url.startswith(('postgresql://', 'sqlite:///')):
+            print_debug_status("DATABASE_URL", "CONFIGURED", True, f"Type: {db_url.split('://')[0]}")
+            env_logger.info(f"✓ DATABASE_URL: configured ({db_url.split('://')[0]})", extra={'debug_zone': 'env'})
+        else:
+            print_debug_status("DATABASE_URL", "INVALID FORMAT", False, "Must start with postgresql:// or sqlite:///")
+            env_logger.warning("DATABASE_URL has unexpected format", extra={'debug_zone': 'env'})
+    else:
+        print_debug_status("DATABASE_URL", "NOT SET (using default SQLite)", True)
+        env_logger.info("DATABASE_URL: not set (will use default SQLite)", extra={'debug_zone': 'env'})
+    
+    # Redis configuration validation
+    print_debug_section("REDIS CONFIGURATION")
+    
+    is_valid, message, redis_url = defensive_env_check('REDIS_URL', required=False,
+                                                       validation_func=lambda x: x.startswith('redis://'))
+    validation_results.setdefault('redis', {})['REDIS_URL'] = is_valid
+    if is_valid and redis_url:
+        print_debug_status("REDIS_URL", "CONFIGURED", True, redis_url)
+        env_logger.info(f"✓ REDIS_URL: {redis_url}", extra={'debug_zone': 'env'})
+    else:
+        if redis_url and not redis_url.startswith('redis://'):
+            print_debug_status("REDIS_URL", "INVALID FORMAT", False, "Must start with redis://")
+            env_logger.error("REDIS_URL: invalid format", extra={'debug_zone': 'env'})
+        else:
+            print_debug_status("REDIS_URL", "NOT SET (using default)", True)
+            env_logger.info("REDIS_URL: not set (will use default)", extra={'debug_zone': 'env'})
+    
+    # LLM Provider configuration validation
+    print_debug_section("LLM PROVIDER CONFIGURATION")
+    
     llm_provider = os.getenv('LLM_PROVIDER', 'openai').lower()
+    print_debug_status("LLM_PROVIDER", llm_provider, True)
     env_logger.info(f"LLM Provider: {llm_provider}", extra={'debug_zone': 'env'})
     
     if llm_provider == 'openai':
-        if not validation_results.get('llm_openai', {}).get('OPENAI_API_KEY', False):
-            env_logger.warning("OpenAI provider selected but OPENAI_API_KEY not configured", 
+        is_valid, message, api_key = defensive_env_check('OPENAI_API_KEY', required=True,
+                                                        validation_func=lambda x: x.startswith('sk-'))
+        validation_results.setdefault('llm_openai', {})['OPENAI_API_KEY'] = is_valid
+        if is_valid:
+            print_debug_status("OPENAI_API_KEY", "SET (format OK)", True)
+            env_logger.info("✓ OPENAI_API_KEY: ***SET*** (valid format)", extra={'debug_zone': 'env'})
+        else:
+            print_debug_status("OPENAI_API_KEY", message, False)
+            env_logger.warning(f"OpenAI provider selected but OPENAI_API_KEY: {message}", 
                              extra={'debug_zone': 'env'})
+            
     elif llm_provider == 'lmstudio':
-        lmstudio_base = os.getenv('LMSTUDIO_API_BASE', 'http://localhost:1234/v1')
-        env_logger.info(f"LMStudio API Base: {lmstudio_base}", extra={'debug_zone': 'env'})
+        is_valid, message, lmstudio_base = defensive_env_check('LMSTUDIO_API_BASE', required=False,
+                                                              validation_func=lambda x: x.startswith('http'))
+        validation_results.setdefault('llm_lmstudio', {})['LMSTUDIO_API_BASE'] = is_valid
+        final_base = lmstudio_base or 'http://localhost:1234/v1'
+        print_debug_status("LMSTUDIO_API_BASE", final_base, True)
+        env_logger.info(f"LMStudio API Base: {final_base}", extra={'debug_zone': 'env'})
     
     # Log deployment environment detection
+    print_debug_section("DEPLOYMENT ENVIRONMENT")
+    
     flask_env = os.getenv('FLASK_ENV', 'production')
     debug_enabled = flask_env == 'development'
+    print_debug_status("FLASK_ENV", flask_env, True)
+    print_debug_status("DEBUG_MODE", str(debug_enabled), debug_enabled)
     env_logger.info(f"Flask Environment: {flask_env}", extra={'debug_zone': 'env'})
     env_logger.info(f"Debug Mode: {debug_enabled}", extra={'debug_zone': 'env'})
     
     # Check Docker-specific environment
+    print_debug_section("CONTAINER ENVIRONMENT")
+    
     if os.getenv('CONTAINER_ID') or os.path.exists('/.dockerenv'):
+        print_debug_status("CONTAINER_STATUS", "RUNNING IN DOCKER", True)
         env_logger.info("Running in Docker container", extra={'debug_zone': 'env'})
         
         # Log Docker-specific variables
         docker_vars = ['HOSTNAME', 'CONTAINER_ID', 'WEB_PORT', 'BACKEND_PORT']
         for var in docker_vars:
-            value = os.getenv(var, 'Not set')
-            env_logger.debug(f"Docker {var}: {value}", extra={'debug_zone': 'env'})
+            is_valid, message, value = defensive_env_check(var, required=False)
+            display_value = value if value else 'Not set'
+            print_debug_status(var, display_value, bool(value))
+            env_logger.debug(f"Docker {var}: {display_value}", extra={'debug_zone': 'env'})
     else:
+        print_debug_status("CONTAINER_STATUS", "LOCAL/NON-CONTAINERIZED", True)
         env_logger.info("Running in local/non-containerized environment", extra={'debug_zone': 'env'})
     
     # Summary of critical configuration issues
-    critical_issues = []
-    if not validation_results.get('basic', {}).get('SECRET_KEY', False):
-        critical_issues.append("SECRET_KEY not set - security risk!")
-    if not validation_results.get('basic', {}).get('JWT_SECRET_KEY', False):
-        critical_issues.append("JWT_SECRET_KEY not set - authentication will fail!")
+    print_debug_section("VALIDATION SUMMARY")
     
     if critical_issues:
+        print_debug_warning("CRITICAL CONFIGURATION ISSUES DETECTED:")
         env_logger.error("CRITICAL CONFIGURATION ISSUES DETECTED:", extra={'debug_zone': 'env'})
         for issue in critical_issues:
+            print(f"  {ConsoleColors.error('•')} {issue}")
             env_logger.error(f"  - {issue}", extra={'debug_zone': 'env'})
     else:
+        print_debug_status("CONFIGURATION", "NO CRITICAL ISSUES", True)
         env_logger.info("✓ No critical configuration issues detected", extra={'debug_zone': 'env'})
     
+    print_debug_header("END ENVIRONMENT VALIDATION")
     env_logger.info("=== END ENVIRONMENT VALIDATION ===", extra={'debug_zone': 'env'})
     return validation_results
+
+
+def log_filesystem_validation():
+    """Validate file system access and Docker mount mapping with defensive checks"""
+    fs_logger = logging.getLogger('bigshot.docker')
+    
+    fs_logger.info("=== FILE SYSTEM VALIDATION ===", extra={'debug_zone': 'docker'})
+    
+    # Get current working directory and validate access
+    try:
+        current_dir = os.getcwd()
+        fs_logger.info(f"✓ Current working directory: {current_dir}", extra={'debug_zone': 'docker'})
+        
+        # Test write permissions in current directory
+        try:
+            test_file = Path(current_dir) / '.bigshot_write_test'
+            test_file.write_text('test')
+            test_file.unlink()
+            fs_logger.info("✓ Write permissions: OK", extra={'debug_zone': 'docker'})
+        except Exception as e:
+            fs_logger.error(f"✗ Write permissions: FAILED - {e}", extra={'debug_zone': 'docker'})
+    except Exception as e:
+        fs_logger.error(f"✗ Working directory access: FAILED - {e}", extra={'debug_zone': 'docker'})
+    
+    # Critical application directories validation
+    critical_dirs = {
+        'app': 'Application source code',
+        'config': 'Configuration files', 
+        'logs': 'Log output directory',
+        'frontend': 'Frontend application files'
+    }
+    
+    for dir_name, description in critical_dirs.items():
+        dir_path = Path(dir_name)
+        if dir_path.exists():
+            try:
+                # Check if directory is readable
+                list(dir_path.iterdir())
+                fs_logger.info(f"✓ {description} ({dir_name}): accessible", extra={'debug_zone': 'docker'})
+                
+                # Log directory stats for debugging
+                stat_info = dir_path.stat()
+                fs_logger.debug(f"  - Mode: {oct(stat_info.st_mode)}, Owner: {stat_info.st_uid}:{stat_info.st_gid}", 
+                              extra={'debug_zone': 'docker'})
+                
+            except Exception as e:
+                fs_logger.error(f"✗ {description} ({dir_name}): access error - {e}", extra={'debug_zone': 'docker'})
+        else:
+            if dir_name == 'logs':
+                # Logs directory is created automatically, this is expected
+                fs_logger.info(f"○ {description} ({dir_name}): will be created", extra={'debug_zone': 'docker'})
+            else:
+                fs_logger.warning(f"⚠ {description} ({dir_name}): missing", extra={'debug_zone': 'docker'})
+    
+    # Docker volume mount validation
+    in_docker = os.path.exists('/.dockerenv') or os.getenv('CONTAINER_ID')
+    if in_docker:
+        fs_logger.info("Docker environment detected - validating mounts...", extra={'debug_zone': 'docker'})
+        
+        # Common Docker mount points to validate
+        docker_mounts = {
+            '/app': 'Application code mount',
+            '/data': 'Data persistence mount',
+            '/logs': 'Log output mount',
+            '/config': 'Configuration mount',
+            '/tmp': 'Temporary files mount'
+        }
+        
+        for mount_path, description in docker_mounts.items():
+            path_obj = Path(mount_path)
+            if path_obj.exists():
+                try:
+                    # Test read access
+                    list(path_obj.iterdir())
+                    
+                    # Test write access if it's a writable mount
+                    if mount_path in ['/logs', '/tmp', '/data']:
+                        test_file = path_obj / '.mount_test'
+                        test_file.write_text('mount test')
+                        test_file.unlink()
+                        fs_logger.info(f"✓ {description} ({mount_path}): read/write OK", extra={'debug_zone': 'docker'})
+                    else:
+                        fs_logger.info(f"✓ {description} ({mount_path}): read OK", extra={'debug_zone': 'docker'})
+                        
+                except PermissionError as e:
+                    fs_logger.error(f"✗ {description} ({mount_path}): permission denied - {e}", extra={'debug_zone': 'docker'})
+                except Exception as e:
+                    fs_logger.error(f"✗ {description} ({mount_path}): access error - {e}", extra={'debug_zone': 'docker'})
+            else:
+                if mount_path in ['/logs', '/tmp']:
+                    fs_logger.info(f"○ {description} ({mount_path}): not mounted (will use local)", extra={'debug_zone': 'docker'})
+                else:
+                    fs_logger.debug(f"○ {description} ({mount_path}): not mounted", extra={'debug_zone': 'docker'})
+    
+    fs_logger.info("=== END FILE SYSTEM VALIDATION ===", extra={'debug_zone': 'docker'})
 
 
 def log_docker_context():

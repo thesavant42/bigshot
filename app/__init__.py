@@ -24,7 +24,7 @@ def create_app(config_class=Config):
     # Initialize centralized logging first
     from app.utils.logging_config import (
         setup_logging, log_service_startup, log_service_connectivity,
-        log_environment_validation, log_docker_context
+        log_environment_validation, log_docker_context, log_filesystem_validation
     )
     
     loggers = setup_logging(app, 'flask-backend')
@@ -32,6 +32,7 @@ def create_app(config_class=Config):
     # Perform environment validation and logging
     log_environment_validation()
     log_docker_context()
+    log_filesystem_validation()
     
     # Log service startup with debugging info
     startup_details = {
@@ -76,6 +77,7 @@ def create_app(config_class=Config):
     from app.api.chat import chat_bp
     from app.api.health import health_bp
     from app.api.llm_providers import llm_providers_bp
+    from app.api.debug import debug_bp
 
     app.register_blueprint(domains_bp, url_prefix="/api/v1")
     app.register_blueprint(jobs_bp, url_prefix="/api/v1")
@@ -84,6 +86,7 @@ def create_app(config_class=Config):
     app.register_blueprint(chat_bp, url_prefix="/api/v1")
     app.register_blueprint(health_bp, url_prefix="/api/v1")
     app.register_blueprint(llm_providers_bp, url_prefix="/api/v1")
+    app.register_blueprint(debug_bp, url_prefix="/api/v1")
     app.logger.info("API blueprints registered successfully")
 
     # Create database tables and ensure default user exists
