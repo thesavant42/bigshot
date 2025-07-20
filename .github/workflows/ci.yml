@@ -17,7 +17,7 @@ on:
 jobs:
   backend-tests:
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
-    runs-on: self-hosted
+    runs-on: bigshot-runner-02
 
     services:
       redis:
@@ -99,7 +99,7 @@ jobs:
 
   frontend-tests:
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
-    runs-on: self-hosted
+    runs-on: bigshot-runner-02
 
     steps:
     - uses: actions/checkout@v4
@@ -141,7 +141,7 @@ jobs:
 
   integration-tests:
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
-    runs-on: self-hosted
+    runs-on: bigshot-runner-02
     needs: [backend-tests, frontend-tests]
 
     services:
@@ -201,7 +201,7 @@ jobs:
 
   performance-tests:
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
-    runs-on: self-hosted
+    runs-on: bigshot-runner-02
     needs: [backend-tests]
 
     services:
@@ -246,7 +246,7 @@ jobs:
 
   ui-health-tests:
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
-    runs-on: self-hosted
+    runs-on: bigshot-runner-02
     needs: [backend-tests, frontend-tests]
     env:
       TEST_USERNAME: ${{ secrets.TEST_USERNAME }}
