@@ -116,7 +116,7 @@ class TestChatTimeoutFix:
             
             # Set up the mock client to raise APITimeoutError when chat.completions.create is called
             import httpx
-            mock_request = httpx.Request("POST", "http://test.com")
+            mock_request = httpx.Request("POST", self.MOCK_URL)
             mock_client.chat.completions.create.side_effect = APITimeoutError(request=mock_request)
             
             response = client.post('/api/v1/chat/messages',
