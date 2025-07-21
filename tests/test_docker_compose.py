@@ -86,10 +86,20 @@ def wait_for_service_health(max_wait_time=60, poll_interval=5):
         if code == 0 and stdout.strip():
             try:
                 containers = []
-                # Parse each line as a separate JSON object
+                # Helper function to validate JSON
+                def is_valid_json(line):
+                    try:
+                        json.loads(line)
+                        return True
+                    except json.JSONDecodeError:
+                        return False
+                
+                # Parse each valid JSON line as a separate JSON object
                 for line in stdout.strip().split('\n'):
-                    if line.strip():
+                    if line.strip() and is_valid_json(line):
                         containers.append(json.loads(line))
+                    else:
+                        print(f"Skipping invalid JSON line: {line.strip()}")
                 
                 # Check if backend container is healthy
                 backend_healthy = False
