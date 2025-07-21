@@ -4,6 +4,7 @@ Critical test for docker-compose functionality.
 This script validates that docker-compose.dev.yml works correctly.
 """
 
+import json
 import subprocess
 import sys
 import time
@@ -27,7 +28,7 @@ def test_docker_compose_build():
     print("\n=== Testing docker-compose build ===")
 
     code, stdout, stderr = run_command(
-        "docker compose -f docker-compose.dev.yml build", timeout=300
+        "docker compose -f docker-compose.dev.yml build", timeout=240
     )
 
     if code != 0:
@@ -46,7 +47,7 @@ def test_docker_compose_up():
 
     # Start services in detached mode
     code, stdout, stderr = run_command(
-        "docker compose -f docker-compose.dev.yml up -d", timeout=180
+        "docker compose -f docker-compose.dev.yml up -d", timeout=120
     )
 
     if code != 0:
@@ -57,9 +58,9 @@ def test_docker_compose_up():
 
     print("✅ Docker compose up succeeded")
 
-    # Wait for services to start with exponential backoff
+    # Wait for services to start with optimized timing
     print("Waiting for services to initialize...")
-    if not wait_for_service_health(max_attempts=5, initial_delay=5):
+    if not wait_for_service_health(max_wait_time=90, poll_interval=5):
         print("❌ Services failed to initialize within the expected time")
         return False
 
@@ -67,41 +68,70 @@ def test_docker_compose_up():
     return check_service_health()
 
 
-def wait_for_service_health(max_attempts=10, initial_delay=10):
-    """Wait for services to be healthy with exponential backoff."""
-    for attempt in range(max_attempts):
-        delay = initial_delay * (2**attempt) if attempt > 0 else initial_delay
-        print(
-            f"Waiting {delay} seconds for services to initialize "
-            f"(attempt {attempt + 1}/{max_attempts})..."
-        )
-        time.sleep(delay)
-
-        # Check if containers are running and healthy
+def wait_for_service_health(max_wait_time=60, poll_interval=5):
+    """Wait for services to be healthy with efficient polling."""
+    start_time = time.time()
+    attempt = 0
+    
+    while time.time() - start_time < max_wait_time:
+        attempt += 1
+        elapsed = time.time() - start_time
+        print(f"Checking service health (attempt {attempt}, elapsed: {elapsed:.1f}s)...")
+        
+        # Check container health status using docker-compose ps with JSON format
         code, stdout, stderr = run_command(
-            "docker compose -f docker-compose.dev.yml ps --format json"
+            "docker compose -f docker-compose.dev.yml ps --format json", timeout=10
         )
-        if code == 0:
-            print("Services appear to be running, checking health status...")
-            
-            # Check specifically for backend health
-            code, stdout, stderr = run_command(
-                "docker compose -f docker-compose.dev.yml ps backend"
-            )
-            print(f"Backend service status:\n{stdout}")
-            
-            # Check backend logs for any errors
-            code, stdout, stderr = run_command(
-                "docker compose -f docker-compose.dev.yml logs --tail=10 backend"
-            )
-            print(f"Recent backend logs:\n{stdout}")
-            
-            # If backend is healthy, we can proceed
-            if "healthy" in stdout.lower() or attempt >= 3:
-                print("Proceeding with health checks...")
-                return True
-
-    print(f"Services did not start after {max_attempts} attempts")
+        
+        if code == 0 and stdout.strip():
+            try:
+                containers = []
+                # Helper function to validate JSON
+                def is_valid_json(line):
+                    try:
+                        json.loads(line)
+                        return True
+                    except json.JSONDecodeError:
+                        return False
+                
+                # Parse each valid JSON line as a separate JSON object
+                for line in stdout.strip().split('\n'):
+                    if line.strip() and is_valid_json(line):
+                        containers.append(json.loads(line))
+                    else:
+                        print(f"Skipping invalid JSON line: {line.strip()}")
+                
+                # Check if backend container is healthy
+                backend_healthy = False
+                for container in containers:
+                    if 'backend' in container.get('Service', '').lower():
+                        state = container.get('State', '').lower()
+                        health = container.get('Health', '').lower()
+                        print(f"Backend container - State: {state}, Health: {health}")
+                        
+                        # Check if the container is running and explicitly healthy
+                        if 'running' in state and ('healthy' in health):
+                            backend_healthy = True
+                            break
+                        # Handle cases where health is empty (assumed healthy if running)
+                        elif 'running' in state and health == '':
+                            print("Warning: Health status is empty, assuming healthy.")
+                            backend_healthy = True
+                            break
+                
+                if backend_healthy:
+                    print("✅ Backend container is healthy, proceeding with API health check...")
+                    return True
+                    
+            except (json.JSONDecodeError, KeyError) as e:
+                print(f"Error parsing container status: {e}")
+        
+        # If containers aren't ready yet, wait before next attempt
+        if time.time() - start_time < max_wait_time:
+            print(f"Services not ready yet, waiting {poll_interval}s before next check...")
+            time.sleep(poll_interval)
+    
+    print(f"Services did not become healthy within {max_wait_time}s")
     return False
 
 
@@ -113,9 +143,10 @@ def check_service_health():
     code, stdout, stderr = run_command("docker compose -f docker-compose.dev.yml ps")
     print(f"Container status:\n{stdout}")
 
-    # Check backend health endpoint with retries
+    # Check backend health endpoint with efficient retries
     backend_healthy = False
-    max_retries = 5
+    max_retries = 6  # 6 retries over 30 seconds
+    retry_interval = 5
     
     for retry in range(max_retries):
         try:
@@ -124,7 +155,7 @@ def check_service_health():
             backend_url = f"http://{backend_host}:{backend_port}/api/v1/health"
             print(f"Testing backend health endpoint (attempt {retry + 1}/{max_retries}): {backend_url}")
             
-            response = requests.get(backend_url, timeout=10)
+            response = requests.get(backend_url, timeout=5)
             if response.status_code == 200:
                 print("✅ Backend health check passed")
                 backend_healthy = True
@@ -136,31 +167,25 @@ def check_service_health():
             print(f"❌ Backend health check failed: {e}")
         
         if retry < max_retries - 1:
-            print("Waiting 5 seconds before retry...")
-            time.sleep(5)
-            
-            # Check backend logs on failure
-            code, stdout, stderr = run_command(
-                "docker compose -f docker-compose.dev.yml logs --tail=20 backend"
-            )
-            print(f"Recent backend logs:\n{stdout}")
+            print(f"Waiting {retry_interval}s before retry...")
+            time.sleep(retry_interval)
 
     if not backend_healthy:
         print("❌ Backend health check failed after all retries")
         # Get final logs for debugging
         code, stdout, stderr = run_command(
-            "docker compose -f docker-compose.dev.yml logs backend"
+            "docker compose -f docker-compose.dev.yml logs --tail=30 backend", timeout=30
         )
-        print(f"Full backend logs:\n{stdout}")
+        print(f"Recent backend logs:\n{stdout}")
         return False
 
-    # Check frontend (simple connection test)
+    # Quick frontend connection test (non-blocking)
     try:
         print("Testing frontend connection...")
         frontend_url = os.getenv("FRONTEND_URL", "http://localhost")
         frontend_port = os.getenv("FRONTEND_PORT", "3000")
         full_frontend_url = f"{frontend_url}:{frontend_port}"
-        response = requests.get(full_frontend_url, timeout=10)
+        response = requests.get(full_frontend_url, timeout=5)
         if response.status_code == 200:
             print("✅ Frontend connection test passed")
         else:
@@ -174,7 +199,7 @@ def check_service_health():
 def cleanup():
     """Clean up docker containers and networks."""
     print("\n=== Cleaning up ===")
-    run_command("docker compose -f docker-compose.dev.yml down", timeout=60)
+    run_command("docker compose -f docker-compose.dev.yml down --volumes --remove-orphans", timeout=60)
     print("✅ Cleanup completed")
 
 
