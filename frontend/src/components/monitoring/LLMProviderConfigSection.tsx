@@ -405,7 +405,7 @@ const LLMProviderConfigSection: React.FC = () => {
                 <input
                   type="number"
                   value={formData.temperature}
-                  onChange={(e) => setFormData({ ...formData, temperature: parseFloat(e.target.value) })}
+                  onChange={(e) => setFormData({ ...formData, temperature: parseFloat(e.target.value) || 0 })}
                   min="0"
                   max="2"
                   step="0.1"
