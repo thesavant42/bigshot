@@ -100,7 +100,13 @@ def wait_for_service_health(max_wait_time=60, poll_interval=5):
                         health = container.get('Health', '').lower()
                         print(f"Backend container - State: {state}, Health: {health}")
                         
-                        if 'running' in state and ('healthy' in health or health == ''):
+                        # Check if the container is running and explicitly healthy
+                        if 'running' in state and ('healthy' in health):
+                            backend_healthy = True
+                            break
+                        # Handle cases where health is empty (assumed healthy if running)
+                        elif 'running' in state and health == '':
+                            print("Warning: Health status is empty, assuming healthy.")
                             backend_healthy = True
                             break
                 
