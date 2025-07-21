@@ -7,6 +7,7 @@ import StatusBadge from '../StatusBadge';
 import SystemMonitoringDashboard from '../monitoring/SystemMonitoringDashboard';
 import PostAuthProof from '../auth/PostAuthProof';
 import ConfigurationManagement from '../monitoring/ConfigurationManagement';
+import ChatInterface from '../chat/ChatInterface';
 
 interface MainLayoutProps {
   children: React.ReactNode;
