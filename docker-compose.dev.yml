@@ -4,6 +4,8 @@ services:
     hostname: database
     image: postgres:15
     container_name: bigshot_dev_database
+    env_file:
+      - .env.dev
     environment:
       POSTGRES_DB: bigshot_dev
       POSTGRES_USER: bigshot
@@ -26,6 +28,8 @@ services:
     hostname: redis
     image: redis:7-alpine
     container_name: bigshot_dev_redis
+    env_file:
+      - .env.dev
     networks:
       - bigshot_network
     ports:
@@ -44,8 +48,10 @@ services:
     hostname: backend
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     container_name: bigshot_dev_backend
+    env_file:
+      - .env.dev
     environment:
       - FLASK_ENV=development
       - FLASK_DEBUG=1
@@ -53,10 +59,8 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      - SECRET_KEY=${SECRET_KEY}
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-      - NODE_ENV=development
-      - VITE_API_URL=http://backend:5000
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-key-change-in-production}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-dev-jwt-secret-key-change-in-production}
     ports:
       - "5001:5000"
     networks:
@@ -78,8 +82,10 @@ services:
     hostname: celery
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     container_name: bigshot_dev_celery
+    env_file:
+      - .env.dev
     entrypoint: ["./scripts/docker-entrypoint.sh"]
     command: python -m celery -A celery_app.celery_app worker --loglevel=debug --concurrency=2
     environment:
@@ -107,14 +113,16 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.dev
     container_name: bigshot_dev_frontend
+    env_file:
+      - .env.dev
     ports:
-      - "0.0.0.0:3000:3000"
+      - "3000:3000"
     volumes:
       - ./frontend:/app
       - /app/node_modules
     environment:
       - NODE_ENV=development
-      - VITE_API_URL=http://backend:5000
+      - VITE_API_URL=http://localhost:5001
       - VITE_API_BASE_URL=
       - VITE_WS_URL=
       - VITE_APP_NAME=BigShot
