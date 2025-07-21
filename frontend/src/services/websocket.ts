@@ -176,9 +176,11 @@ export class WebSocketService {
   // Method to refresh connection after login
   refreshConnection(): void {
     const token = localStorage.getItem('auth_token');
-    if (token && !this.isConnected()) {
+    if (token) {
       console.log('Refreshing WebSocket connection with new auth token');
-      this.disconnect();
+      if (this.isConnected()) {
+        this.disconnect();
+      }
       this.connect();
     }
   }
