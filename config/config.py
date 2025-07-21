@@ -40,6 +40,7 @@ class Config:
 
     # LLM and MCP settings
     LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "lmstudio")  # 'openai' or 'lmstudio'
+    LLM_MOCK_MODE = os.environ.get("LLM_MOCK_MODE", "false").lower() == "true"  # Enable mock responses when LLM unavailable
 
     # OpenAI settings
     OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
