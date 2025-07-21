@@ -67,23 +67,39 @@ def test_docker_compose_up():
     return check_service_health()
 
 
-def wait_for_service_health(max_attempts=5, initial_delay=5):
+def wait_for_service_health(max_attempts=10, initial_delay=10):
     """Wait for services to be healthy with exponential backoff."""
     for attempt in range(max_attempts):
-        delay = initial_delay * (2**attempt)
+        delay = initial_delay * (2**attempt) if attempt > 0 else initial_delay
         print(
             f"Waiting {delay} seconds for services to initialize "
             f"(attempt {attempt + 1}/{max_attempts})..."
         )
         time.sleep(delay)
 
-        # Check if containers are running
+        # Check if containers are running and healthy
         code, stdout, stderr = run_command(
             "docker compose -f docker-compose.dev.yml ps --format json"
         )
         if code == 0:
-            print("Services appear to be running, proceeding with health checks...")
-            return True
+            print("Services appear to be running, checking health status...")
+            
+            # Check specifically for backend health
+            code, stdout, stderr = run_command(
+                "docker compose -f docker-compose.dev.yml ps backend"
+            )
+            print(f"Backend service status:\n{stdout}")
+            
+            # Check backend logs for any errors
+            code, stdout, stderr = run_command(
+                "docker compose -f docker-compose.dev.yml logs --tail=10 backend"
+            )
+            print(f"Recent backend logs:\n{stdout}")
+            
+            # If backend is healthy, we can proceed
+            if "healthy" in stdout.lower() or attempt >= 3:
+                print("Proceeding with health checks...")
+                return True
 
     print(f"Services did not start after {max_attempts} attempts")
     return False
@@ -97,20 +113,45 @@ def check_service_health():
     code, stdout, stderr = run_command("docker compose -f docker-compose.dev.yml ps")
     print(f"Container status:\n{stdout}")
 
-    # Check backend health endpoint
-    try:
-        backend_host = os.getenv("BACKEND_HOST", "localhost")
-        backend_port = os.getenv("BACKEND_PORT", "5001")
-        backend_url = f"http://{backend_host}:{backend_port}/api/v1/health"
-        print("Testing backend health endpoint...")
-        response = requests.get(backend_url, timeout=10)
-        if response.status_code == 200:
-            print("✅ Backend health check passed")
-        else:
-            print(f"❌ Backend health check failed: {response.status_code}")
-            return False
-    except Exception as e:
-        print(f"❌ Backend health check failed: {e}")
+    # Check backend health endpoint with retries
+    backend_healthy = False
+    max_retries = 5
+    
+    for retry in range(max_retries):
+        try:
+            backend_host = os.getenv("BACKEND_HOST", "localhost")
+            backend_port = os.getenv("BACKEND_PORT", "5001")
+            backend_url = f"http://{backend_host}:{backend_port}/api/v1/health"
+            print(f"Testing backend health endpoint (attempt {retry + 1}/{max_retries}): {backend_url}")
+            
+            response = requests.get(backend_url, timeout=10)
+            if response.status_code == 200:
+                print("✅ Backend health check passed")
+                backend_healthy = True
+                break
+            else:
+                print(f"❌ Backend health check failed: {response.status_code}")
+                print(f"Response content: {response.text}")
+        except Exception as e:
+            print(f"❌ Backend health check failed: {e}")
+        
+        if retry < max_retries - 1:
+            print("Waiting 5 seconds before retry...")
+            time.sleep(5)
+            
+            # Check backend logs on failure
+            code, stdout, stderr = run_command(
+                "docker compose -f docker-compose.dev.yml logs --tail=20 backend"
+            )
+            print(f"Recent backend logs:\n{stdout}")
+
+    if not backend_healthy:
+        print("❌ Backend health check failed after all retries")
+        # Get final logs for debugging
+        code, stdout, stderr = run_command(
+            "docker compose -f docker-compose.dev.yml logs backend"
+        )
+        print(f"Full backend logs:\n{stdout}")
         return False
 
     # Check frontend (simple connection test)
