@@ -1,5 +1,5 @@
 import React from 'react';
-import { CogIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
+import { CogIcon, ChevronDownIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import type { LMStudioModel, LLMProviderConfig } from '../../types';
 
 interface ChatHeaderProps {
