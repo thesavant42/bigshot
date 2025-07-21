@@ -19,7 +19,7 @@ class TestLMStudioIntegration:
             os.environ,
             {
                 "LLM_PROVIDER": "lmstudio",
-                "LMSTUDIO_API_BASE": "http://localhost:1234/v1",
+                "LMSTUDIO_API_BASE": "http://localhost:1234/api/v0",
                 "LMSTUDIO_MODEL": "llama-3.2-1b-instruct",
             },
         ):
@@ -30,7 +30,7 @@ class TestLMStudioIntegration:
 
             config = Config()
             assert config.LLM_PROVIDER == "lmstudio"
-            assert config.LMSTUDIO_API_BASE == "http://localhost:1234/v1"
+            assert config.LMSTUDIO_API_BASE == "http://localhost:1234/api/v0"
             assert config.LMSTUDIO_MODEL == "llama-3.2-1b-instruct"
 
     def test_openai_config_initialization(self):
@@ -64,7 +64,7 @@ class TestLMStudioIntegration:
             os.environ,
             {
                 "LLM_PROVIDER": "lmstudio",
-                "LMSTUDIO_API_BASE": "http://localhost:1234/v1",
+                "LMSTUDIO_API_BASE": "http://localhost:1234/api/v0",
             },
         ):
             # Reload config module
@@ -79,7 +79,7 @@ class TestLMStudioIntegration:
             assert service.provider == "lmstudio"
             assert service.client is not None
             mock_openai.assert_called_once_with(
-                api_key="lm-studio", base_url="http://localhost:1234/v1"
+                api_key="lm-studio", base_url="http://localhost:1234/api/v0"
             )
 
     @patch("app.services.llm_service.OpenAI")

@@ -45,7 +45,7 @@ class TestLMStudioIssue208:
         provider = LLMProviderConfig(
             provider="lmstudio",
             name="LMSTUDIO (Legacy)",
-            base_url="http://192.168.1.98:1234/v1",  # Fixed URL with /v1
+            base_url="http://192.168.1.98:1234/api/v0",  # Fixed URL with /api/v0
             model="qwen/qwen3-8b",
             is_active=True,
         )
@@ -116,7 +116,7 @@ class TestLMStudioIssue208:
                 mock_service.get_current_provider_info.return_value = {
                     "name": "LMSTUDIO (Legacy)",
                     "provider": "lmstudio",
-                    "base_url": "http://192.168.1.98:1234/v1",
+                    "base_url": "http://192.168.1.98:1234/api/v0",
                     "model": "qwen/qwen3-8b",
                     "source": "config"
                 }
@@ -133,7 +133,7 @@ class TestLMStudioIssue208:
                 # Should NOT be empty like in the original issue
                 assert len(data["models"]) > 0
                 assert data["models"][0]["id"] == "qwen/qwen3-8b"
-                assert data["provider"]["base_url"] == "http://192.168.1.98:1234/v1"
+                assert data["provider"]["base_url"] == "http://192.168.1.98:1234/api/v0"
                 assert data["provider"]["model"] == "qwen/qwen3-8b"
 
     def test_chat_completion_with_available_models(self, client, auth_headers, app):
@@ -207,7 +207,7 @@ class TestLMStudioIssue208:
                 service = LLMService()
                 service.client = mock_client
                 service.current_provider_config = Mock()
-                service.current_provider_config.base_url = "http://192.168.1.98:1234/v1"
+                service.current_provider_config.base_url = "http://192.168.1.98:1234/api/v0"
                 service.current_provider_config.name = "Test LMStudio"
                 
                 models = service.get_available_models()
@@ -222,10 +222,10 @@ class TestLMStudioIssue208:
         from config.config import Config
         config = Config()
         
-        # Should now end with /v1
-        assert config.LMSTUDIO_API_BASE.endswith("/v1")
+        # Should now end with /api/v0
+        assert config.LMSTUDIO_API_BASE.endswith("/api/v0")
         # Should be the correct default
-        assert config.LMSTUDIO_API_BASE == "http://192.168.1.98:1234/v1"
+        assert config.LMSTUDIO_API_BASE == "http://192.168.1.98:1234/api/v0"
         # Default model should be updated
         assert config.LMSTUDIO_MODEL == "qwen/qwen3-8b"
 
@@ -239,7 +239,7 @@ class TestLMStudioIssue208:
                 mock_service.is_available.return_value = True
                 mock_service.get_detailed_models.return_value = []  # Empty like in the issue
                 mock_service.get_current_provider_info.return_value = {
-                    "base_url": "http://192.168.1.98:1234",  # Wrong URL without /v1
+                    "base_url": "http://192.168.1.98:1234",  # Wrong URL without /api/v0
                     "model": "qwen/qwen3-8b",
                     "name": "LMSTUDIO (Legacy)",
                     "provider": "lmstudio",
@@ -270,7 +270,7 @@ class TestLMStudioIssue208:
                     }
                 ]
                 mock_service.get_current_provider_info.return_value = {
-                    "base_url": "http://192.168.1.98:1234/v1",  # Fixed URL with /v1
+                    "base_url": "http://192.168.1.98:1234/api/v0",  # Fixed URL with /api/v0
                     "model": "qwen/qwen3-8b",
                     "name": "LMSTUDIO (Legacy)",
                     "provider": "lmstudio",
@@ -289,4 +289,4 @@ class TestLMStudioIssue208:
                 # Models array is now populated - issue is fixed
                 assert len(data["models"]) > 0
                 assert data["models"][0]["id"] == "qwen/qwen3-8b"
-                assert data["provider"]["base_url"] == "http://192.168.1.98:1234/v1"
+                assert data["provider"]["base_url"] == "http://192.168.1.98:1234/api/v0"

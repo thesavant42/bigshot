@@ -48,7 +48,7 @@ class Config:
     OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-3.5-turbo")
 
     # LMStudio settings
-    LMSTUDIO_API_BASE = os.environ.get("LMSTUDIO_API_BASE", "http://192.168.1.98:1234/v1")
+    LMSTUDIO_API_BASE = os.environ.get("LMSTUDIO_API_BASE", "http://192.168.1.98:1234/api/v0")
     LMSTUDIO_API_KEY = os.environ.get(
         "LMSTUDIO_API_KEY", "lm-studio"
     )  # Default API key for LMStudio

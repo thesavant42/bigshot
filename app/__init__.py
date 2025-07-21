@@ -246,7 +246,7 @@ def _ensure_default_llm_providers_exist():
                 {
                     "provider": "lmstudio",
                     "name": "LMStudio Local",
-                    "base_url": "http://localhost:1234/v1",
+                    "base_url": "http://localhost:1234/api/v0",
                     "model": "model-identifier",
                     "is_default": False,
                     "is_active": False,
@@ -256,7 +256,7 @@ def _ensure_default_llm_providers_exist():
             # Get configuration from environment
             openai_key = current_app.config.get("OPENAI_API_KEY")
             lmstudio_base = current_app.config.get(
-                "LMSTUDIO_API_BASE", "http://localhost:1234/v1"
+                "LMSTUDIO_API_BASE", "http://localhost:1234/api/v0"
             )
             lmstudio_model = current_app.config.get(
                 "LMSTUDIO_MODEL", "model-identifier"

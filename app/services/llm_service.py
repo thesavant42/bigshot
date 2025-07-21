@@ -136,7 +136,7 @@ class LLMService:
         try:
             import requests
 
-            response = requests.get(f"{base_url.rstrip('/v1')}/v1/models", timeout=5)
+            response = requests.get(f"{base_url.rstrip('/')}/models", timeout=5)
             if response.status_code != 200:
                 logger.warning(f"LMStudio server may not be accessible at {base_url}")
         except Exception as e:

@@ -305,7 +305,7 @@ class TestEnhancedEnvironmentValidation:
                 "SECRET_KEY": "this-is-a-very-long-secret-key",
                 "JWT_SECRET_KEY": "this-is-a-very-long-jwt-secret",
                 "LLM_PROVIDER": "lmstudio",
-                "LMSTUDIO_API_BASE": "http://localhost:1234/v1",
+                "LMSTUDIO_API_BASE": "http://localhost:1234/api/v0",
             },
         ):
             from app.utils.logging_config import log_environment_validation
