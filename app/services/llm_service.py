@@ -307,7 +307,7 @@ class LLMService:
 
     def is_available(self) -> bool:
         """Check if LLM service is available"""
-        # Check if we have a working client
+        # Check if we have a client object (does not verify functionality)
         if self.client is not None:
             return True
         
