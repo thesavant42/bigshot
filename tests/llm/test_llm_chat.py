@@ -23,9 +23,10 @@ class TestLLMService:
 
         # Ensure LLM service starts in a clean state for each test
         from app.models.models import LLMProviderConfig
+
         LLMProviderConfig.query.update({"is_active": False})
         db.session.commit()
-        
+
         # Reset the global LLM service instance to clean state
         llm_service.client = None
         llm_service.current_provider_config = None
@@ -146,9 +147,10 @@ class TestChatAPI:
 
         # Ensure LLM service starts in a clean state for each test
         from app.models.models import LLMProviderConfig
+
         LLMProviderConfig.query.update({"is_active": False})
         db.session.commit()
-        
+
         # Reset the global LLM service instance to clean state
         llm_service.client = None
         llm_service.current_provider_config = None
@@ -192,12 +194,13 @@ class TestChatAPI:
         """Test MCP tools endpoint"""
         # Activate a test provider for MCP tools testing
         from app.models.models import LLMProviderConfig
+
         test_provider = LLMProviderConfig.query.first()
         if test_provider:
             test_provider.is_active = True
             db.session.commit()
             llm_service._initialize_client()
-        
+
         response = self.client.get("/api/v1/mcp/tools", headers=self.headers)
 
         assert response.status_code == 200
@@ -209,12 +212,13 @@ class TestChatAPI:
         """Test MCP execute endpoint"""
         # Activate a test provider for MCP execution testing
         from app.models.models import LLMProviderConfig
+
         test_provider = LLMProviderConfig.query.first()
         if test_provider:
             test_provider.is_active = True
             db.session.commit()
             llm_service._initialize_client()
-        
+
         # Create test domain
         domain = Domain(
             root_domain="example.com", subdomain="test.example.com", source="crt.sh"

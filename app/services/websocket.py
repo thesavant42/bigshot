@@ -25,7 +25,7 @@ class WebSocketService:
         self.redis_available = False
         self.redis_retry_count = 0
         self.max_redis_retries = 5
-        self.logger = logging.getLogger('bigshot.websocket')
+        self.logger = logging.getLogger("bigshot.websocket")
 
         if app:
             self.init_app(app)
@@ -64,7 +64,9 @@ class WebSocketService:
             self.redis_client.ping()
             self.redis_available = True
             self.redis_retry_count = 0
-            self.logger.info("Redis connection established successfully for WebSocket service")
+            self.logger.info(
+                "Redis connection established successfully for WebSocket service"
+            )
         except redis.ConnectionError as e:
             self.redis_available = False
             self.logger.warning(
@@ -83,7 +85,9 @@ class WebSocketService:
             return False
 
         self.redis_retry_count += 1
-        wait_time = min(2 ** self.redis_retry_count, 60)  # Exponential backoff, max 60 seconds
+        wait_time = min(
+            2**self.redis_retry_count, 60
+        )  # Exponential backoff, max 60 seconds
 
         self.logger.info(
             f"Attempting Redis reconnection #{self.redis_retry_count} in {wait_time} seconds..."
@@ -279,7 +283,9 @@ class WebSocketService:
             while True:
                 try:
                     if not self.redis_available:
-                        self.logger.info("Attempting to reconnect to Redis for pubsub...")
+                        self.logger.info(
+                            "Attempting to reconnect to Redis for pubsub..."
+                        )
                         if not self._retry_redis_connection():
                             self.logger.error(
                                 "Failed to reconnect to Redis. Retrying in 30 seconds..."
@@ -307,7 +313,9 @@ class WebSocketService:
                                     )
 
                                     # Broadcast to all jobs room
-                                    self.socketio.emit("job_update", data, room="all_jobs")
+                                    self.socketio.emit(
+                                        "job_update", data, room="all_jobs"
+                                    )
 
                                     print(
                                         f"Broadcasted {update_type} update for job {job_id}"
@@ -318,7 +326,9 @@ class WebSocketService:
                                     f"Invalid JSON in pubsub message: {message['data']}"
                                 )
                             except Exception as e:
-                                self.logger.error(f"Error processing pubsub message: {e}")
+                                self.logger.error(
+                                    f"Error processing pubsub message: {e}"
+                                )
 
                 except redis.ConnectionError as e:
                     self.redis_available = False

@@ -93,7 +93,9 @@ def send_message():
             return error_response(f"Failed to process message: {str(e)}", 500)
 
 
-def stream_chat_response(message: str, conversation_history: list, context: dict, model: str = None):
+def stream_chat_response(
+    message: str, conversation_history: list, context: dict, model: str = None
+):
     """Stream chat response"""
     try:
         response_stream = llm_service.create_chat_completion(

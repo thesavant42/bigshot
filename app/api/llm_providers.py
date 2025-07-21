@@ -84,7 +84,9 @@ def create_llm_provider():
         # Check Content-Type first to prevent 422 errors
         if not request.is_json:
             logger.warning(f"Invalid Content-Type: {request.content_type}")
-            return error_response("Request must have Content-Type: application/json", 400)
+            return error_response(
+                "Request must have Content-Type: application/json", 400
+            )
 
         # Safely parse JSON with comprehensive error handling
         try:
@@ -115,12 +117,16 @@ def create_llm_provider():
         for field in required_fields:
             if field not in data:
                 missing_fields.append(field)
-            elif not data.get(field) or (isinstance(data.get(field), str) and not data.get(field).strip()):
+            elif not data.get(field) or (
+                isinstance(data.get(field), str) and not data.get(field).strip()
+            ):
                 missing_fields.append(field)
 
         if missing_fields:
             logger.warning(f"Missing required fields: {missing_fields}")
-            return error_response(f"Missing required fields: {', '.join(missing_fields)}", 400)
+            return error_response(
+                f"Missing required fields: {', '.join(missing_fields)}", 400
+            )
 
         # Validate field types and formats
         validation_errors = []
@@ -142,7 +148,11 @@ def create_llm_provider():
             validation_errors.append("'model' must be a non-empty string")
 
         # Validate optional fields
-        if "api_key" in data and data["api_key"] is not None and not isinstance(data["api_key"], str):
+        if (
+            "api_key" in data
+            and data["api_key"] is not None
+            and not isinstance(data["api_key"], str)
+        ):
             validation_errors.append("'api_key' must be a string or null")
 
         if "is_default" in data and not isinstance(data["is_default"], bool):
@@ -152,9 +162,13 @@ def create_llm_provider():
             try:
                 timeout_val = int(data["connection_timeout"])
                 if timeout_val <= 0:
-                    validation_errors.append("'connection_timeout' must be a positive integer")
+                    validation_errors.append(
+                        "'connection_timeout' must be a positive integer"
+                    )
             except (ValueError, TypeError):
-                validation_errors.append("'connection_timeout' must be a positive integer")
+                validation_errors.append(
+                    "'connection_timeout' must be a positive integer"
+                )
 
         if "max_tokens" in data:
             try:
@@ -170,17 +184,23 @@ def create_llm_provider():
                 if temp_val < 0 or temp_val > 2:
                     validation_errors.append("'temperature' must be between 0 and 2")
             except (ValueError, TypeError):
-                validation_errors.append("'temperature' must be a number between 0 and 2")
+                validation_errors.append(
+                    "'temperature' must be a number between 0 and 2"
+                )
 
         if validation_errors:
             logger.warning(f"Validation errors: {validation_errors}")
-            return error_response(f"Validation failed: {'; '.join(validation_errors)}", 400)
+            return error_response(
+                f"Validation failed: {'; '.join(validation_errors)}", 400
+            )
 
         # Check if name already exists
         existing = LLMProviderConfig.query.filter_by(name=data["name"].strip()).first()
         if existing:
             logger.warning(f"Provider name already exists: {data['name']}")
-            return error_response(f"Provider with name '{data['name']}' already exists", 400)
+            return error_response(
+                f"Provider with name '{data['name']}' already exists", 400
+            )
 
         # Set validated values with defaults
         validated_connection_timeout = int(data.get("connection_timeout", 30))
@@ -192,7 +212,11 @@ def create_llm_provider():
             provider=data["provider"].strip(),
             name=data["name"].strip(),
             base_url=data["base_url"].strip(),
-            api_key=data.get("api_key", "").strip() if data.get("api_key", "").strip() else None,
+            api_key=(
+                data.get("api_key", "").strip()
+                if data.get("api_key", "").strip()
+                else None
+            ),
             model=data["model"].strip(),
             is_active=False,  # New providers start inactive
             is_default=bool(data.get("is_default", False)),
@@ -214,14 +238,18 @@ def create_llm_provider():
         db.session.add(audit_log)
         db.session.commit()
 
-        logger.info(f"Successfully created LLM provider: {provider_config.name} (ID: {provider_config.id})")
+        logger.info(
+            f"Successfully created LLM provider: {provider_config.name} (ID: {provider_config.id})"
+        )
         return success_response(provider_config.to_dict(), 201)
 
     except ValueError as e:
         # Handle user lookup errors specifically
         if "not found or inactive" in str(e):
             logger.error(f"User lookup failed during provider creation: {e}")
-            return error_response("Authentication failed: user not found or inactive", 401)
+            return error_response(
+                "Authentication failed: user not found or inactive", 401
+            )
         else:
             raise  # Re-raise if it's a different ValueError
     except Exception as e:
@@ -236,12 +264,16 @@ def create_llm_provider():
         if "400 Bad Request" in error_message:
             return error_response("Invalid request data", 400)
         elif "415 Unsupported Media Type" in error_message:
-            return error_response("Request must have Content-Type: application/json", 400)
+            return error_response(
+                "Request must have Content-Type: application/json", 400
+            )
         elif "JSON" in error_message and "decode" in error_message:
             return error_response("Invalid JSON format", 400)
         elif "Unprocessable Entity" in error_message or "422" in error_message:
             # Preserve 422 error semantics for validation failures
-            return error_response("Unprocessable Entity: Invalid request data format", 422)
+            return error_response(
+                "Unprocessable Entity: Invalid request data format", 422
+            )
         else:
             return error_response(f"Failed to create LLM provider: {str(e)}", 500)
 
@@ -252,12 +284,16 @@ def update_llm_provider(provider_id):
     """Update an LLM provider configuration"""
     try:
         # Enhanced request validation for CI environment compatibility
-        logger.debug(f"Updating provider {provider_id}, Content-Type: {request.content_type}")
+        logger.debug(
+            f"Updating provider {provider_id}, Content-Type: {request.content_type}"
+        )
 
         # Check Content-Type first to prevent 422 errors
         if not request.is_json:
             logger.warning(f"Invalid Content-Type for update: {request.content_type}")
-            return error_response("Request must have Content-Type: application/json", 400)
+            return error_response(
+                "Request must have Content-Type: application/json", 400
+            )
 
         # Safely parse JSON with comprehensive error handling
         try:
@@ -297,20 +333,29 @@ def update_llm_provider(provider_id):
             else:
                 # Check if new name already exists (excluding current record)
                 existing = LLMProviderConfig.query.filter(
-                    LLMProviderConfig.name == data["name"].strip(), LLMProviderConfig.id != provider_id
+                    LLMProviderConfig.name == data["name"].strip(),
+                    LLMProviderConfig.id != provider_id,
                 ).first()
                 if existing:
-                    return error_response(f"Provider with name '{data['name']}' already exists", 400)
+                    return error_response(
+                        f"Provider with name '{data['name']}' already exists", 400
+                    )
                 provider_config.name = data["name"].strip()
 
         if "provider" in data:
-            if not isinstance(data["provider"], str) or len(data["provider"].strip()) == 0:
+            if (
+                not isinstance(data["provider"], str)
+                or len(data["provider"].strip()) == 0
+            ):
                 validation_errors.append("'provider' must be a non-empty string")
             else:
                 provider_config.provider = data["provider"].strip()
 
         if "base_url" in data:
-            if not isinstance(data["base_url"], str) or len(data["base_url"].strip()) == 0:
+            if (
+                not isinstance(data["base_url"], str)
+                or len(data["base_url"].strip()) == 0
+            ):
                 validation_errors.append("'base_url' must be a non-empty string")
             else:
                 provider_config.base_url = data["base_url"].strip()
@@ -339,11 +384,15 @@ def update_llm_provider(provider_id):
             try:
                 timeout_val = int(data["connection_timeout"])
                 if timeout_val <= 0:
-                    validation_errors.append("'connection_timeout' must be a positive integer")
+                    validation_errors.append(
+                        "'connection_timeout' must be a positive integer"
+                    )
                 else:
                     provider_config.connection_timeout = timeout_val
             except (ValueError, TypeError):
-                validation_errors.append("'connection_timeout' must be a positive integer")
+                validation_errors.append(
+                    "'connection_timeout' must be a positive integer"
+                )
 
         if "max_tokens" in data:
             try:
@@ -363,11 +412,15 @@ def update_llm_provider(provider_id):
                 else:
                     provider_config.temperature = temp_val
             except (ValueError, TypeError):
-                validation_errors.append("'temperature' must be a number between 0 and 2")
+                validation_errors.append(
+                    "'temperature' must be a number between 0 and 2"
+                )
 
         if validation_errors:
             logger.warning(f"Update validation errors: {validation_errors}")
-            return error_response(f"Validation failed: {'; '.join(validation_errors)}", 400)
+            return error_response(
+                f"Validation failed: {'; '.join(validation_errors)}", 400
+            )
 
         # Create audit log
         new_values = provider_config.to_dict(include_sensitive=False)
@@ -381,14 +434,18 @@ def update_llm_provider(provider_id):
         db.session.add(audit_log)
         db.session.commit()
 
-        logger.info(f"Successfully updated LLM provider: {provider_config.name} (ID: {provider_config.id})")
+        logger.info(
+            f"Successfully updated LLM provider: {provider_config.name} (ID: {provider_config.id})"
+        )
         return success_response(provider_config.to_dict())
 
     except ValueError as e:
         # Handle user lookup errors specifically
         if "not found or inactive" in str(e):
             logger.error(f"User lookup failed during provider update: {e}")
-            return error_response("Authentication failed: user not found or inactive", 401)
+            return error_response(
+                "Authentication failed: user not found or inactive", 401
+            )
         else:
             raise  # Re-raise if it's a different ValueError
     except Exception as e:
@@ -403,7 +460,9 @@ def update_llm_provider(provider_id):
         if "400 Bad Request" in error_message:
             return error_response("Invalid request data", 400)
         elif "415 Unsupported Media Type" in error_message:
-            return error_response("Request must have Content-Type: application/json", 400)
+            return error_response(
+                "Request must have Content-Type: application/json", 400
+            )
         elif "JSON" in error_message and "decode" in error_message:
             return error_response("Invalid JSON format", 400)
         elif "Unprocessable Entity" in error_message or "422" in error_message:
@@ -446,7 +505,9 @@ def delete_llm_provider(provider_id):
         # Handle user lookup errors specifically
         if "not found or inactive" in str(e):
             logger.error(f"User lookup failed during provider deletion: {e}")
-            return error_response("Authentication failed: user not found or inactive", 401)
+            return error_response(
+                "Authentication failed: user not found or inactive", 401
+            )
         else:
             raise  # Re-raise if it's a different ValueError
     except Exception as e:
@@ -483,14 +544,19 @@ def activate_llm_provider(provider_id):
         db.session.commit()
 
         return success_response(
-            {"message": "LLM provider activated successfully", "provider": provider_config.to_dict()}
+            {
+                "message": "LLM provider activated successfully",
+                "provider": provider_config.to_dict(),
+            }
         )
 
     except ValueError as e:
         # Handle user lookup errors specifically
         if "not found or inactive" in str(e):
             logger.error(f"User lookup failed during provider activation: {e}")
-            return error_response("Authentication failed: user not found or inactive", 401)
+            return error_response(
+                "Authentication failed: user not found or inactive", 401
+            )
         else:
             raise  # Re-raise if it's a different ValueError
     except Exception as e:
@@ -509,7 +575,7 @@ def test_llm_provider(provider_id):
 
         # Test the provider connection
         test_result = llm_service.test_provider_connection(provider_config)
-        
+
         # Ensure test_result is not None and has the expected structure
         if test_result is None:
             test_result = {
@@ -519,9 +585,9 @@ def test_llm_provider(provider_id):
                     "name": provider_config.name,
                     "provider": provider_config.provider,
                     "base_url": provider_config.base_url,
-                    "model": provider_config.model
+                    "model": provider_config.model,
                 },
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
         # Create audit log
@@ -534,13 +600,17 @@ def test_llm_provider(provider_id):
         db.session.add(audit_log)
         db.session.commit()
 
-        return success_response({"provider_id": provider_id, "test_result": test_result})
+        return success_response(
+            {"provider_id": provider_id, "test_result": test_result}
+        )
 
     except ValueError as e:
         # Handle user lookup errors specifically
         if "not found or inactive" in str(e):
             logger.error(f"User lookup failed during provider test: {e}")
-            return error_response("Authentication failed: user not found or inactive", 401)
+            return error_response(
+                "Authentication failed: user not found or inactive", 401
+            )
         else:
             raise  # Re-raise if it's a different ValueError
     except Exception as e:
@@ -555,7 +625,11 @@ def get_audit_logs():
     """Get recent LLM provider configuration changes"""
     try:
         limit = request.args.get("limit", 50, type=int)
-        logs = LLMProviderAuditLog.query.order_by(LLMProviderAuditLog.created_at.desc()).limit(limit).all()
+        logs = (
+            LLMProviderAuditLog.query.order_by(LLMProviderAuditLog.created_at.desc())
+            .limit(limit)
+            .all()
+        )
 
         return success_response([log.to_dict() for log in logs])
 
@@ -571,19 +645,18 @@ def get_available_models():
     try:
         if not llm_service.is_available():
             return error_response("No LLM provider is currently available", 503)
-        
+
         detailed = request.args.get("detailed", "false").lower() == "true"
-        
+
         if detailed:
             models = llm_service.get_detailed_models()
         else:
             models = llm_service.get_available_models()
-        
-        return success_response({
-            "models": models,
-            "provider": llm_service.get_current_provider_info()
-        })
-    
+
+        return success_response(
+            {"models": models, "provider": llm_service.get_current_provider_info()}
+        )
+
     except Exception as e:
         logger.error(f"Failed to get available models: {e}")
         return error_response(f"Failed to get available models: {str(e)}", 500)
@@ -595,7 +668,9 @@ def create_text_completion():
     """Create text completion using /v1/completions endpoint"""
     try:
         if not request.is_json:
-            return error_response("Request must have Content-Type: application/json", 400)
+            return error_response(
+                "Request must have Content-Type: application/json", 400
+            )
 
         data = request.get_json()
         if not data:
@@ -629,7 +704,7 @@ def create_text_completion():
             max_tokens=max_tokens,
             temperature=temperature,
             stream=stream,
-            stop=stop
+            stop=stop,
         )
 
         return success_response(result)
@@ -645,7 +720,9 @@ def create_embeddings():
     """Create embeddings using /v1/embeddings endpoint"""
     try:
         if not request.is_json:
-            return error_response("Request must have Content-Type: application/json", 400)
+            return error_response(
+                "Request must have Content-Type: application/json", 400
+            )
 
         data = request.get_json()
         if not data:
@@ -661,16 +738,15 @@ def create_embeddings():
         # Validate parameter types
         if not isinstance(input_text, (str, list)):
             return error_response("'input' must be a string or array of strings", 400)
-        if isinstance(input_text, list) and not all(isinstance(item, str) for item in input_text):
+        if isinstance(input_text, list) and not all(
+            isinstance(item, str) for item in input_text
+        ):
             return error_response("All items in 'input' array must be strings", 400)
 
         if not llm_service.is_available():
             return error_response("No LLM provider is currently available", 503)
 
-        result = llm_service.create_embeddings(
-            input_text=input_text,
-            model=model
-        )
+        result = llm_service.create_embeddings(input_text=input_text, model=model)
 
         return success_response(result)
 
