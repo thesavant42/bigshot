@@ -4,12 +4,9 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { KeyboardProvider } from './contexts/KeyboardContext';
 import MainLayout from './components/layout/MainLayout';
 import DomainDashboard from './components/domain/DomainDashboard';
-import ChatInterface from './components/chat/ChatInterface';
-import SplitLayout from './components/SplitLayout';
 import KeyboardShortcutsHelp from './components/KeyboardShortcutsHelp';
 import LoadingSpinner from './components/LoadingSpinner';
 import PostAuthProof from './components/auth/PostAuthProof';
-import ErrorBoundary from './components/ErrorBoundary';
 import { useAuth } from './hooks/useApi';
 
 const queryClient = new QueryClient({
@@ -153,20 +150,7 @@ const AppContent: React.FC = () => {
 
   return (
     <MainLayout>
-      <SplitLayout
-        leftPanel={
-          <ErrorBoundary
-            onError={(error, errorInfo) => {
-              // Log error for debugging
-              console.error('ChatInterface Error:', error, errorInfo);
-              // Could also send to error reporting service here
-            }}
-          >
-            <ChatInterface />
-          </ErrorBoundary>
-        }
-        rightPanel={<DomainDashboard />}
-      />
+      <DomainDashboard />
     </MainLayout>
   );
 };
