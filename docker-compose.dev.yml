@@ -48,7 +48,7 @@ services:
     hostname: backend
     build:
       context: .
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
     container_name: bigshot_dev_backend
     env_file:
       - .env.dev
@@ -81,7 +81,7 @@ services:
   celery:
     hostname: celery
     build:
-      context: .
+      context: ./
       dockerfile: Dockerfile.dev
     container_name: bigshot_dev_celery
     env_file:
