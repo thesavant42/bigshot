@@ -20,11 +20,7 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # JWT settings
-    JWT_SECRET_KEY = (
-        os.environ.get("JWT_SECRET_KEY") or 
-        os.environ.get("SECRET_KEY") or 
-        "jwt-secret-key-change-in-production"
-    )
+    JWT_SECRET_KEY = (os.environ.get("JWT_SECRET_KEY") or  os.environ.get("SECRET_KEY") or  "jwt-secret-key-change-in-production")
     JWT_ACCESS_TOKEN_EXPIRES = 3600  # 1 hour
 
     # External API settings
@@ -49,12 +45,8 @@ class Config:
 
     # LMStudio settings
     LMSTUDIO_API_BASE = os.environ.get("LMSTUDIO_API_BASE", "http://192.168.1.98:1234/api/v0")
-    LMSTUDIO_API_KEY = os.environ.get(
-        "LMSTUDIO_API_KEY", "lm-studio"
-    )  # Default API key for LMStudio
-    LMSTUDIO_MODEL = os.environ.get(
-        "LMSTUDIO_MODEL", "qwen/qwen3-8b"
-    )  # Default model identifier - use specific model instead of generic
+    LMSTUDIO_API_KEY = os.environ.get("LMSTUDIO_API_KEY", "lm-studio")  # Default API key for LMStudio
+    LMSTUDIO_MODEL = os.environ.get("LMSTUDIO_MODEL", "qwen/qwen3-8b")  # Default model identifier - use specific model instead of generic
 
     # MCP settings
     MCP_SERVER_ENABLED = os.environ.get("MCP_SERVER_ENABLED", "true").lower() == "true"
@@ -80,9 +72,7 @@ class ProductionConfig(Config):
     """Production configuration"""
 
     DEBUG = False
-    SQLALCHEMY_DATABASE_URI = (
-        os.environ.get("DATABASE_URL") or "postgresql://user:pass@localhost/bigshot"
-    )
+    SQLALCHEMY_DATABASE_URI = (os.environ.get("DATABASE_URL") or "postgresql://user:pass@localhost/bigshot")
 
 
 config = {
