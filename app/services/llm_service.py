@@ -661,8 +661,6 @@ class LLMService:
             raise RuntimeError("Invalid or empty response from LLM service")
             
         choice = response.choices[0]
-        if not choice:
-            raise RuntimeError("Invalid choice structure in LLM response")
 
         result = {
             "id": response.id,
