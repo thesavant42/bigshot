@@ -306,23 +306,37 @@ class LLMService:
             }
 
     def is_available(self) -> bool:
-        """Check if LLM service is available (including mock mode)"""
-        # Return True to enable mock mode when no real client is available
-        return True
+        """Check if LLM service is available"""
+        # Check if we have a working client
+        if self.client is not None:
+            return True
+        
+        # If mock mode is enabled, consider it available
+        if self.config.LLM_MOCK_MODE:
+            return True
+            
+        # Otherwise, not available
+        return False
 
     def get_available_models(self) -> List[str]:
         """Get list of available models"""
         if not self.client:
-            # Return mock models when no real client is available
-            return ["mock-model", "bigshot-assistant"]
+            # Only return mock models if mock mode is enabled
+            if self.config.LLM_MOCK_MODE:
+                return ["mock-model", "bigshot-assistant"]
+            else:
+                return []
 
         try:
             models = self.client.models.list()
             return [model.id for model in models.data]
         except Exception as e:
             logger.error(f"Failed to get available models: {e}")
-            # Return mock models on error
-            return ["mock-model", "bigshot-assistant"]
+            # Only return mock models on error if mock mode is enabled
+            if self.config.LLM_MOCK_MODE:
+                return ["mock-model", "bigshot-assistant"]
+            else:
+                return []
 
     def get_detailed_models(self) -> List[Dict[str, Any]]:
         """Get detailed list of available models with metadata"""
@@ -466,8 +480,11 @@ class LLMService:
     ) -> Union[Dict[str, Any], Iterator[Dict[str, Any]]]:
         """Create chat completion with context"""
         if not self.client:
-            # Fallback to mock response in development/Docker environments
-            return self._create_mock_response(message, context, stream)
+            # Only fallback to mock response if mock mode is enabled
+            if self.config.LLM_MOCK_MODE:
+                return self._create_mock_response(message, context, stream)
+            else:
+                raise RuntimeError("LLM client not available")
 
         # Build messages list
         messages = []
@@ -503,9 +520,12 @@ class LLMService:
                 return self._process_response(response)
         except Exception as e:
             logger.error(f"Failed to create chat completion: {e}")
-            # Fallback to mock response on any error
-            logger.info("Falling back to mock response due to LLM service error")
-            return self._create_mock_response(message, context, stream)
+            # Only fallback to mock response if mock mode is enabled
+            if self.config.LLM_MOCK_MODE:
+                logger.info("Falling back to mock response due to LLM service error")
+                return self._create_mock_response(message, context, stream)
+            else:
+                raise
 
     def _build_system_message(self, context: Optional[Dict[str, Any]] = None) -> str:
         """Build system message with context"""
