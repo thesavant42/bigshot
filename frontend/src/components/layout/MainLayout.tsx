@@ -59,7 +59,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       <div
         className={`${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-dark-800 border-r border-neutral-200 dark:border-dark-700 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 shadow-medium lg:shadow-none`}
+        } fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-dark-800 border-r border-neutral-200 dark:border-dark-700 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 shadow-xl lg:shadow-none`}
       >
         <div className="flex items-center justify-between h-16 px-4 bg-neutral-50 dark:bg-dark-900 border-b border-neutral-200 dark:border-dark-700">
           <div className="flex items-center">
@@ -70,7 +70,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           <div className="flex items-center space-x-2">
             <ThemeToggle />
             <button
-              className="lg:hidden p-2 rounded-lg text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
+              className="lg:hidden p-2 rounded-lg text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-dark-700"
               onClick={() => setSidebarOpen(false)}
               aria-label="Close sidebar"
             >
@@ -81,6 +81,20 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
         <nav className="mt-5 px-2">
           <div className="space-y-1">
+            <button
+              onClick={() => {
+                setActiveView('config');
+                setSidebarOpen(false);
+              }}
+              className={`w-full group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                activeView === 'config'
+                  ? 'bg-accent-100 dark:bg-accent-900/20 text-accent-900 dark:text-accent-100'
+                  : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-dark-700 hover:text-neutral-900 dark:hover:text-white'
+              }`}
+            >
+              <CogIcon className="h-5 w-5 mr-3" />
+              Settings
+            </button>
             <button
               onClick={() => setActiveView('dashboard')}
               className={`w-full group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
@@ -112,17 +126,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
             >
               <HeartIcon className="h-5 w-5 mr-3" />
               Service Health
-            </button>
-            <button
-              onClick={() => setActiveView('config')}
-              className={`w-full group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                activeView === 'config'
-                  ? 'bg-accent-100 dark:bg-accent-900/20 text-accent-900 dark:text-accent-100'
-                  : 'text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-dark-700 hover:text-neutral-900 dark:hover:text-white'
-              }`}
-            >
-              <CogIcon className="h-5 w-5 mr-3" />
-              Settings
             </button>
           </div>
         </nav>
@@ -222,7 +225,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           ) : (
             /* Full-width panels for monitoring, health, and config */
             <div className="flex-1 bg-neutral-50 dark:bg-dark-950 overflow-hidden">
-              {activeView === 'monitoring' && <SystemMonitoringDashboard />}
+              {activeView === 'monitoring' && (
+                <div className="h-full p-4">
+                  <SystemMonitoringDashboard />
+                </div>
+              )}
               {activeView === 'health' && <PostAuthProof onContinue={() => setActiveView('dashboard')} />}
               {activeView === 'config' && <ConfigurationManagement />}
             </div>
@@ -233,7 +240,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       {/* Sidebar overlay for mobile */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
+          className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden backdrop-blur-sm"
           onClick={() => setSidebarOpen(false)}
           aria-hidden="true"
         />
