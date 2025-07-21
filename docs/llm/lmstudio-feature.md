@@ -35,7 +35,7 @@ BigShot includes robust integration with LM Studio's REST API, allowing users to
 
 #### 1. Model Management
 
-**GET `/api/v1/llm-providers/models`**
+**GET `/api/v0/llm-providers/models`**
 - Lists available models from active LM Studio instance
 - Supports `?detailed=true` for extended model metadata
 - Returns model IDs, types, architectures, and states
@@ -57,7 +57,7 @@ BigShot includes robust integration with LM Studio's REST API, allowing users to
     "provider": {
       "name": "LMStudio Local",
       "provider": "lmstudio",
-      "base_url": "http://192.168.1.98:1234/v1"
+      "base_url": "http://192.168.1.98:1234/api/v0"
     }
   }
 }
@@ -65,8 +65,8 @@ BigShot includes robust integration with LM Studio's REST API, allowing users to
 
 #### 2. Text Completions
 
-**POST `/api/v1/llm-providers/completions`**
-- Creates text completions using LM Studio's `/v1/completions` endpoint
+**POST `/api/v0/llm-providers/completions`**
+- Creates text completions using LM Studio's `/api/v0/completions` endpoint
 - Supports streaming and non-streaming responses
 - Configurable parameters (temperature, max_tokens, stop sequences)
 
@@ -83,8 +83,8 @@ BigShot includes robust integration with LM Studio's REST API, allowing users to
 
 #### 3. Embeddings
 
-**POST `/api/v1/llm-providers/embeddings`**
-- Creates text embeddings using LM Studio's `/v1/embeddings` endpoint
+**POST `/api/v0/llm-providers/embeddings`**
+- Creates text embeddings using LM Studio's `/api/v0/embeddings` endpoint
 - Supports single strings or arrays of text
 - Returns vector embeddings for semantic search
 
@@ -101,7 +101,7 @@ BigShot includes robust integration with LM Studio's REST API, allowing users to
 The implementation is designed to work with LM Studio's OpenAI-compatible REST API:
 
 - **Base URL**: Configurable via `LMSTUDIO_API_BASE` environment variable
-- **Default**: `http://192.168.1.98:1234/v1`
+- **Default**: `http://192.168.1.98:1234/api/v0/`
 - **Authentication**: Uses dummy API key (`lm-studio`) as per LM Studio conventions
 - **API Version**: Compatible with LM Studio v0.2.0+
 
@@ -112,7 +112,7 @@ The implementation is designed to work with LM Studio's OpenAI-compatible REST A
 ```bash
 # LM Studio Configuration
 LLM_PROVIDER=lmstudio
-LMSTUDIO_API_BASE=http://192.168.1.98:1234/v1
+LMSTUDIO_API_BASE=http://192.168.1.98:1234/api/v0/
 LMSTUDIO_API_KEY=lm-studio
 LMSTUDIO_MODEL=model-identifier
 ```
@@ -131,7 +131,7 @@ LM Studio providers can be configured via:
 
 The chat interface includes:
 
-- **Model Dropdown**: Dynamically populated from `/v1/models` endpoint
+- **Model Dropdown**: Dynamically populated from /api/v0/models` endpoint
 - **Provider Status**: Shows active LM Studio instance
 - **Settings Panel**: Collapsible controls for temperature and max tokens
 - **Real-time Updates**: Model list refreshes automatically
@@ -284,7 +284,7 @@ logging.getLogger('app.services.llm_service').setLevel(logging.DEBUG)
 Test LM Studio connectivity:
 
 ```bash
-curl http://192.168.1.98:1234/v1/models
+curl http://192.168.1.98:1234/api/v0/models
 ```
 
 ## Future Enhancements

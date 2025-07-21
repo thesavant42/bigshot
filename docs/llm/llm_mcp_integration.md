@@ -44,9 +44,9 @@ OPENAI_API_BASE=https://api.openai.com/v1  # Optional, defaults to OpenAI
 OPENAI_MODEL=gpt-3.5-turbo  # Optional, defaults to gpt-3.5-turbo
 
 # LMStudio Configuration (when LLM_PROVIDER=lmstudio)
-LMSTUDIO_API_BASE=http://localhost:1234/v1  # Optional, defaults to localhost:1234
+LMSTUDIO_API_BASE=http://localhost:1234/api/v0  # Optional, defaults to localhost:1234
 LMSTUDIO_API_KEY=lm-studio  # Optional, defaults to 'lm-studio'
-LMSTUDIO_MODEL=your-model-name  # Optional, defaults to 'model-identifier'
+LMSTUDIO_MODEL=qwen/qwen3-8b  # Optional, defaults to 'model-identifier'
 
 # MCP Server Configuration
 MCP_SERVER_ENABLED=true

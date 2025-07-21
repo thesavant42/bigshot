@@ -44,7 +44,7 @@ Set the following environment variables in your `.env` file:
 LLM_PROVIDER=lmstudio
 
 # LMStudio API endpoint (optional, defaults to localhost:1234)
-LMSTUDIO_API_BASE=http://localhost:1234/v1
+LMSTUDIO_API_BASE=http://localhost:1234/v0
 
 # Model identifier from LMStudio (optional)
 LMSTUDIO_MODEL=qwen2.5-7b-instruct
@@ -194,7 +194,7 @@ To switch between models:
 If running LMStudio on a different port or remote server:
 
 ```bash
-LMSTUDIO_API_BASE=http://your-server:8080/v1
+LMSTUDIO_API_BASE=http://192.168.1.98:1234/v0/
 ```
 
 ## Integration with BigShot Features

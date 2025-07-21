@@ -37,7 +37,7 @@ def fix_docker_chat():
                 # Option 1: Try to fix the URL to use host.docker.internal
                 if "192.168.1.98" in lmstudio_provider.base_url:
                     # Update to use host.docker.internal for Docker networking
-                    lmstudio_provider.base_url = "http://host.docker.internal:1234/v1"
+                    lmstudio_provider.base_url = "http://192.168.1.98:1234/api/v0/"
                     print("Updated base URL to use host.docker.internal")
 
                 # Option 2: Set a more reasonable model name
