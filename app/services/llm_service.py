@@ -363,6 +363,16 @@ class LLMService:
                     model_info["state"] = model.state
                 if hasattr(model, "max_context_length"):
                     model_info["max_context_length"] = model.max_context_length
+                if hasattr(model, "loaded_context_length"):
+                    model_info["loaded_context_length"] = model.loaded_context_length
+                    
+                # Set preferred context length based on LMStudio issue requirements
+                if hasattr(model, "loaded_context_length") and model.loaded_context_length:
+                    model_info["preferred_context_length"] = model.loaded_context_length
+                elif hasattr(model, "max_context_length") and model.max_context_length:
+                    model_info["preferred_context_length"] = min(model.max_context_length, 16000)
+                else:
+                    model_info["preferred_context_length"] = 16000  # sane default
 
                 detailed_models.append(model_info)
 
@@ -370,6 +380,37 @@ class LLMService:
         except Exception as e:
             logger.error(f"Failed to get detailed models: {e}")
             return []
+
+    def get_model_info(self, model_name: str) -> Optional[Dict[str, Any]]:
+        """Get detailed information about a specific model"""
+        try:
+            detailed_models = self.get_detailed_models()
+            for model_info in detailed_models:
+                if model_info["id"] == model_name:
+                    return model_info
+            
+            # If not found in detailed models, try to get basic info
+            logger.warning(f"Model {model_name} not found in detailed models list")
+            try:
+                basic_info = self.client.models.retrieve(model_name)
+                return basic_info
+            except Exception as e:
+                logger.error(f"Failed to retrieve basic info for model {model_name}: {e}")
+                return None
+            
+        except Exception as e:
+            logger.error(f"Failed to get model info for {model_name}: {e}")
+            return None
+
+    def get_model_context_length(self, model_name: str) -> int:
+        """Get the appropriate context length for a model"""
+        model_info = self.get_model_info(model_name)
+        if model_info:
+            # Use the preferred context length we calculated
+            return model_info.get("preferred_context_length", 16000)
+        
+        # Fall back to default
+        return 16000
 
     def generate_response(
         self,
@@ -384,14 +425,38 @@ class LLMService:
             raise RuntimeError("LLM client not available")
 
         model = model or self.get_default_model()
+        
+        # Log request details for debugging
+        logger.debug(f"Generating LLM response with model: {model}")
+        logger.debug(f"Message count: {len(messages)}")
+        logger.debug(f"Tools provided: {len(tools) if tools else 0}")
+        logger.debug(f"Stream mode: {stream}")
 
         try:
             response = self.client.chat.completions.create(
                 model=model, messages=messages, tools=tools, stream=stream, **kwargs
             )
+            
+            # Log successful response
+            if not stream and response:
+                logger.debug(f"Received response with type: {type(response)}")
+                logger.debug(f"Response has choices: {hasattr(response, 'choices')}")
+                if hasattr(response, 'choices') and response.choices:
+                    try:
+                        logger.debug(f"Number of choices: {len(response.choices)}")
+                        logger.debug(f"First choice has message: {hasattr(response.choices[0], 'message')}")
+                    except (TypeError, AttributeError):
+                        logger.debug("Response choices structure not standard (possibly mocked)")
+            
             return response
         except Exception as e:
             logger.error(f"Failed to generate LLM response: {e}")
+            logger.error(f"Error type: {type(e)}")
+            logger.error(f"Request model: {model}")
+            logger.error(f"Request messages: {len(messages)} messages")
+            logger.error(f"Provider: {self.get_current_provider()}")
+            if hasattr(self, 'current_provider_config') and self.current_provider_config:
+                logger.error(f"Base URL: {self.current_provider_config.base_url}")
             raise
 
     def create_text_completion(
@@ -667,7 +732,7 @@ class LLMService:
             "object": response.object,
             "created": response.created,
             "model": response.model,
-            "content": choice.message.content if hasattr(choice, "message") else choice.text or "",
+            "content": choice.text if hasattr(choice, "text") else (choice.message.content if hasattr(choice, "message") and choice.message else ""),
             "finish_reason": choice.finish_reason,
             "usage": response.usage.model_dump() if response.usage else None,
         }
@@ -694,12 +759,31 @@ class LLMService:
 
     def _process_response(self, response: ChatCompletion) -> Dict[str, Any]:
         """Process non-streaming chat response"""
-        # Validate response structure
-        if not response or not response.choices or len(response.choices) == 0:
+        # Enhanced validation with detailed error reporting
+        if not response:
+            logger.error("Received null/empty response from LLM service")
+            raise RuntimeError("Invalid or empty response from LLM service")
+        
+        # Log response details for debugging
+        logger.debug(f"LLM Response details: id={getattr(response, 'id', 'N/A')}, "
+                    f"model={getattr(response, 'model', 'N/A')}, "
+                    f"object={getattr(response, 'object', 'N/A')}")
+        
+        if not hasattr(response, 'choices') or not response.choices:
+            logger.error(f"Response missing choices. Response attributes: {dir(response)}")
+            logger.error(f"Response type: {type(response)}")
+            if hasattr(response, '__dict__'):
+                sanitized_response = {key: value for key, value in response.__dict__.items() if key not in ['api_key', 'token']}
+                logger.error(f"Sanitized response attributes: {sanitized_response}")
+            raise RuntimeError("Invalid or empty response from LLM service")
+        
+        if len(response.choices) == 0:
+            logger.error("Response has empty choices array")
             raise RuntimeError("Invalid or empty response from LLM service")
         
         message = response.choices[0].message
         if not message:
+            logger.error(f"Choice has no message. Choice details: {response.choices[0]}")
             raise RuntimeError("Invalid message structure in LLM response")
 
         result = {
