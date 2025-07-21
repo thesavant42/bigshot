@@ -8,6 +8,7 @@ from datetime import datetime, UTC
 from typing import Dict, Any, Optional
 from flask import Blueprint, request, jsonify, Response, stream_with_context
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from openai import APITimeoutError, APIConnectionError
 
 from app.services.llm_service import llm_service
 from app.utils.responses import success_response, error_response
@@ -76,6 +77,10 @@ def send_message():
         else:
             logger.error(f"Runtime error in chat: {e}")
             return error_response(f"Failed to process message: {str(e)}", 500)
+    except (APITimeoutError, APIConnectionError) as e:
+        # Handle LLM timeout and connection errors specifically
+        logger.warning(f"LLM service connection issue: {e}")
+        return error_response("LLM service is temporarily unavailable. Please try again later.", 503)
     except Exception as e:
         # Check if this is a session-related error or other LLM service issue
         error_message = str(e)
@@ -85,6 +90,8 @@ def send_message():
             or ("Mock" in error_message and "not subscriptable" in error_message)
             or ("not available" in error_message.lower())
             or ("client not available" in error_message.lower())
+            or ("timed out" in error_message.lower())
+            or ("timeout" in error_message.lower())
         ):
             logger.warning(f"LLM service unavailable: {e}")
             return error_response("LLM service is not available", 503)
@@ -114,6 +121,10 @@ def stream_chat_response(
         # Send completion event
         yield f"data: {json.dumps({'type': 'completion'})}\n\n"
 
+    except (APITimeoutError, APIConnectionError) as e:
+        logger.warning(f"Streaming LLM service connection issue: {e}")
+        error_data = json.dumps({"type": "error", "error": "LLM service is temporarily unavailable"})
+        yield f"data: {error_data}\n\n"
     except Exception as e:
         logger.error(f"Streaming failed: {e}")
         error_data = json.dumps({"type": "error", "error": str(e)})
@@ -131,6 +142,10 @@ def get_models():
         models = llm_service.get_available_models()
         return success_response({"models": models})
 
+    except (APITimeoutError, APIConnectionError) as e:
+        # Handle LLM timeout and connection errors specifically
+        logger.warning(f"LLM service connection issue: {e}")
+        return error_response("LLM service is temporarily unavailable. Please try again later.", 503)
     except Exception as e:
         logger.error(f"Failed to get models: {e}")
         return error_response(f"Failed to get models: {str(e)}", 500)
@@ -167,6 +182,8 @@ def get_status():
             or "attribute refresh operation cannot proceed" in error_message
             or ("not available" in error_message.lower())
             or ("client not available" in error_message.lower())
+            or ("timed out" in error_message.lower())
+            or ("timeout" in error_message.lower())
         ):
             logger.warning(f"LLM service unavailable: {e}")
             return error_response("LLM service is not available", 503)
@@ -253,6 +270,10 @@ def get_mcp_tools():
 
         return success_response({"tools": tools, "total": len(tools)})
 
+    except (APITimeoutError, APIConnectionError) as e:
+        # Handle LLM timeout and connection errors specifically
+        logger.warning(f"LLM service connection issue: {e}")
+        return error_response("LLM service is temporarily unavailable. Please try again later.", 503)
     except Exception as e:
         logger.error(f"Failed to get MCP tools: {e}")
         return error_response(f"Failed to get MCP tools: {str(e)}", 500)
@@ -284,6 +305,10 @@ def execute_mcp_tool():
             }
         )
 
+    except (APITimeoutError, APIConnectionError) as e:
+        # Handle LLM timeout and connection errors specifically
+        logger.warning(f"LLM service connection issue: {e}")
+        return error_response("LLM service is temporarily unavailable. Please try again later.", 503)
     except Exception as e:
         logger.error(f"Failed to execute MCP tool: {e}")
         return error_response(f"Failed to execute MCP tool: {str(e)}", 500)
