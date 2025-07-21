@@ -43,6 +43,12 @@ export class WebSocketService {
     const wsUrl = url || getWebSocketUrl();
     const token = localStorage.getItem('auth_token');
     
+    // Don't attempt connection without a valid token
+    if (!token) {
+      console.warn('WebSocket connection attempted without auth token. Will retry after login.');
+      return;
+    }
+    
     this.socket = io(wsUrl, {
       transports: ['websocket'],
       auth: {
@@ -87,6 +93,13 @@ export class WebSocketService {
   private handleReconnect(): void {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
       console.error('Max WebSocket reconnection attempts reached');
+      return;
+    }
+
+    // Check if we have a valid token before attempting reconnection
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      console.warn('Cannot reconnect WebSocket: no auth token available');
       return;
     }
 
@@ -158,6 +171,16 @@ export class WebSocketService {
 
   isConnected(): boolean {
     return this.socket?.connected || false;
+  }
+
+  // Method to refresh connection after login
+  refreshConnection(): void {
+    const token = localStorage.getItem('auth_token');
+    if (token && !this.isConnected()) {
+      console.log('Refreshing WebSocket connection with new auth token');
+      this.disconnect();
+      this.connect();
+    }
   }
 }
 
