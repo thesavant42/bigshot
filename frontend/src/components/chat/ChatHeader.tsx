@@ -43,7 +43,8 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
               </div>
             ) : !models || models.length === 0 ? (
               <div className="flex items-center space-x-2 px-3 py-1 bg-gray-700 text-red-400 rounded border border-gray-600 text-sm">
-                <span>⚠️ No models available</span>
+                <ExclamationTriangleIcon className="h-4 w-4 text-red-400" />
+                <span>No models available</span>
               </div>
             ) : (
               <select
