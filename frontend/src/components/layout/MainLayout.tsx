@@ -4,7 +4,6 @@ import { useWebSocket } from '../../hooks/useWebSocket';
 import { useKeyboard } from '../../hooks/useKeyboard';
 import ThemeToggle from '../ThemeToggle';
 import StatusBadge from '../StatusBadge';
-import SearchInput from '../SearchInput';
 import ChatInterface from '../chat/ChatInterface';
 import SystemMonitoringDashboard from '../monitoring/SystemMonitoringDashboard';
 import PostAuthProof from '../auth/PostAuthProof';
@@ -17,27 +16,11 @@ interface MainLayoutProps {
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [leftPanelWidth, setLeftPanelWidth] = useState(40); // Percentage
-  const [searchQuery, setSearchQuery] = useState('');
   const [activeView, setActiveView] = useState<'dashboard' | 'monitoring' | 'config' | 'health'>('dashboard');
   const { isConnected } = useWebSocket();
   const { addShortcut } = useKeyboard();
 
   // Add keyboard shortcuts
-  React.useEffect(() => {
-    addShortcut({
-      key: 'k',
-      ctrlKey: true,
-      callback: () => {
-        const searchInput = document.getElementById('search-input');
-        searchInput?.focus();
-      },
-      description: 'Focus search',
-    });
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- Only run once on mount to register shortcuts
-  }, []);
-
-  // Separate effect for sidebar toggle to avoid render loop
   React.useEffect(() => {
     addShortcut({
       key: 'b',
@@ -184,16 +167,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                   </button>
                 )}
                 <div className="ml-4 flex items-center space-x-4">
-                  <SearchInput
-                    id="search-input"
-                    value={searchQuery}
-                    onChange={setSearchQuery}
-                    placeholder="Search domains..."
-                    className="w-64"
-                    showKeyboardShortcut={true}
-                    keyboardShortcut="Ctrl+K"
-                    variant="header"
-                  />
+                  {/* Global search removed - each section has its own contextual search */}
                 </div>
               </div>
               <div className="flex items-center space-x-4">
