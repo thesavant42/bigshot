@@ -122,8 +122,13 @@ def stream_chat_response(
         yield f"data: {json.dumps({'type': 'completion'})}\n\n"
 
     except (APITimeoutError, APIConnectionError) as e:
-        logger.warning(f"Streaming LLM service connection issue: {e}")
-        error_data = json.dumps({"type": "error", "error": "LLM service is temporarily unavailable"})
+        error_message = str(e).lower()
+        if "timeout" in error_message:
+            logger.warning(f"Streaming LLM service timeout detected: {e}")
+            error_data = json.dumps({"type": "error", "error": "LLM service timeout. Please try again later."})
+        else:
+            logger.warning(f"Streaming LLM service connection issue: {e}")
+            error_data = json.dumps({"type": "error", "error": "LLM service is temporarily unavailable"})
         yield f"data: {error_data}\n\n"
     except Exception as e:
         logger.error(f"Streaming failed: {e}")
