@@ -53,7 +53,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
       // Default error UI
       return (
         <div className="flex flex-col items-center justify-center h-full p-8 text-center">
-          <ExclamationTriangleIcon className="h-16 w-16 text-red-500 mb-4" />
+          <ExclamationTriangleIcon className="h-12 w-12 text-red-500 mb-4" />
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
             Something went wrong
           </h2>

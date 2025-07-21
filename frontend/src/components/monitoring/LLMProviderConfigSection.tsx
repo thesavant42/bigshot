@@ -520,7 +520,7 @@ const LLMProviderConfigSection: React.FC = () => {
 
         {providers.length === 0 && (
           <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-            <BeakerIcon className="h-6 w-6 mx-auto mb-4 opacity-50" />
+            <BeakerIcon className="h-4 w-4 mx-auto mb-4 opacity-50" />
             <p>No LLM providers configured</p>
             <p className="text-sm">Add a provider to start using AI chat features</p>
           </div>
