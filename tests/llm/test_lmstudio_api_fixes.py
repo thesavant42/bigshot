@@ -154,7 +154,7 @@ class TestLMStudioAPIFixes:
             provider = LLMProviderConfig(
                 provider="lmstudio",
                 name="Test LMStudio",
-                base_url="http://test:1234/v1",
+                base_url="http://test:1234/api/v0",
                 model="test-model",
                 is_active=True,
             )

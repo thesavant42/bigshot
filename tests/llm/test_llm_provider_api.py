@@ -150,7 +150,7 @@ class TestLLMProviderAPI:
         provider_data = {
             "provider": "lmstudio",
             "name": "Local LMStudio",
-            "base_url": "http://localhost:1234/v1",
+            "base_url": "http://localhost:1234/api/v0",
             "model": "llama-2-7b",
         }
 
@@ -232,7 +232,7 @@ class TestLLMProviderAPI:
         provider_data = {
             "provider": "lmstudio",
             "name": "Active Provider",
-            "base_url": "http://localhost:1234/v1",
+            "base_url": "http://localhost:1234/api/v0",
             "model": "test-model",
         }
 
@@ -375,7 +375,7 @@ class TestLLMProviderAPI:
         provider_data = {
             "provider": "lmstudio",
             "name": "Test Connection",
-            "base_url": "http://invalid:1234/v1",  # Invalid URL
+            "base_url": "http://invalid:1234/api/v0",  # Invalid URL
             "model": "test-model",
         }
 

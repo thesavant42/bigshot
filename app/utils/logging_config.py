@@ -550,7 +550,7 @@ def log_environment_validation():
         validation_results.setdefault("llm_lmstudio", {})[
             "LMSTUDIO_API_BASE"
         ] = is_valid
-        final_base = lmstudio_base or "http://localhost:1234/v1"
+        final_base = lmstudio_base or "http://localhost:1234/api/v0"
         print_debug_status("LMSTUDIO_API_BASE", final_base, True)
         env_logger.info(f"LMStudio API Base: {final_base}", extra={"debug_zone": "env"})
 
@@ -862,7 +862,7 @@ def log_service_connectivity():
         try:
             import requests
 
-            lmstudio_base = os.getenv("LMSTUDIO_API_BASE", "http://localhost:1234/v1")
+            lmstudio_base = os.getenv("LMSTUDIO_API_BASE", "http://localhost:1234/api/v0")
             response = requests.get(f"{lmstudio_base}/models", timeout=5)
             if response.status_code == 200:
                 connectivity_logger.info(

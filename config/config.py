@@ -48,13 +48,13 @@ class Config:
     OPENAI_MODEL = os.environ.get("OPENAI_MODEL", "gpt-3.5-turbo")
 
     # LMStudio settings
-    LMSTUDIO_API_BASE = os.environ.get("LMSTUDIO_API_BASE", "http://192.168.1.98:1234/v1")
+    LMSTUDIO_API_BASE = os.environ.get("LMSTUDIO_API_BASE", "http://192.168.1.98:1234/api/v0")
     LMSTUDIO_API_KEY = os.environ.get(
         "LMSTUDIO_API_KEY", "lm-studio"
     )  # Default API key for LMStudio
     LMSTUDIO_MODEL = os.environ.get(
-        "LMSTUDIO_MODEL", "model-identifier"
-    )  # Default model identifier
+        "LMSTUDIO_MODEL", "qwen/qwen3-8b"
+    )  # Default model identifier - use specific model instead of generic
 
     # MCP settings
     MCP_SERVER_ENABLED = os.environ.get("MCP_SERVER_ENABLED", "true").lower() == "true"

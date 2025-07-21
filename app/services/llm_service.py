@@ -136,7 +136,7 @@ class LLMService:
         try:
             import requests
 
-            response = requests.get(f"{base_url.rstrip('/v1')}/v1/models", timeout=5)
+            response = requests.get(f"{base_url.rstrip('/')}/models", timeout=5)
             if response.status_code != 200:
                 logger.warning(f"LMStudio server may not be accessible at {base_url}")
         except Exception as e:
@@ -321,19 +321,44 @@ class LLMService:
     def get_available_models(self) -> List[str]:
         """Get list of available models"""
         if not self.client:
+            logger.warning("LLM client is None - cannot get models")
             # Only return mock models if mock mode is enabled
             if self.config.LLM_MOCK_MODE:
+                logger.info("Returning mock models due to LLM_MOCK_MODE")
                 return ["mock-model", "bigshot-assistant"]
             else:
                 return []
 
         try:
+            logger.debug(f"Requesting models from LLM service: {self.get_current_provider()}")
+            if hasattr(self, 'current_provider_config') and self.current_provider_config:
+                logger.debug(f"Using base URL: {self.current_provider_config.base_url}")
+                
             models = self.client.models.list()
-            return [model.id for model in models.data]
+            
+            if not models or not hasattr(models, 'data'):
+                logger.error("Invalid models response structure from LLM service")
+                return []
+                
+            model_ids = [model.id for model in models.data]
+            logger.info(f"Successfully retrieved {len(model_ids)} models from LLM service: {model_ids}")
+            return model_ids
+            
         except Exception as e:
-            logger.error(f"Failed to get available models: {e}")
+            logger.error(f"Failed to get available models from LLM service: {e}")
+            logger.error(f"Error type: {type(e)}")
+            
+            # Log additional context for debugging
+            if hasattr(self, 'current_provider_config') and self.current_provider_config:
+                logger.error(f"Provider: {self.current_provider_config.name}")
+                logger.error(f"Base URL: {self.current_provider_config.base_url}")
+            else:
+                logger.error(f"Legacy provider: {self.provider}")
+                logger.error(f"Base URL: {self._get_legacy_base_url()}")
+                
             # Only return mock models on error if mock mode is enabled
             if self.config.LLM_MOCK_MODE:
+                logger.info("Returning mock models due to LLM_MOCK_MODE after error")
                 return ["mock-model", "bigshot-assistant"]
             else:
                 return []
@@ -341,15 +366,25 @@ class LLMService:
     def get_detailed_models(self) -> List[Dict[str, Any]]:
         """Get detailed list of available models with metadata"""
         if not self.client:
+            logger.warning("LLM client is None - cannot get detailed models")
             return []
 
         try:
+            logger.debug(f"Requesting detailed models from LLM service: {self.get_current_provider()}")
+            if hasattr(self, 'current_provider_config') and self.current_provider_config:
+                logger.debug(f"Using base URL: {self.current_provider_config.base_url}")
+                
             models = self.client.models.list()
+            
+            if not models or not hasattr(models, 'data'):
+                logger.error("Invalid models response structure from LLM service")
+                return []
+                
             detailed_models = []
             for model in models.data:
                 model_info = {
                     "id": model.id,
-                    "object": model.object,
+                    "object": getattr(model, "object", "model"),
                     "created": getattr(model, "created", None),
                     "owned_by": getattr(model, "owned_by", "lmstudio"),
                 }
@@ -376,9 +411,21 @@ class LLMService:
 
                 detailed_models.append(model_info)
 
+            logger.info(f"Successfully retrieved detailed info for {len(detailed_models)} models")
             return detailed_models
+            
         except Exception as e:
-            logger.error(f"Failed to get detailed models: {e}")
+            logger.error(f"Failed to get detailed models from LLM service: {e}")
+            logger.error(f"Error type: {type(e)}")
+            
+            # Log additional context for debugging
+            if hasattr(self, 'current_provider_config') and self.current_provider_config:
+                logger.error(f"Provider: {self.current_provider_config.name}")
+                logger.error(f"Base URL: {self.current_provider_config.base_url}")
+            else:
+                logger.error(f"Legacy provider: {self.provider}")
+                logger.error(f"Base URL: {self._get_legacy_base_url()}")
+                
             return []
 
     def get_model_info(self, model_name: str) -> Optional[Dict[str, Any]]:
@@ -554,6 +601,31 @@ class LLMService:
                     "Alternatively, set LLM_MOCK_MODE=true for testing purposes."
                 )
 
+        # Validate that models are available (unless mock mode is enabled)
+        if not self.config.LLM_MOCK_MODE:
+            available_models = self.get_available_models()
+            if not available_models:
+                logger.error("No models available from LLM service - cannot create chat completion")
+                raise RuntimeError(
+                    "No models available from LLM service. Please check your LLM provider configuration and ensure the service is running with loaded models."
+                )
+            logger.debug(f"Available models for chat: {available_models}")
+
+        # Determine which model to use
+        target_model = model or self.get_default_model()
+        
+        # Validate the target model is available (unless mock mode is enabled)
+        if not self.config.LLM_MOCK_MODE:
+            available_models = self.get_available_models()
+            if target_model not in available_models:
+                logger.warning(f"Requested model '{target_model}' not in available models: {available_models}")
+                if available_models:
+                    # Use the first available model as fallback
+                    target_model = available_models[0]
+                    logger.info(f"Falling back to available model: {target_model}")
+                else:
+                    raise RuntimeError(f"Requested model '{target_model}' not available and no fallback models found")
+
         # Build messages list
         messages = []
 
@@ -575,11 +647,12 @@ class LLMService:
         tools = self._get_mcp_tools()
 
         try:
+            logger.info(f"Creating chat completion with model: {target_model}")
             response = self.generate_response(
                 messages=messages,
                 tools=tools,
                 stream=stream,
-                model=model,  # Pass model parameter
+                model=target_model,  # Use validated model
             )
 
             if stream:

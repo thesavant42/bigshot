@@ -67,7 +67,7 @@ class TestUndefinedVariableFix:
         payload = {
             "provider": "lmstudio",
             "name": "Test Provider Timeout",
-            "base_url": "http://localhost:1234/v1",
+            "base_url": "http://localhost:1234/api/v0",
             "model": "test-model",
             "connection_timeout": "45",  # String input
         }
@@ -96,7 +96,7 @@ class TestUndefinedVariableFix:
         payload = {
             "provider": "lmstudio",
             "name": "Test Provider Temperature",
-            "base_url": "http://localhost:1234/v1",
+            "base_url": "http://localhost:1234/api/v0",
             "model": "test-model",
             "temperature": "0.8",  # String input
         }
@@ -124,7 +124,7 @@ class TestUndefinedVariableFix:
         payload = {
             "provider": "lmstudio",
             "name": "Test Provider Defaults",
-            "base_url": "http://localhost:1234/v1",
+            "base_url": "http://localhost:1234/api/v0",
             "model": "test-model",
             # No connection_timeout or temperature provided
         }
@@ -153,7 +153,7 @@ class TestUndefinedVariableFix:
         payload = {
             "provider": "lmstudio",
             "name": "Test Provider Numeric",
-            "base_url": "http://localhost:1234/v1",
+            "base_url": "http://localhost:1234/api/v0",
             "model": "test-model",
             "connection_timeout": 60,  # Numeric input
             "temperature": 1.2,  # Numeric input
@@ -190,7 +190,7 @@ class TestUndefinedVariableFix:
             payload = {
                 "provider": "lmstudio",
                 "name": name,
-                "base_url": "http://localhost:1234/v1",
+                "base_url": "http://localhost:1234/api/v0",
                 "model": "test-model",
                 "connection_timeout": timeout_value,
             }
@@ -222,7 +222,7 @@ class TestUndefinedVariableFix:
             payload = {
                 "provider": "lmstudio",
                 "name": name,
-                "base_url": "http://localhost:1234/v1",
+                "base_url": "http://localhost:1234/api/v0",
                 "model": "test-model",
                 "temperature": temp_value,
             }

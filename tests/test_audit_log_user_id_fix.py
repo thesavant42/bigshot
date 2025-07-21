@@ -63,7 +63,7 @@ def test_audit_log_user_id_is_integer(client, auth_headers, app):
     provider_data = {
         "provider": "lmstudio",
         "name": "Test User ID Fix",
-        "base_url": "http://localhost:1234/v1",
+        "base_url": "http://localhost:1234/api/v0",
         "model": "test-model",
     }
 
