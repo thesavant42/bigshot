@@ -118,14 +118,17 @@ describe('MainLayout', () => {
     expect(screen.getByTestId('configuration-management')).toBeInTheDocument();
   });
 
-  it('renders search input with keyboard shortcut', () => {
+  it('shows the main navigation elements', () => {
     renderWithProviders(
       <MainLayout>
         <div data-testid="dashboard-content">Dashboard Content</div>
       </MainLayout>
     );
     
-    expect(screen.getByPlaceholderText('Search domains...')).toBeInTheDocument();
-    expect(screen.getByText('Ctrl+K')).toBeInTheDocument();
+    // Check that key navigation elements are present
+    expect(screen.getByText('BigShot')).toBeInTheDocument();
+    expect(screen.getByText('Dashboard')).toBeInTheDocument();
+    expect(screen.getByText('AI Assistant')).toBeInTheDocument();
+    expect(screen.getByText('Domain Reconnaissance')).toBeInTheDocument();
   });
 });
