@@ -484,7 +484,10 @@ class LLMService:
             if self.config.LLM_MOCK_MODE:
                 return self._create_mock_response(message, context, stream)
             else:
-                raise RuntimeError("LLM client not available")
+                raise RuntimeError(
+                    "LLM client not available. Please configure the LLM_PROVIDER environment variable and ensure the service is running. "
+                    "Alternatively, set LLM_MOCK_MODE=true for testing purposes."
+                )
 
         # Build messages list
         messages = []
