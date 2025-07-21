@@ -76,6 +76,12 @@ services:
       - ./logs:/app/logs
     entrypoint: ["./scripts/docker-entrypoint.sh"]
     command: python run.py
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   # Celery Worker (Development)
   celery:
