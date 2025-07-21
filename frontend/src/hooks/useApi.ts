@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiService } from '../services/api';
+import { webSocketService } from '../services/websocket';
 import type { Domain, FilterOptions, TextCompletionRequest, EmbeddingsRequest } from '../types';
 import type { ChatContext } from '../services/chatService';
 
@@ -25,6 +26,8 @@ export const useAuth = () => {
     onSuccess: (data) => {
       localStorage.setItem('auth_token', data.token);
       queryClient.invalidateQueries({ queryKey: ['auth'] });
+      // Refresh WebSocket connection with new auth token
+      webSocketService.refreshConnection();
     },
   });
 
@@ -37,6 +40,8 @@ export const useAuth = () => {
   const logout = () => {
     localStorage.removeItem('auth_token');
     queryClient.clear();
+    // Disconnect WebSocket on logout
+    webSocketService.disconnect();
     window.location.href = '/login';
   };
 

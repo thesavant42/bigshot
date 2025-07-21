@@ -656,6 +656,10 @@ class LLMService:
 
     def _process_completion_response(self, response) -> Dict[str, Any]:
         """Process non-streaming completion response"""
+        # Validate response structure
+        if not response or not response.choices or len(response.choices) == 0:
+            raise RuntimeError("Invalid or empty response from LLM service")
+            
         choice = response.choices[0]
 
         result = {
@@ -663,7 +667,7 @@ class LLMService:
             "object": response.object,
             "created": response.created,
             "model": response.model,
-            "content": choice.text,
+            "content": choice.message.content if hasattr(choice, "message") else choice.text or "",
             "finish_reason": choice.finish_reason,
             "usage": response.usage.model_dump() if response.usage else None,
         }
@@ -681,7 +685,7 @@ class LLMService:
     ) -> Iterator[Dict[str, Any]]:
         """Process streaming completion response"""
         for chunk in response:
-            if chunk.choices and chunk.choices[0].text:
+            if chunk and chunk.choices and len(chunk.choices) > 0 and chunk.choices[0].text:
                 yield {
                     "content": chunk.choices[0].text,
                     "finish_reason": chunk.choices[0].finish_reason,
@@ -690,11 +694,17 @@ class LLMService:
 
     def _process_response(self, response: ChatCompletion) -> Dict[str, Any]:
         """Process non-streaming chat response"""
+        # Validate response structure
+        if not response or not response.choices or len(response.choices) == 0:
+            raise RuntimeError("Invalid or empty response from LLM service")
+        
         message = response.choices[0].message
+        if not message:
+            raise RuntimeError("Invalid message structure in LLM response")
 
         result = {
-            "content": message.content,
-            "role": message.role,
+            "content": message.content or "",
+            "role": message.role or "assistant",
             "function_calls": [],
             "usage": response.usage.model_dump() if response.usage else None,
         }
@@ -729,11 +739,11 @@ class LLMService:
     ) -> Iterator[Dict[str, Any]]:
         """Process streaming response"""
         for chunk in response:
-            if chunk.choices and chunk.choices[0].delta:
+            if chunk and chunk.choices and len(chunk.choices) > 0 and chunk.choices[0].delta:
                 delta = chunk.choices[0].delta
                 yield {
-                    "content": delta.content,
-                    "role": delta.role,
+                    "content": delta.content or "",
+                    "role": delta.role or "assistant",
                     "finish_reason": chunk.choices[0].finish_reason,
                     "usage": chunk.usage.model_dump() if chunk.usage else None,
                 }
