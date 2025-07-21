@@ -669,7 +669,7 @@ class LLMService:
             "object": response.object,
             "created": response.created,
             "model": response.model,
-            "content": choice.text or "",
+            "content": choice.message.content if hasattr(choice, "message") else choice.text or "",
             "finish_reason": choice.finish_reason,
             "usage": response.usage.model_dump() if response.usage else None,
         }
