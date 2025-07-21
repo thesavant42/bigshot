@@ -391,7 +391,12 @@ class LLMService:
             
             # If not found in detailed models, try to get basic info
             logger.warning(f"Model {model_name} not found in detailed models list")
-            return None
+            try:
+                basic_info = self.client.models.retrieve(model_name)
+                return basic_info
+            except Exception as e:
+                logger.error(f"Failed to retrieve basic info for model {model_name}: {e}")
+                return None
             
         except Exception as e:
             logger.error(f"Failed to get model info for {model_name}: {e}")
