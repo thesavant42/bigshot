@@ -85,7 +85,6 @@ def wait_for_service_health(max_wait_time=60, poll_interval=5):
         
         if code == 0 and stdout.strip():
             try:
-                import json
                 containers = []
                 # Parse each line as a separate JSON object
                 for line in stdout.strip().split('\n'):
