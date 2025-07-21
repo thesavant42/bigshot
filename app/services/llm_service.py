@@ -768,7 +768,8 @@ class LLMService:
             logger.error(f"Response missing choices. Response attributes: {dir(response)}")
             logger.error(f"Response type: {type(response)}")
             if hasattr(response, '__dict__'):
-                logger.error(f"Response dict: {response.__dict__}")
+                sanitized_response = {key: value for key, value in response.__dict__.items() if key not in ['api_key', 'token']}
+                logger.error(f"Sanitized response attributes: {sanitized_response}")
             raise RuntimeError("Invalid or empty response from LLM service")
         
         if len(response.choices) == 0:
