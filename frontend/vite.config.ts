@@ -7,7 +7,7 @@ export default defineConfig({
     port: 3000,
     strictPort: true,
     hmr: {
-      host: 'localhost',      // Connect HMR websocket to localhost instead of 0.0.0.0
+      host: '0.0.0.0',      // Connect HMR websocket to localhost instead of 0.0.0.0
       protocol: 'ws',         // Use ws protocol for HMR
       port: 3000              // Specify HMR websocket port
     },
