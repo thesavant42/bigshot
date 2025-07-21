@@ -745,7 +745,7 @@ class LLMService:
                 delta = chunk.choices[0].delta
                 yield {
                     "content": delta.content or "",
-                    "role": delta.role,
+                    "role": delta.role or "assistant",
                     "finish_reason": chunk.choices[0].finish_reason,
                     "usage": chunk.usage.model_dump() if chunk.usage else None,
                 }
