@@ -97,11 +97,18 @@ def wait_for_service_health(max_attempts=10, initial_delay=10):
             print(f"Recent backend logs:\n{stdout}")
             
             # If backend is healthy, we can proceed
-            if "healthy" in stdout.lower() or attempt >= 3:
-                print("Proceeding with health checks...")
+            if "healthy" in stdout.lower():
+                print("Backend is healthy, proceeding with health checks...")
                 return True
 
-    print(f"Services did not start after {max_attempts} attempts")
+    print(f"Services did not become healthy after {max_attempts} attempts")
+    
+    # Get final status for debugging
+    code, stdout, stderr = run_command(
+        "docker compose -f docker-compose.dev.yml ps"
+    )
+    print(f"Final container status:\n{stdout}")
+    
     return False
 
 
