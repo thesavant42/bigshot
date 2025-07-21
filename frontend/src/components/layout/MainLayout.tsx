@@ -4,7 +4,6 @@ import { useWebSocket } from '../../hooks/useWebSocket';
 import { useKeyboard } from '../../hooks/useKeyboard';
 import ThemeToggle from '../ThemeToggle';
 import StatusBadge from '../StatusBadge';
-import ChatInterface from '../chat/ChatInterface';
 import SystemMonitoringDashboard from '../monitoring/SystemMonitoringDashboard';
 import PostAuthProof from '../auth/PostAuthProof';
 import ConfigurationManagement from '../monitoring/ConfigurationManagement';
