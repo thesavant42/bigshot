@@ -1,6 +1,7 @@
 services:
   # PostgreSQL Database
   database:
+    hostname: database
     image: postgres:15
     container_name: bigshot_dev_database
     environment:
@@ -10,6 +11,8 @@ services:
     volumes:
       - postgres_dev_data:/var/lib/postgresql/data
       - ./config/postgresql_schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    networks:
+      - bigshot_network
     ports:
       - "5433:5432"
     healthcheck:
@@ -20,6 +23,7 @@ services:
 
   # Redis Cache and Message Broker
   redis:
+    hostname: redis
     image: redis:7-alpine
     container_name: bigshot_dev_redis
     ports:
@@ -27,6 +31,8 @@ services:
     volumes:
       - redis_dev_data:/data
     command: redis-server --appendonly yes
+    networks:
+      - bigshot_network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 30s
@@ -35,6 +41,7 @@ services:
 
   # Flask Backend API (Development)
   backend:
+    hostname: backend
     build:
       context: .
       dockerfile: Dockerfile
@@ -48,8 +55,12 @@ services:
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - SECRET_KEY=${SECRET_KEY}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - NODE_ENV=development
+      - VITE_API_URL=http://backend:5000
     ports:
       - "5001:5000"
+    networks:
+      - bigshot_network
     depends_on:
       database:
         condition: service_healthy
@@ -64,6 +75,7 @@ services:
 
   # Celery Worker (Development)
   celery:
+    hostname: celery
     build:
       context: .
       dockerfile: Dockerfile
@@ -76,6 +88,8 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    networks:
+      - bigshot_network
     depends_on:
       database:
         condition: service_healthy
@@ -88,6 +102,7 @@ services:
 
   # Frontend Development Server
   frontend:
+    hostname: frontend
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev
@@ -102,6 +117,8 @@ services:
       - VITE_API_URL=http://backend:5000
       - CHOKIDAR_USEPOLLING=true
       - CHOKIDAR_INTERVAL=500
+    networks:
+      - bigshot_network
     depends_on:
       - backend
 
@@ -110,5 +127,6 @@ volumes:
   redis_dev_data:
 
 networks:
-  default:
-    name: bigshot_dev_network
+  bigshot_network:
+    name: bigshot_network
+    driver: bridge

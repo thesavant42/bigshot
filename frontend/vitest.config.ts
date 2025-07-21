@@ -1,7 +1,5 @@
-/// <reference types="vitest" />
 import { defineConfig } from 'vitest/config'
 
-// https://vitest.dev/config/
 export default defineConfig({
   test: {
     globals: true,
@@ -12,12 +10,12 @@ export default defineConfig({
       '**/node_modules/**',
       '**/dist/**',
       '**/build/**',
-      '**/tests/e2e/**', // Exclude Playwright E2E tests
-      '**/*.spec.ts', // Exclude Playwright spec files
+      '**/tests/e2e/**',
+      '**/*.spec.ts',
     ],
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html'],
+      reporter: ['text','json','html'],
       exclude: [
         'node_modules/',
         'src/test/',
