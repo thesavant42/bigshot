@@ -96,7 +96,10 @@ def check_service_health():
     # Check frontend (simple connection test)
     try:
         print("Testing frontend connection...")
-        response = requests.get("http://localhost:3000", timeout=10)
+        frontend_url = os.getenv("FRONTEND_URL", "http://localhost")
+        frontend_port = os.getenv("FRONTEND_PORT", "3000")
+        full_frontend_url = f"{frontend_url}:{frontend_port}"
+        response = requests.get(full_frontend_url, timeout=10)
         if response.status_code == 200:
             print("✅ Frontend connection test passed")
         else:
