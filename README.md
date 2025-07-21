@@ -18,6 +18,7 @@ A comprehensive domain enumeration and intelligence gathering platform with inte
 ## Architecture
 
 ### Backend
+
 - **Flask**: Python web framework with REST API
 - **SQLAlchemy**: Database ORM with PostgreSQL support
 - **Celery**: Distributed task queue for background processing
@@ -25,6 +26,7 @@ A comprehensive domain enumeration and intelligence gathering platform with inte
 - **Socket.IO**: Real-time WebSocket communication
 
 ### Frontend
+
 - **React**: Modern UI library with TypeScript
 - **Tailwind CSS**: Utility-first CSS framework
 - **Vite**: Fast build tool and development server
@@ -43,24 +45,28 @@ Choose the installation guide that matches your environment:
 For dependency mapping and CI/CD optimization, see: [Dependency Mapping Guide](docs/dependency_mapping.md)
 
 ### Prerequisites
+
 - Python 3.12+ (3.12.3 or later recommended)
 - Node.js 20+ (20.19.3 or later recommended)  
 - PostgreSQL 15+
 - Redis 7+ (required for background task processing and caching)
 
 ### Platform Requirements
+
 - **Windows**: WSL2 is **required** and is the only tested environment for Windows users
 - **Linux/macOS**: Native installation supported
 
 ### Basic Development Setup (Linux/macOS)
 
 1. **Clone the repository**
+  
    ```bash
    git clone https://github.com/thesavant42/bigshot.git
    cd bigshot
    ```
 
 2. **Backend Setup**
+
    ```bash
    # Create virtual environment
    python -m venv venv
@@ -78,6 +84,7 @@ For dependency mapping and CI/CD optimization, see: [Dependency Mapping Guide](d
    ```
 
 3. **Start Backend Services**
+
    ```bash
    # Start Redis (required for the application to function)
    redis-server
@@ -90,6 +97,7 @@ For dependency mapping and CI/CD optimization, see: [Dependency Mapping Guide](d
    ```
 
 4. **Frontend Setup**
+
    ```bash
    cd frontend
    npm install
@@ -111,6 +119,7 @@ docker-compose -f docker-compose.prod.yml up
 ## Testing
 
 ### Backend Tests
+
 ```bash
 # Run all tests
 python -m pytest
@@ -124,6 +133,7 @@ python -m pytest -m "performance"
 ```
 
 ### Frontend Tests
+
 ```bash
 cd frontend
 
@@ -148,6 +158,7 @@ The project uses GitHub Actions for continuous integration:
 ### Authentication
 
 **Default Admin Credentials:**
+
 - **Username:** `admin`
 - **Password:** `password`
 
@@ -167,6 +178,7 @@ Authorization: Bearer <token>
 ```
 
 ### Domains
+
 ```bash
 # List domains
 GET /api/v1/domains
@@ -184,6 +196,7 @@ GET /api/v1/domains/{id}
 ```
 
 ### Chat
+
 ```bash
 # Send message
 POST /api/v1/chat/send
@@ -225,6 +238,7 @@ OPENAI_API_KEY=your-openai-key
 ### Production Deployment
 
 1. **Database Setup**
+
    ```bash
    # Create production database
    createdb bigshot_prod
@@ -234,12 +248,14 @@ OPENAI_API_KEY=your-openai-key
    ```
 
 2. **Static Files**
+  
    ```bash
    cd frontend
    npm run build
    ```
 
 3. **Process Management**
+
    ```bash
    # Use supervisor or systemd for process management
    # Example supervisor config in docs/deployment.md
@@ -248,12 +264,14 @@ OPENAI_API_KEY=your-openai-key
 ## Performance
 
 ### Benchmarks
+
 - **API Response Time**: < 500ms for 95th percentile
 - **Database Queries**: < 100ms average
 - **Concurrent Users**: 50+ simultaneous connections
 - **Memory Usage**: < 512MB typical usage
 
 ### Monitoring
+
 - Built-in health checks at `/api/health`
 - Performance metrics collection
 - Error tracking and logging
@@ -263,18 +281,24 @@ OPENAI_API_KEY=your-openai-key
 
 1. **Fork the repository**
 2. **Create a feature branch**
+  
    ```bash
+
    git checkout -b feature/amazing-feature
    ```
+
 3. **Make your changes**
 4. **Run tests**
+  
    ```bash
    python -m pytest
    cd frontend && npm test
    ```
+
 5. **Submit a pull request**
 
 ### Code Style
+
 - **Python**: Black formatting, Flake8 linting
 - **TypeScript**: ESLint with TypeScript rules
 - **Commits**: Conventional commit format
@@ -282,10 +306,12 @@ OPENAI_API_KEY=your-openai-key
 ## Documentation
 
 ### Installation & Setup
+
 - [Windows 11 + WSL2 Installation Guide](docs/windows_wsl2_installation.md) - **Comprehensive installation tutorial**
 - [Dependency Mapping & CI/CD Optimization](docs/dependency_mapping.md) - **Installation order and requirements**
 
-### Development & Architecture  
+### Development & Architecture
+
 - [API Documentation](docs/api.md)
 - [Frontend Architecture](docs/frontend_architecture.md)
 - [Database Schema](docs/database_schema.md)
@@ -293,6 +319,7 @@ OPENAI_API_KEY=your-openai-key
 - [Testing Guide](docs/testing.md)
 
 ### Operations & Deployment
+
 - [Deployment Guide](docs/deployment.md)
 - [CI/CD Pipeline](docs/cicd.md)
 - [Troubleshooting](docs/troubleshooting.md)

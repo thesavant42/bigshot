@@ -162,8 +162,7 @@ export function validateFrontendConfig(): ConfigValidationResult {
 
   // Check required environment variables
   const requiredEnvVars = [
-    'VITE_API_BASE_URL',
-    'VITE_WS_URL'
+    'VITE_API_URL' // Backend API URL for REST and WebSocket proxying
   ];
 
   for (const envVar of requiredEnvVars) {
