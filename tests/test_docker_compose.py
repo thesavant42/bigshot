@@ -59,9 +59,11 @@ def test_docker_compose_up():
     
     print("✅ Docker compose up succeeded")
     
-    # Wait for services to start
+    # Wait for services to start with exponential backoff
     print("Waiting for services to initialize...")
-    time.sleep(30)
+    if not wait_for_service_health(max_attempts=5, initial_delay=5):
+        print("❌ Services failed to initialize within the expected time")
+        return False
     
     # Check service health
     return check_service_health()
