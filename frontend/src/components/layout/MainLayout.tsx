@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bars3Icon, XMarkIcon, MagnifyingGlassIcon, ChartBarIcon, CogIcon, HeartIcon } from '@heroicons/react/24/outline';
+import { Bars3Icon, XMarkIcon, MagnifyingGlassIcon, ChartBarIcon, CogIcon, HeartIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { useKeyboard } from '../../hooks/useKeyboard';
 import ThemeToggle from '../ThemeToggle';
@@ -172,6 +172,16 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 >
                   <Bars3Icon className="h-5 w-5" />
                 </button>
+                {activeView !== 'dashboard' && (
+                  <button
+                    onClick={() => setActiveView('dashboard')}
+                    className="flex items-center space-x-2 px-3 py-2 ml-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white rounded-lg transition-colors"
+                    aria-label="Back to Dashboard"
+                  >
+                    <ArrowLeftIcon className="h-4 w-4" />
+                    <span className="text-sm font-medium">Back to Dashboard</span>
+                  </button>
+                )}
                 <div className="ml-4 flex items-center space-x-4">
                   <div className="relative z-10">
                     <input
@@ -194,9 +204,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 </div>
               </div>
               <div className="flex items-center space-x-4">
-                <span className="text-neutral-600 dark:text-neutral-400 text-sm">
-                  Ready for reconnaissance
-                </span>
                 <div className="hidden lg:block">
                   <ThemeToggle />
                 </div>
