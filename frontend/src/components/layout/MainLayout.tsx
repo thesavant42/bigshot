@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Bars3Icon, XMarkIcon, MagnifyingGlassIcon, ChartBarIcon, CogIcon, HeartIcon } from '@heroicons/react/24/outline';
+import { Bars3Icon, XMarkIcon, ChartBarIcon, CogIcon, HeartIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { useWebSocket } from '../../hooks/useWebSocket';
 import { useKeyboard } from '../../hooks/useKeyboard';
 import ThemeToggle from '../ThemeToggle';
 import StatusBadge from '../StatusBadge';
+import SearchInput from '../SearchInput';
 import ChatInterface from '../chat/ChatInterface';
 import SystemMonitoringDashboard from '../monitoring/SystemMonitoringDashboard';
 import PostAuthProof from '../auth/PostAuthProof';
@@ -116,7 +117,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               }`}
             >
               <ChartBarIcon className="h-5 w-5 mr-3" />
-              Monitoring
+              System Metrics
             </button>
             <button
               onClick={() => setActiveView('health')}
@@ -127,7 +128,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               }`}
             >
               <HeartIcon className="h-5 w-5 mr-3" />
-              Health Status
+              Service Health
             </button>
             <button
               onClick={() => setActiveView('config')}
@@ -172,31 +173,30 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                 >
                   <Bars3Icon className="h-5 w-5" />
                 </button>
+                {activeView !== 'dashboard' && (
+                  <button
+                    onClick={() => setActiveView('dashboard')}
+                    className="flex items-center space-x-2 px-3 py-2 ml-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white rounded-lg transition-colors"
+                    aria-label="Back to Dashboard"
+                  >
+                    <ArrowLeftIcon className="h-4 w-4" />
+                    <span className="text-sm font-medium">Back to Dashboard</span>
+                  </button>
+                )}
                 <div className="ml-4 flex items-center space-x-4">
-                  <div className="relative z-10">
-                    <input
-                      id="search-input"
-                      type="search"
-                      placeholder="Search domains..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-64 pl-10 pr-16 py-2 bg-neutral-100 dark:bg-dark-700 border border-neutral-300 dark:border-dark-600 text-neutral-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-accent-500 placeholder-neutral-500 dark:placeholder-neutral-400 transition-colors"
-                    />
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-20">
-                      <MagnifyingGlassIcon className="h-5 w-5 text-neutral-400" />
-                    </div>
-                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none z-20">
-                      <kbd className="hidden sm:inline-flex items-center px-2 py-1 bg-neutral-200 dark:bg-dark-600 text-neutral-600 dark:text-neutral-400 text-xs rounded">
-                        Ctrl+K
-                      </kbd>
-                    </div>
-                  </div>
+                  <SearchInput
+                    id="search-input"
+                    value={searchQuery}
+                    onChange={setSearchQuery}
+                    placeholder="Search domains..."
+                    className="w-64"
+                    showKeyboardShortcut={true}
+                    keyboardShortcut="Ctrl+K"
+                    variant="header"
+                  />
                 </div>
               </div>
               <div className="flex items-center space-x-4">
-                <span className="text-neutral-600 dark:text-neutral-400 text-sm">
-                  Ready for reconnaissance
-                </span>
                 <div className="hidden lg:block">
                   <ThemeToggle />
                 </div>

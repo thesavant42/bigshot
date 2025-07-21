@@ -106,15 +106,40 @@ For dependency mapping and CI/CD optimization, see: [Dependency Mapping Guide](d
 
 > **Note for Windows Users**: The above commands should be run in WSL2. For detailed Windows 11 + WSL2 setup instructions including version requirements, environment setup, and troubleshooting, see the [Windows WSL2 Installation Guide](docs/windows_wsl2_installation.md).
 
-### Docker Setup
+### Docker Development Setup
 
-```bash
-# Development
-docker-compose up
+For a complete development environment using Docker:
 
-# Production
-docker-compose -f docker-compose.prod.yml up
-```
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/thesavant42/bigshot.git
+   cd bigshot
+   ```
+
+2. **Start the development environment**
+   ```bash
+   # Start all services (backend, frontend, database, redis, celery)
+   docker-compose -f docker-compose.dev.yml up --build
+   ```
+
+3. **Access the application**
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:5001
+   - Database: localhost:5433 (PostgreSQL)
+   - Redis: localhost:6380
+
+4. **Stop the environment**
+   ```bash
+   docker-compose -f docker-compose.dev.yml down
+   ```
+
+**Environment Configuration**: The development environment uses `.env.dev` for all configuration. Modify this file to customize database URLs, API keys, and other settings.
+
+**Development Features**:
+- Hot reloading for both frontend and backend
+- Volume mounts for live code changes
+- Debug mode enabled
+- Development databases with persistent data
 
 ## Testing
 
