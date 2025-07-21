@@ -78,7 +78,10 @@ def check_service_health():
     print(f"Container status:\n{stdout}")
     
     # Check backend health endpoint
-    try:
+        backend_host = os.getenv("BACKEND_HOST", "localhost")
+        backend_port = os.getenv("BACKEND_PORT", "5001")
+        backend_url = f"http://{backend_host}:{backend_port}/api/v1/health"
+        response = requests.get(backend_url, timeout=10)
         print("Testing backend health endpoint...")
         response = requests.get("http://localhost:5001/api/v1/health", timeout=10)
         if response.status_code == 200:
