@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import type { KeyboardShortcut } from '../hooks/useKeyboard';
-import { KeyboardContext } from './KeyboardContextDefinition';
+import { KeyboardContext, type KeyboardShortcut } from './KeyboardContextDefinition';
 
 interface KeyboardProviderProps {
   children: React.ReactNode;
