@@ -47,7 +47,7 @@ const LLMProviderConfigSection: React.FC = () => {
     api_key: '',
     model: '',
     connection_timeout: 30,
-    max_tokens: 4000,
+    max_tokens: 8000,
     temperature: 0.7,
   });
   const [testingProvider, setTestingProvider] = useState<number | null>(null);
@@ -86,7 +86,7 @@ const LLMProviderConfigSection: React.FC = () => {
         api_key: '',
         model: '',
         connection_timeout: 30,
-        max_tokens: 4000,
+        max_tokens: 8000,
         temperature: 0.7,
       });
     },
@@ -166,7 +166,7 @@ const LLMProviderConfigSection: React.FC = () => {
       api_key: '',
       model: '',
       connection_timeout: 30,
-      max_tokens: 4000,
+      max_tokens: 8000,
       temperature: 0.7,
     });
   };
@@ -184,7 +184,7 @@ const LLMProviderConfigSection: React.FC = () => {
       api_key: '',
       model: preset.model,
       connection_timeout: 30,
-      max_tokens: 4000,
+      max_tokens: 8000,
       temperature: 0.7,
     });
     setShowForm(true);
@@ -379,6 +379,43 @@ const LLMProviderConfigSection: React.FC = () => {
                   className="w-full px-3 py-2 bg-white dark:bg-dark-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Max Tokens
+                </label>
+                <input
+                  type="number"
+                  value={formData.max_tokens}
+                  onChange={(e) => setFormData({ ...formData, max_tokens: parseInt(e.target.value) })}
+                  min="1"
+                  max="16000"
+                  className="w-full px-3 py-2 bg-white dark:bg-dark-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  placeholder="4000"
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Maximum number of tokens to generate (1-16,000)
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Temperature
+                </label>
+                <input
+                  type="number"
+                  value={formData.temperature}
+                  onChange={(e) => setFormData({ ...formData, temperature: parseFloat(e.target.value) || 0 })}
+                  min="0"
+                  max="2"
+                  step="0.1"
+                  className="w-full px-3 py-2 bg-white dark:bg-dark-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  placeholder="0.7"
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Controls randomness (0.0 = deterministic, 2.0 = very random)
+                </p>
+              </div>
             </div>
 
             <div className="flex justify-end space-x-3 pt-4">
@@ -483,19 +520,19 @@ const LLMProviderConfigSection: React.FC = () => {
 
         {providers.length === 0 && (
           <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-            <BeakerIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <BeakerIcon className="h-4 w-4 mx-auto mb-4 opacity-50" />
             <p>No LLM providers configured</p>
             <p className="text-sm">Add a provider to start using AI chat features</p>
           </div>
         )}
       </div>
 
-      {/* Recent Changes */}
+      {/* Provider Settings Log */}
       {auditLogs.length > 0 && (
         <div className="bg-white dark:bg-dark-800 rounded-xl p-6 shadow-soft border border-gray-200 dark:border-gray-700">
           <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center">
             <ClockIcon className="h-5 w-5 mr-2" />
-            Recent Changes
+            Provider Settings Log
           </h4>
           <div className="space-y-3">
             {auditLogs.slice(0, 5).map((log) => (
