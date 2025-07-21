@@ -73,52 +73,50 @@ class TestAuth:
         )
 
         assert response.status_code == 422  # JWT decode error
-    
-    
+
     def test_connectivity_proof_authenticated(self, client, auth_headers):
         """Test connectivity proof endpoint with authentication"""
         response = client.get("/api/v1/auth/connectivity-proof", headers=auth_headers)
-        
+
         assert response.status_code == 200
         data = response.get_json()
         assert data["success"] is True
-        
+
         proof_data = data["data"]
         assert "authentication" in proof_data
         assert "backend_services" in proof_data
         assert "environment" in proof_data
         assert "client" in proof_data
         assert "overall_status" in proof_data
-        
+
         # Check authentication section
         auth_data = proof_data["authentication"]
         assert auth_data["status"] == "SUCCESS"
         assert auth_data["user"] == "admin"
         assert "timestamp" in auth_data
         assert "message" in auth_data
-        
+
         # Check backend services
         services = proof_data["backend_services"]
         assert "database" in services
         assert "redis" in services
         assert "celery" in services
-        
+
         # Check environment info
         env_data = proof_data["environment"]
         assert "service_name" in env_data
         assert "hostname" in env_data
         assert "flask_env" in env_data
         assert "container_id" in env_data
-        
+
         # Check overall status
         overall = proof_data["overall_status"]
         assert "healthy_services" in overall
         assert "total_services" in overall
         assert "status" in overall
-    
-    
+
     def test_connectivity_proof_unauthenticated(self, client):
         """Test connectivity proof endpoint without authentication"""
         response = client.get("/api/v1/auth/connectivity-proof")
-        
+
         assert response.status_code == 401

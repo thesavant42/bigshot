@@ -38,7 +38,7 @@ class LLMService:
             # Try to load active provider from database first
             if self._load_active_provider_from_db():
                 return
-            
+
             # Fall back to config-based initialization
             if self.provider == "lmstudio":
                 self._initialize_lmstudio_client()
@@ -52,12 +52,14 @@ class LLMService:
         """Load active provider configuration from database"""
         try:
             from flask import has_app_context
+
             if not has_app_context():
                 return False
-                
+
             from app.models.models import LLMProviderConfig
+
             active_provider = LLMProviderConfig.query.filter_by(is_active=True).first()
-            
+
             if active_provider:
                 # Ensure the provider is attached to the session
                 active_provider = db.session.merge(active_provider)
@@ -75,7 +77,7 @@ class LLMService:
             provider_config = db.session.merge(provider_config)
             self.current_provider_config = provider_config
             self.provider = provider_config.provider.lower()
-            
+
             # Use the provider config for initialization
             api_key = provider_config.api_key or "dummy-key"
             if provider_config.provider.lower() == "lmstudio":
@@ -84,14 +86,15 @@ class LLMService:
             self.client = OpenAI(
                 api_key=api_key,
                 base_url=provider_config.base_url,
-                timeout=provider_config.connection_timeout
+                timeout=provider_config.connection_timeout,
             )
-            
+
             logger.info(f"LLM client initialized with provider: {provider_config.name}")
-            
+
         except Exception as e:
             # Handle detached instance and other errors
             import sqlalchemy
+
             if isinstance(e, sqlalchemy.orm.exc.DetachedInstanceError):
                 logger.error(f"ProviderConfig is detached: {e}")
             else:
@@ -157,7 +160,7 @@ class LLMService:
                 logger.warning(f"Could not access provider config model: {e}")
                 # Fall back to config-based model
                 pass
-        
+
         # Return provider-specific default model regardless of client state (supports testing scenarios)
         if self.provider == "lmstudio":
             return self.config.LMSTUDIO_MODEL
@@ -176,19 +179,19 @@ class LLMService:
                     "provider": provider_config.provider,
                     "base_url": provider_config.base_url,
                     "model": provider_config.model,
-                    "source": "database"
+                    "source": "database",
                 }
             except Exception as e:
                 logger.warning(f"Could not access provider config info: {e}")
                 # Fall back to legacy info
                 pass
-        
+
         return {
             "name": f"{self.provider.upper()} (Legacy)",
             "provider": self.provider,
             "base_url": self._get_legacy_base_url(),
             "model": self.get_default_model(),
-            "source": "config"
+            "source": "config",
         }
 
     def _get_legacy_base_url(self) -> str:
@@ -203,9 +206,11 @@ class LLMService:
         try:
             old_provider = self.get_current_provider_info()
             self._initialize_client_from_config(provider_config)
-            
+
             if self.client:
-                logger.info(f"Successfully switched from {old_provider.get('name')} to {provider_config.name}")
+                logger.info(
+                    f"Successfully switched from {old_provider.get('name')} to {provider_config.name}"
+                )
                 return True
             else:
                 logger.error(f"Failed to switch to provider {provider_config.name}")
@@ -225,12 +230,12 @@ class LLMService:
             test_client = OpenAI(
                 api_key=api_key,
                 base_url=provider_config.base_url,
-                timeout=provider_config.connection_timeout
+                timeout=provider_config.connection_timeout,
             )
 
             # Test with a simple request
             start_time = datetime.now()
-            
+
             # Try to list models first
             try:
                 models = test_client.models.list()
@@ -238,14 +243,21 @@ class LLMService:
                 if not model_list:
                     model_list = [provider_config.model]  # Fallback to configured model
             except Exception:
-                model_list = [provider_config.model]  # Fallback if models endpoint fails
+                model_list = [
+                    provider_config.model
+                ]  # Fallback if models endpoint fails
 
             # Test a simple completion
             test_response = test_client.chat.completions.create(
                 model=provider_config.model,
-                messages=[{"role": "user", "content": "Hello, this is a connection test. Please respond with 'OK'."}],
+                messages=[
+                    {
+                        "role": "user",
+                        "content": "Hello, this is a connection test. Please respond with 'OK'.",
+                    }
+                ],
                 max_tokens=10,
-                timeout=10
+                timeout=10,
             )
 
             end_time = datetime.now()
@@ -253,8 +265,15 @@ class LLMService:
 
             # Safely extract response content
             test_content = "No response"
-            if test_response and test_response.choices and len(test_response.choices) > 0:
-                if test_response.choices[0].message and test_response.choices[0].message.content:
+            if (
+                test_response
+                and test_response.choices
+                and len(test_response.choices) > 0
+            ):
+                if (
+                    test_response.choices[0].message
+                    and test_response.choices[0].message.content
+                ):
                     test_content = test_response.choices[0].message.content.strip()
 
             result = {
@@ -266,9 +285,9 @@ class LLMService:
                     "name": provider_config.name,
                     "provider": provider_config.provider,
                     "base_url": provider_config.base_url,
-                    "model": provider_config.model
+                    "model": provider_config.model,
                 },
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
             return result
@@ -281,9 +300,9 @@ class LLMService:
                     "name": provider_config.name,
                     "provider": provider_config.provider,
                     "base_url": provider_config.base_url,
-                    "model": provider_config.model
+                    "model": provider_config.model,
                 },
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
     def is_available(self) -> bool:
@@ -296,7 +315,7 @@ class LLMService:
         if not self.client:
             # Return mock models when no real client is available
             return ["mock-model", "bigshot-assistant"]
-        
+
         try:
             models = self.client.models.list()
             return [model.id for model in models.data]
@@ -317,22 +336,22 @@ class LLMService:
                 model_info = {
                     "id": model.id,
                     "object": model.object,
-                    "created": getattr(model, 'created', None),
-                    "owned_by": getattr(model, 'owned_by', 'lmstudio'),
+                    "created": getattr(model, "created", None),
+                    "owned_by": getattr(model, "owned_by", "lmstudio"),
                 }
-                
+
                 # Add LM Studio specific fields if available
-                if hasattr(model, 'type'):
-                    model_info['type'] = model.type
-                if hasattr(model, 'arch'):
-                    model_info['arch'] = model.arch
-                if hasattr(model, 'state'):
-                    model_info['state'] = model.state
-                if hasattr(model, 'max_context_length'):
-                    model_info['max_context_length'] = model.max_context_length
-                
+                if hasattr(model, "type"):
+                    model_info["type"] = model.type
+                if hasattr(model, "arch"):
+                    model_info["arch"] = model.arch
+                if hasattr(model, "state"):
+                    model_info["state"] = model.state
+                if hasattr(model, "max_context_length"):
+                    model_info["max_context_length"] = model.max_context_length
+
                 detailed_models.append(model_info)
-            
+
             return detailed_models
         except Exception as e:
             logger.error(f"Failed to get detailed models: {e}")
@@ -386,7 +405,7 @@ class LLMService:
                 temperature=temperature,
                 stream=stream,
                 stop=stop,
-                **kwargs
+                **kwargs,
             )
 
             if stream:
@@ -411,29 +430,27 @@ class LLMService:
         if not model:
             if self.current_provider_config:
                 # Look for embedding model in provider config
-                model = getattr(self.current_provider_config, 'embedding_model', None)
+                model = getattr(self.current_provider_config, "embedding_model", None)
             if not model:
                 model = self.get_default_model()
 
         try:
             response = self.client.embeddings.create(
-                input=input_text,
-                model=model,
-                **kwargs
+                input=input_text, model=model, **kwargs
             )
-            
+
             return {
                 "object": response.object,
                 "data": [
                     {
                         "object": embedding.object,
                         "embedding": embedding.embedding,
-                        "index": embedding.index
+                        "index": embedding.index,
                     }
                     for embedding in response.data
                 ],
                 "model": response.model,
-                "usage": response.usage.model_dump() if response.usage else None
+                "usage": response.usage.model_dump() if response.usage else None,
             }
         except Exception as e:
             logger.error(f"Failed to create embeddings: {e}")
@@ -474,7 +491,10 @@ class LLMService:
 
         try:
             response = self.generate_response(
-                messages=messages, tools=tools, stream=stream, model=model  # Pass model parameter
+                messages=messages,
+                tools=tools,
+                stream=stream,
+                model=model,  # Pass model parameter
             )
 
             if stream:
@@ -614,7 +634,7 @@ class LLMService:
     def _process_completion_response(self, response) -> Dict[str, Any]:
         """Process non-streaming completion response"""
         choice = response.choices[0]
-        
+
         result = {
             "id": response.id,
             "object": response.object,
@@ -624,13 +644,13 @@ class LLMService:
             "finish_reason": choice.finish_reason,
             "usage": response.usage.model_dump() if response.usage else None,
         }
-        
+
         # Add LM Studio specific stats if available
-        if hasattr(response, 'stats'):
-            result['stats'] = response.stats
-        if hasattr(response, 'model_info'):
-            result['model_info'] = response.model_info
-            
+        if hasattr(response, "stats"):
+            result["stats"] = response.stats
+        if hasattr(response, "model_info"):
+            result["model_info"] = response.model_info
+
         return result
 
     def _process_streaming_completion_response(
@@ -808,14 +828,14 @@ class LLMService:
         self,
         message: str,
         context: Optional[Dict[str, Any]] = None,
-        stream: bool = False
+        stream: bool = False,
     ) -> Union[Dict[str, Any], Iterator[Dict[str, Any]]]:
         """Create a mock response when LLM service is not available"""
-        
+
         # Generate a helpful mock response based on the message content
         message_lower = message.lower()
-        
-        if any(word in message_lower for word in ['hello', 'hi', 'help']):
+
+        if any(word in message_lower for word in ["hello", "hi", "help"]):
             mock_content = """Hello! I'm a mock AI assistant for BigShot. 
 
 I can help you with domain reconnaissance and security research, but I'm currently running in mock mode because the LLM service isn't available.
@@ -826,8 +846,10 @@ To set up a real LLM connection:
 3. Or configure an OpenAI API key for full functionality
 
 For now, I can still help you understand the BigShot interface and features!"""
-        
-        elif any(word in message_lower for word in ['domain', 'subdomain', 'enumerate']):
+
+        elif any(
+            word in message_lower for word in ["domain", "subdomain", "enumerate"]
+        ):
             mock_content = """I can help with domain reconnaissance! Here are some key features of BigShot:
 
 🔍 **Domain Discovery**: Find subdomains using multiple sources (crt.sh, VirusTotal, etc.)
@@ -841,8 +863,8 @@ To get started:
 3. Monitor job progress in the "View Jobs" panel
 
 Note: I'm running in mock mode - enable a real LLM for advanced AI assistance!"""
-        
-        elif any(word in message_lower for word in ['config', 'setup', 'provider']):
+
+        elif any(word in message_lower for word in ["config", "setup", "provider"]):
             mock_content = """Here's how to configure the LLM providers:
 
 🔧 **LMStudio Setup**:
@@ -857,7 +879,7 @@ Note: I'm running in mock mode - enable a real LLM for advanced AI assistance!""
 3. Select OpenAI as the active provider
 
 The mock mode you're seeing now is a fallback when no working LLM is configured."""
-        
+
         else:
             mock_content = f"""I received your message: "{message}"
 
@@ -869,33 +891,27 @@ To enable full AI capabilities:
 - Check the provider configuration
 
 Would you like help with domain reconnaissance features or LLM configuration?"""
-        
+
         mock_response = {
             "role": "assistant",
             "content": mock_content,
             "mock": True,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
-        
+
         if stream:
+
             def mock_stream():
                 # Simulate streaming by yielding chunks
                 words = mock_content.split()
                 for i in range(0, len(words), 3):  # Send 3 words at a time
-                    chunk_words = words[i:i+3]
+                    chunk_words = words[i : i + 3]
                     chunk_content = " " + " ".join(chunk_words)
-                    yield {
-                        "type": "content",
-                        "content": chunk_content,
-                        "mock": True
-                    }
+                    yield {"type": "content", "content": chunk_content, "mock": True}
                     time.sleep(0.1)  # Small delay to simulate streaming
-                
-                yield {
-                    "type": "done",
-                    "mock": True
-                }
-            
+
+                yield {"type": "done", "mock": True}
+
             return mock_stream()
         else:
             return mock_response

@@ -15,22 +15,22 @@ def app():
     import tempfile
     import os
     from config.config import TestingConfig
-    
+
     # Create a temporary file for the test database
     db_fd, db_path = tempfile.mkstemp()
-    
+
     # Create test configuration
     test_config = TestingConfig()
     test_config.SQLALCHEMY_DATABASE_URI = f"sqlite:///{db_path}"
     test_config.TESTING = True
     test_config.WTF_CSRF_ENABLED = False
     test_config.JWT_SECRET_KEY = "test-secret"
-    
+
     # Create app with test config - this will automatically create admin user and default providers
     app = create_app(test_config)
-    
+
     yield app
-    
+
     # Clean up
     os.close(db_fd)
     os.unlink(db_path)
@@ -47,14 +47,14 @@ def auth_headers(app, client):
     """Create authorization headers for test requests using default admin user"""
     # Use the default admin user created by the app
     response = client.post(
-        "/api/v1/auth/login", 
-        json={"username": "admin", "password": "password"}
+        "/api/v1/auth/login", json={"username": "admin", "password": "password"}
     )
     assert response.status_code == 200, f"Login failed: {response.get_json()}"
-    
+
     data = response.get_json()
     token = data["data"]["access_token"]
     return {"Authorization": f"Bearer {token}"}
+
 
 class TestLLMProviderAPI:
     """Test LLM Provider API endpoints"""
@@ -154,9 +154,7 @@ class TestLLMProviderAPI:
             "model": "llama-2-7b",
         }
 
-        client.post(
-            "/api/v1/llm-providers", json=provider_data, headers=auth_headers
-        )
+        client.post("/api/v1/llm-providers", json=provider_data, headers=auth_headers)
 
         # Get all providers
         response = client.get("/api/v1/llm-providers", headers=auth_headers)
@@ -250,9 +248,7 @@ class TestLLMProviderAPI:
         )
 
         # Get active provider
-        response = client.get(
-            "/api/v1/llm-providers/active", headers=auth_headers
-        )
+        response = client.get("/api/v1/llm-providers/active", headers=auth_headers)
         assert response.status_code == 200
         data = json.loads(response.data)
         assert data["data"]["name"] == "Active Provider"
@@ -315,15 +311,13 @@ class TestLLMProviderAPI:
 
         assert response.status_code == 400
         data = json.loads(response.data)
-        assert "Cannot delete the active provider" in data.get(
-            "error", {}
-        ).get("message", "")
+        assert "Cannot delete the active provider" in data.get("error", {}).get(
+            "message", ""
+        )
 
     def test_get_provider_presets(self, client, auth_headers):
         """Test getting provider presets"""
-        response = client.get(
-            "/api/v1/llm-providers/presets", headers=auth_headers
-        )
+        response = client.get("/api/v1/llm-providers/presets", headers=auth_headers)
         assert response.status_code == 200
         data = json.loads(response.data)
         assert len(data["data"]) > 0
@@ -359,9 +353,7 @@ class TestLLMProviderAPI:
         )
 
         # Check audit logs
-        response = client.get(
-            "/api/v1/llm-providers/audit-logs", headers=auth_headers
-        )
+        response = client.get("/api/v1/llm-providers/audit-logs", headers=auth_headers)
         assert response.status_code == 200
         data = json.loads(response.data)
 

@@ -262,10 +262,10 @@ class User(db.Model):
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
-        
+
         if include_sensitive:
             result["password_hash"] = self.password_hash
-            
+
         return result
 
 
@@ -275,7 +275,9 @@ class LLMProviderConfig(db.Model):
     __tablename__ = "llm_provider_configs"
 
     id = db.Column(db.Integer, primary_key=True)
-    provider = db.Column(db.String(50), nullable=False)  # 'openai', 'lmstudio', 'custom'
+    provider = db.Column(
+        db.String(50), nullable=False
+    )  # 'openai', 'lmstudio', 'custom'
     name = db.Column(db.String(100), nullable=False)  # Display name
     base_url = db.Column(db.String(500), nullable=False)
     api_key = db.Column(db.Text)  # Can be null for providers that don't need keys
@@ -292,9 +294,7 @@ class LLMProviderConfig(db.Model):
         onupdate=lambda: datetime.now(UTC),
     )
 
-    __table_args__ = (
-        db.UniqueConstraint("name", name="unique_provider_name"),
-    )
+    __table_args__ = (db.UniqueConstraint("name", name="unique_provider_name"),)
 
     def to_dict(self, include_sensitive=False):
         """Convert LLM provider config to dictionary representation"""
@@ -335,7 +335,9 @@ class LLMProviderAuditLog(db.Model):
     provider_config_id = db.Column(
         db.Integer, db.ForeignKey("llm_provider_configs.id"), nullable=True
     )
-    action = db.Column(db.String(50), nullable=False)  # 'created', 'updated', 'activated', 'tested'
+    action = db.Column(
+        db.String(50), nullable=False
+    )  # 'created', 'updated', 'activated', 'tested'
     old_values = db.Column(db.Text)  # JSON string of old values
     new_values = db.Column(db.Text)  # JSON string of new values
     test_result = db.Column(db.Text)  # JSON string of test results
