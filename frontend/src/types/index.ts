@@ -128,6 +128,20 @@ export interface MCPToolParameters {
   required?: string[];
 }
 
+// Backend chat response structure 
+export interface BackendChatResponse {
+  content: string;
+  role: 'user' | 'assistant';
+  function_calls?: FunctionCall[];
+  usage?: {
+    completion_tokens: number;
+    completion_tokens_details?: unknown;
+    prompt_tokens: number;
+    prompt_tokens_details?: unknown;
+    total_tokens: number;
+  };
+}
+
 export interface ContextData {
   recent_domains?: Domain[];
   active_jobs?: Job[];

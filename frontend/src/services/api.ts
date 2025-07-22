@@ -21,7 +21,8 @@ import type {
   LLMProviderPreset,
   AvailableModelsResponse,
   TextCompletionRequest,
-  EmbeddingsRequest
+  EmbeddingsRequest,
+  BackendChatResponse
 } from '../types';
 import type { ChatContext } from './chatService';
 
@@ -175,7 +176,7 @@ class ApiService {
   }
 
   // Chat endpoints
-  async sendMessage(message: string, context?: ChatContext): Promise<ChatMessage> {
+  async sendMessage(message: string, context?: ChatContext): Promise<BackendChatResponse> {
     // Get the current active model for the chat request
     let model: string | undefined;
     try {
