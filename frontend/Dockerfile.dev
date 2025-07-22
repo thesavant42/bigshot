@@ -9,7 +9,7 @@ COPY package*.json ./
 COPY package.json package-lock.json ./
 RUN npm install
 # Install dependencies
-RUN npm ci
+# RUN npm ci
 
 # Don't copy source code - it will be mounted as a volume for hot reload
 
