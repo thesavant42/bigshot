@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiService } from '../services/api';
 import { webSocketService } from '../services/websocket';
-import type { Domain, FilterOptions, TextCompletionRequest, EmbeddingsRequest } from '../types';
+import type { Domain, FilterOptions, TextCompletionRequest, EmbeddingsRequest, ChatMessage, BackendChatResponse } from '../types';
 import type { ChatContext } from '../services/chatService';
 
 // Additional types for API operations
@@ -161,8 +161,44 @@ export const useChat = () => {
   const sendMessage = useMutation({
     mutationFn: ({ message, context }: { message: string; context?: ChatContext }) =>
       apiService.sendMessage(message, context),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['conversation'] });
+    onMutate: async ({ message }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['conversation'] });
+
+      // Snapshot the previous value
+      const previousConversation = queryClient.getQueryData(['conversation']) as ChatMessage[] || [];
+
+      // Optimistically add user message
+      const userMessage: ChatMessage = {
+        id: `user-${crypto.randomUUID()}`,
+        content: message,
+        role: 'user',
+        timestamp: new Date().toISOString(),
+      };
+
+      queryClient.setQueryData(['conversation'], [...previousConversation, userMessage]);
+
+      // Return a context object with the snapshot
+      return { previousConversation };
+    },
+    onSuccess: (assistantResponse: BackendChatResponse, _variables, context) => {
+      // Add assistant response to conversation
+      const currentConversation = queryClient.getQueryData(['conversation']) as ChatMessage[] || [];
+      
+      const assistantMessage: ChatMessage = {
+        id: `assistant-${Date.now()}`,
+        content: assistantResponse.content,
+        role: 'assistant',
+        timestamp: new Date().toISOString(),
+      };
+
+      queryClient.setQueryData(['conversation'], [...currentConversation, assistantMessage]);
+    },
+    onError: (_err, _variables, context) => {
+      // On error, rollback to the snapshot
+      if (context?.previousConversation) {
+        queryClient.setQueryData(['conversation'], context.previousConversation);
+      }
     },
   });
 
@@ -171,6 +207,7 @@ export const useChat = () => {
     queryFn: () => apiService.getConversation('default'),
     refetchInterval: 30000, // Fixed: Reduced from 5 seconds to 30 seconds to prevent excessive re-renders
     refetchOnWindowFocus: false, // Fixed: Prevent refetch on window focus
+    initialData: [], // Start with empty conversation
   });
 
   return {
