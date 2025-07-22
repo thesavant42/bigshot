@@ -177,24 +177,23 @@ export const useChat = () => {
       await queryClient.cancelQueries({ queryKey: ['conversation'] });
 
       // Snapshot the previous value
-      const previousConversation = queryClient.getQueryData(['conversation']) as ChatMessage[] || [];
+      const previousConversation = queryClient.getQueryData(['conversation']) as ChatMessage[];
+      const safePreviousConversation = Array.isArray(previousConversation) ? previousConversation : [];
 
       // Optimistically add user message
-      // Replace crypto.randomUUID() with randomUUID()
       const userMessage: ChatMessage = {
         id: `user-${randomUUID()}`,
         content: message,
         role: 'user',
         timestamp: new Date().toISOString(),
       };
-      
 
-      queryClient.setQueryData(['conversation'], [...previousConversation, userMessage]);
+      queryClient.setQueryData(['conversation'], [...safePreviousConversation, userMessage]);
 
       // Return a context object with the snapshot
-      return { previousConversation };
+      return { previousConversation: safePreviousConversation };
     },
-    onSuccess: (assistantResponse: BackendChatResponse, _variables, context) => {
+    onSuccess: (assistantResponse: BackendChatResponse) => {
       // Add assistant response to conversation
       const currentConversation = queryClient.getQueryData(['conversation']) as ChatMessage[] || [];
       
@@ -207,7 +206,7 @@ export const useChat = () => {
 
       queryClient.setQueryData(['conversation'], [...currentConversation, assistantMessage]);
     },
-    onError: (_err, _variables, context) => {
+    onError: (_err) => {
       // On error, rollback to the snapshot
       if (context?.previousConversation) {
         queryClient.setQueryData(['conversation'], context.previousConversation);
