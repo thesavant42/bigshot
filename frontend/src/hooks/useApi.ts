@@ -3,6 +3,7 @@ import { apiService } from '../services/api';
 import { webSocketService } from '../services/websocket';
 import type { Domain, FilterOptions, TextCompletionRequest, EmbeddingsRequest, ChatMessage, BackendChatResponse } from '../types';
 import type { ChatContext } from '../services/chatService';
+import { randomUUID } from 'uncrypto';
 
 // Additional types for API operations
 interface BulkOperationData {
@@ -169,12 +170,14 @@ export const useChat = () => {
       const previousConversation = queryClient.getQueryData(['conversation']) as ChatMessage[] || [];
 
       // Optimistically add user message
+      // Replace crypto.randomUUID() with randomUUID()
       const userMessage: ChatMessage = {
-        id: `user-${crypto.randomUUID()}`,
+        id: `user-${randomUUID()}`,
         content: message,
         role: 'user',
         timestamp: new Date().toISOString(),
       };
+      
 
       queryClient.setQueryData(['conversation'], [...previousConversation, userMessage]);
 
