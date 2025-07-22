@@ -183,7 +183,7 @@ export const useChat = () => {
     },
     onSuccess: (assistantResponse: BackendChatResponse, _variables, context) => {
       // Add assistant response to conversation
-      const previousConversation = context?.previousConversation || [];
+      const currentConversation = queryClient.getQueryData(['conversation']) as ChatMessage[] || [];
       
       const assistantMessage: ChatMessage = {
         id: `assistant-${Date.now()}`,
