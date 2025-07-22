@@ -16,14 +16,14 @@ class CertificateTransparencyAPI:
 
     async def enumerate_domain(self, domain, api_key=None):
         """Enumerate subdomains using Certificate Transparency logs"""
+        url = f"{self.base_url}/?q={domain}&output=json"
+        print(f"[crt.sh] Request URL: {url}")
         try:
-            url = f"{self.base_url}/?q=%.{domain}&output=json"
-
             async with aiohttp.ClientSession() as session:
                 async with session.get(url, timeout=30) as response:
+                    print(f"[crt.sh] Response status: {response.status}")
                     if response.status == 200:
                         data = await response.json()
-
                         # Extract unique subdomains
                         subdomains = set()
                         for entry in data:
@@ -33,15 +33,14 @@ class CertificateTransparencyAPI:
                                     name = name.strip()
                                     if name and name.endswith(f".{domain}"):
                                         subdomains.add(name)
-
                         return list(subdomains)
                     else:
-                        print(f"crt.sh API returned status {response.status}")
-                        return []
-
+                        body = await response.text()
+                        print(f"[crt.sh] Non-200 response body: {body}")
+                        return {"error": f"crt.sh API returned status {response.status}", "url": url, "body": body}
         except Exception as e:
-            print(f"Error with crt.sh API: {e}")
-            return []
+            print(f"[crt.sh] Exception: {e}")
+            return {"error": str(e), "url": url}
 
 
 class VirusTotalAPI:

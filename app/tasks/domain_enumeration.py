@@ -53,6 +53,7 @@ def enumerate_domains_task(self, job_id, domains, sources, options):
             completed_tasks = 0
 
             all_results = []
+            error_results = []
 
             # Run enumeration for each domain and source
             for domain in domains:
@@ -108,46 +109,61 @@ def enumerate_domains_task(self, job_id, domains, sources, options):
                             finally:
                                 loop.close()
 
-                            # Process and store results
-                            for subdomain in results:
-                                # Check for existing domain
-                                existing = Domain.query.filter_by(
-                                    subdomain=subdomain, source=source
-                                ).first()
+                            # If results is a dict with error, log and collect it
+                            if isinstance(results, dict) and "error" in results:
+                                error_results.append({
+                                    "domain": domain,
+                                    "source": source,
+                                    "error": results["error"],
+                                    "url": results.get("url"),
+                                    "body": results.get("body"),
+                                })
+                            else:
+                                # Process and store results
+                                for subdomain in results:
+                                    # Check for existing domain
+                                    existing = Domain.query.filter_by(
+                                        subdomain=subdomain, source=source
+                                    ).first()
 
-                                if not existing:
-                                    # Create new domain record
-                                    domain_record = Domain(
-                                        root_domain=domain,
-                                        subdomain=subdomain,
-                                        source=source,
-                                        fetched_at=datetime.utcnow(),
-                                    )
-                                    db.session.add(domain_record)
-                                    all_results.append(
-                                        {
-                                            "subdomain": subdomain,
-                                            "source": source,
-                                            "root_domain": domain,
-                                        }
-                                    )
-                                else:
-                                    # Update existing record
-                                    existing.fetched_at = datetime.utcnow()
-                                    all_results.append(
-                                        {
-                                            "subdomain": subdomain,
-                                            "source": source,
-                                            "root_domain": domain,
-                                            "existing": True,
-                                        }
-                                    )
+                                    if not existing:
+                                        # Create new domain record
+                                        domain_record = Domain(
+                                            root_domain=domain,
+                                            subdomain=subdomain,
+                                            source=source,
+                                            fetched_at=datetime.utcnow(),
+                                        )
+                                        db.session.add(domain_record)
+                                        all_results.append(
+                                            {
+                                                "subdomain": subdomain,
+                                                "source": source,
+                                                "root_domain": domain,
+                                            }
+                                        )
+                                    else:
+                                        # Update existing record
+                                        existing.fetched_at = datetime.utcnow()
+                                        all_results.append(
+                                            {
+                                                "subdomain": subdomain,
+                                                "source": source,
+                                                "root_domain": domain,
+                                                "existing": True,
+                                            }
+                                        )
 
                         completed_tasks += 1
 
                     except Exception as e:
                         # Log error but continue with other tasks
                         print(f"Error enumerating {domain} from {source}: {e}")
+                        error_results.append({
+                            "domain": domain,
+                            "source": source,
+                            "error": str(e)
+                        })
                         completed_tasks += 1
 
             # Commit all results
@@ -162,6 +178,7 @@ def enumerate_domains_task(self, job_id, domains, sources, options):
                     "new_domains": len([r for r in all_results if not r.get("existing")]),
                     "updated_domains": len([r for r in all_results if r.get("existing")]),
                     "domains_found": all_results[:100],  # Limit for storage
+                    "errors": error_results,
                 }
             )
             db.session.commit()
