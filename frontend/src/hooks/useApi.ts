@@ -3,7 +3,17 @@ import { apiService } from '../services/api';
 import { webSocketService } from '../services/websocket';
 import type { Domain, FilterOptions, TextCompletionRequest, EmbeddingsRequest, ChatMessage, BackendChatResponse } from '../types';
 import type { ChatContext } from '../services/chatService';
-import { randomUUID } from 'uncrypto';
+/**
+ * Simple UUID v4 generator (RFC4122 compliant, not cryptographically secure).
+ * Use this for compatibility in all JS environments.
+ */
+function randomUUID() {
+  // https://stackoverflow.com/a/2117523/2715716
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
 
 // Additional types for API operations
 interface BulkOperationData {

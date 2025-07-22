@@ -12,22 +12,36 @@ import type {
 // Uses the same smart environment detection as API configuration
 const getWebSocketUrl = () => {
   const envUrl = import.meta.env.VITE_API_URL;
-  
-  // In development mode (vite dev server), always use current origin
-  // This allows vite's proxy configuration to handle websocket routing
-  // regardless of whether backend is on localhost or in Docker
-  if (import.meta.env.DEV) {
-    return window.location.origin; // Let vite proxy handle /socket.io -> backend
+  const dev = import.meta.env.DEV;
+  const origin = window.location.origin;
+
+  let resultUrl;
+  let pathTaken;
+
+  if (dev) {
+    resultUrl = origin;
+    pathTaken = 'dev';
+  } else if (envUrl === "") {
+    resultUrl = origin;
+    pathTaken = 'prod/docker';
+  } else {
+    resultUrl = envUrl || 'http://localhost:5000';
+    pathTaken = envUrl ? 'explicit override' : 'fallback';
   }
-  
-  // For production and Docker environments, use current origin
-  // nginx will proxy these to the appropriate backend service
-  if (envUrl === "") {
-    return window.location.origin; // Production/Docker: use current origin, nginx will proxy
+
+  // Diagnostic logging
+  console.log('[WebSocket URL Resolution]', {
+    DEV: dev,
+    VITE_API_URL: envUrl,
+    windowOrigin: origin,
+    pathTaken,
+    resultUrl,
+  });
+  if (pathTaken === 'fallback') {
+    console.warn('[WebSocket URL Resolution] Using fallback URL http://localhost:5000. This may indicate a misconfiguration.');
   }
-  
-  // Fallback for explicit URL override (rare cases)
-  return envUrl || 'http://localhost:5000';
+
+  return resultUrl;
 };
 
 export class WebSocketService {
