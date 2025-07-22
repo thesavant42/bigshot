@@ -4,6 +4,7 @@ Celery application factory for bigshot
 
 from celery import Celery
 from config.config import Config
+from app import create_app
 
 
 def create_celery_app(app=None):
@@ -54,5 +55,5 @@ def create_celery_app(app=None):
     return celery
 
 
-# Create default Celery app for worker
-celery_app = create_celery_app()
+flask_app = create_app()
+celery_app = create_celery_app(flask_app)
