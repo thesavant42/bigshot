@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 import { useChat } from './useApi';
 import { apiService } from '../services/api';
+import type { BackendChatResponse } from '../types';
 
 // Mock the apiService
 vi.mock('../services/api', () => ({
@@ -44,7 +45,7 @@ describe('useChat hook - Response Structure Handling', () => {
 
   it('should handle backend response structure correctly', async () => {
     // Mock the backend response structure from the issue
-    const mockBackendResponse = {
+    const mockBackendResponse: BackendChatResponse = {
       content: "\n\nHello! How can I assist you with your cybersecurity reconnaissance or bug bounty research today? Let me know if you need help analyzing domains, checking URLs, managing jobs, or looking up information!",
       function_calls: [],
       role: "assistant",
@@ -131,10 +132,18 @@ describe('useChat hook - Response Structure Handling', () => {
   it('should generate unique IDs for messages', async () => {
     // Mock responses
     vi.mocked(apiService.getConversation).mockResolvedValue([]);
-    vi.mocked(apiService.sendMessage).mockResolvedValue({
+    
+    const mockResponse1: BackendChatResponse = {
       content: "Response 1",
       role: "assistant"
-    });
+    };
+    
+    const mockResponse2: BackendChatResponse = {
+      content: "Response 2", 
+      role: "assistant"
+    };
+
+    vi.mocked(apiService.sendMessage).mockResolvedValueOnce(mockResponse1);
 
     const { result } = renderHook(() => useChat(), { wrapper });
 
@@ -147,13 +156,8 @@ describe('useChat hook - Response Structure Handling', () => {
       expect(result.current.conversation).toHaveLength(2);
     });
 
-    const firstConversation = result.current.conversation;
-
     // Send second message
-    vi.mocked(apiService.sendMessage).mockResolvedValue({
-      content: "Response 2", 
-      role: "assistant"
-    });
+    vi.mocked(apiService.sendMessage).mockResolvedValueOnce(mockResponse2);
 
     await result.current.sendMessage.mutateAsync({
       message: "message 2"
@@ -163,10 +167,10 @@ describe('useChat hook - Response Structure Handling', () => {
       expect(result.current.conversation).toHaveLength(4);
     });
 
-    const secondConversation = result.current.conversation;
+    const conversation = result.current.conversation;
 
     // Check that all IDs are unique
-    const ids = secondConversation.map(msg => msg.id);
+    const ids = conversation.map(msg => msg.id);
     const uniqueIds = new Set(ids);
     expect(uniqueIds.size).toBe(4); // All IDs should be unique
   });

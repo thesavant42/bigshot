@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiService } from '../services/api';
 import { webSocketService } from '../services/websocket';
-import type { Domain, FilterOptions, TextCompletionRequest, EmbeddingsRequest, ChatMessage } from '../types';
+import type { Domain, FilterOptions, TextCompletionRequest, EmbeddingsRequest, ChatMessage, BackendChatResponse } from '../types';
 import type { ChatContext } from '../services/chatService';
 
 // Additional types for API operations
@@ -181,7 +181,7 @@ export const useChat = () => {
       // Return a context object with the snapshot
       return { previousConversation };
     },
-    onSuccess: (assistantResponse) => {
+    onSuccess: (assistantResponse: BackendChatResponse) => {
       // Add assistant response to conversation
       const previousConversation = queryClient.getQueryData(['conversation']) as ChatMessage[] || [];
       
