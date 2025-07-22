@@ -181,9 +181,9 @@ export const useChat = () => {
       // Return a context object with the snapshot
       return { previousConversation };
     },
-    onSuccess: (assistantResponse: BackendChatResponse) => {
+    onSuccess: (assistantResponse: BackendChatResponse, _variables, context) => {
       // Add assistant response to conversation
-      const previousConversation = queryClient.getQueryData(['conversation']) as ChatMessage[] || [];
+      const previousConversation = context?.previousConversation || [];
       
       const assistantMessage: ChatMessage = {
         id: `assistant-${Date.now()}`,
