@@ -170,7 +170,7 @@ export const useChat = () => {
 
       // Optimistically add user message
       const userMessage: ChatMessage = {
-        id: `user-${Date.now()}`,
+        id: `user-${crypto.randomUUID()}`,
         content: message,
         role: 'user',
         timestamp: new Date().toISOString(),
