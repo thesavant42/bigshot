@@ -192,7 +192,7 @@ export const useChat = () => {
         timestamp: new Date().toISOString(),
       };
 
-      queryClient.setQueryData(['conversation'], [...previousConversation, assistantMessage]);
+      queryClient.setQueryData(['conversation'], [...currentConversation, assistantMessage]);
     },
     onError: (_err, _variables, context) => {
       // On error, rollback to the snapshot
