@@ -704,3 +704,6 @@ config/development.py
 config/production.py
 .coverage
 .pytest_cache/
+
+# Playwright
+/playwright/.cache/

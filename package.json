@@ -1,0 +1,26 @@
+{
+  "name": "bigshot",
+  "version": "1.0.0",
+  "description": "A comprehensive domain enumeration and intelligence gathering platform with integrated AI chat capabilities.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thesavant42/bigshot.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/thesavant42/bigshot/issues"
+  },
+  "homepage": "https://github.com/thesavant42/bigshot#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.54.1",
+    "@types/node": "^24.1.0"
+  }
+}
